@@ -48,7 +48,7 @@ var moduloEditorTexto = (function(ele) {
 	
 	var guardarArchivo = function() {
 		if (!haCambiado()) {
-			moduloMenus.info('menus.mensajes.sincambios');
+			moduloModales.info('No ha cambiado nada');
 			return;
 		}
 		var editor = ace.edit(idLocal);
@@ -56,7 +56,7 @@ var moduloEditorTexto = (function(ele) {
 		var contenido = editor.getValue();
 		promesasTodas['guardado'] = moduloArchivos.escribirTextoPlano(idActual, contenido); 
 		$.when(promesasTodas).then(function() {
-			moduloMenus.info('menus.mensajes.guardado');
+			moduloModales.notificar('Guardado exitosamente');
 			hashActual = MD5(contenido);
 		}, function() {
 			alert('Error subiendo el archivo');

@@ -57,7 +57,7 @@ var moduloModales;
 
 		var info = function(mensaje, titulo) {
 			if (!utilidades.hayValorTexto(titulo)) {
-				titulo = 'Información';
+				titulo = 'Informaci�n';
 			}
 			var temp = bootbox.alert({
 			    title: titulo,

@@ -34,8 +34,8 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
     	//Se mira si ha cambiado o no
     	if (editorActual.editor.haCambiado()) {
     		//Se pide confirmar en caso que el hash haya cambiado
-        	var promesaConf = moduloMenus.confirmar('general.perderacambios');
-        	$.when(promesaConf).then(function() {
+        	var promesaConf = moduloModales.confirmar('Perderá los cambios si no guarda');
+        	promesaConf.then(function() {
         		cerrarTab(tabSeleccionado);
         	});
     	} else {
@@ -135,7 +135,7 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
 				elNodo.text = anterior;
 				elNodo.original.text = anterior;
 				refArbol.redraw([elNodo]);
-				moduloMenus.error();
+				moduloModales.alertar('Ha ocurrido un error')
 			};
 			
 			//Validar que otro no se llame igual
@@ -192,7 +192,7 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
     		}
     		agregarTab(ref.text, contenido, ref.id);
     	}, function(obj) {
-    		moduloMenus.error(obj.msg);
+    		moduloModales.alertar(obj.msg);
     	});
 	}
 	
@@ -256,8 +256,8 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
             "separator_after": false,
             "label": "Borrar",
             "action": function(data) {
-            	var promesaConf = moduloMenus.confirmar();
-            	$.when(promesaConf).then(function() {
+            	var promesaConf = moduloModales.confirmar();
+            	promesaConf.then(function() {
 		        	var inst = $.jstree.reference(data.reference),
 		        	obj = inst.get_node(data.reference);
 	            	var promesa = moduloArchivos.borrar(obj.id);
@@ -266,9 +266,11 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
 		            		var inst = $.jstree.reference(data.reference);
 		                	inst.delete_node($node);
 	            		} else {
-	            			moduloMenus.error();
+	            			moduloModales.alertar('Ha ocurrido un error');
 	            		}
-	            	}, moduloMenus.error);
+	            	}, function() {
+	            		moduloModales.alertar('Ha ocurrido un error');
+	            	});
             	});
             }
         };
@@ -300,7 +302,9 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
 		                	
 		                });
 	        		}
-	        	}, moduloMenus.error);
+	        	}, function() {
+	        		moduloModales.alertar('Ha ocurrido un error');
+	        	});
 	        }
 		};
 		
