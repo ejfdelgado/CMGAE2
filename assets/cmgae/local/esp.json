@@ -1,0 +1,33 @@
+{
+	"general": {
+		"verif_campo": "Verifique el campo ",
+		"cache_borr_ok": "Cache borrada",
+		"error_ajax": "Error al invocar servicio",
+		"confirme": "¿Está seguro de realizar la acción?",
+		"procesando": "Procesando petición... :)",
+		"verifique": "Verifique el campo ",
+		"perderacambios": "¿Hay cambios sin guardar, desea cerrar de todas formas?"
+	},
+	"menus": {
+		"general": {
+			"configurar": "Configurar",
+			"borrar": "Borrar contenido",
+			"borrarcache": "Borrar memoria cache",
+			"editar": "Editar",
+			"propiedades": "Propiedades de página",
+			"salir": "Salir",
+			"ingresar": "Ingresar",
+			"archivos": "Administrar archivos"
+		},
+		"mensajes": {
+			"hecho": "Hecho!",
+			"sincambios": "No hay cambios",
+			"guardado": "Guardado exitosamente",
+			"error": "Ups, ha ocurrido un error, por favor reintente."
+		},
+		"botones": {
+			"aceptar": "Aceptar",
+			"cancelar": "Cancelar"
+		}
+	}
+}

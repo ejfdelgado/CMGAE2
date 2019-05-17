@@ -1,0 +1,55 @@
+{
+  "name": "micodigo.co",
+  "version": "1.0.0",
+  "description": "Indexaci�n de c�digos QR",
+  "main": "index.js",
+  "scripts": {
+    "gulp": "gulp"
+  },
+  "keywords": [
+    "c�digo",
+    "qr"
+  ],
+  "author": "edgar.jose.fernando.delgado@gmail.com",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-core": "^6.24.0",
+    "babel-plugin-undeclared-variables-check": "^6.22.0",
+    "babel-preset-es2015": "^6.24.0",
+    "globals": "^9.16.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-cli": "^1.2.2",
+    "gulp-concat": "^2.6.1",
+    "gulp-copy": "^1.0.1",
+    "gulp-uglify": "^2.0.0"
+  },
+  "dependencies": {
+    "ace": "^1.3.0",
+    "angular": "^1.7.2",
+    "angular-animate": "^1.7.2",
+    "angular-aria": "^1.7.2",
+    "angular-material": "^1.1.9",
+    "angular-resource": "^1.7.2",
+    "angular-route": "^1.7.2",
+    "angular-ui-router": "^1.0.18",
+    "angularfire": "^2.3.0",
+    "bootstrap": "^4.1.3",
+    "chart.js": "^2.7.2",
+    "cropperjs": "^1.4.0",
+    "crypto-js": "^3.1.9-1",
+    "firebaseui": "^3.1.1",
+    "instascan": "^1.0.0",
+    "jquery": "^3.3.1",
+    "jquery-next-id": "^1.0.1",
+    "jquery-roving-tabindex": "^1.0.1",
+    "jquery-tabs": "^0.5.3",
+    "jquery-ui": "^1.12.1",
+    "jquery-ui-dist": "^1.12.1",
+    "jquery.enhsplitter": "^1.1.0",
+    "jspdf": "^1.4.1",
+    "jstree": "^3.3.5",
+    "ngmap": "^1.18.4",
+    "three": "^0.94.0"
+  }
+}

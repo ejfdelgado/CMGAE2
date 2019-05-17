@@ -1,0 +1,16 @@
+
+body {
+	margin: 0;
+}
+
+.invisible {
+	display: none;
+}
+
+.lrnopadding {
+	padding: 0 !important;
+}
+
+.manito {
+	cursor: pointer;
+}

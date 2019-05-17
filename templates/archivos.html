@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block encabezado %}
+
+	<link rel="stylesheet" href="/assets/node_modules/jquery-ui-dist/jquery-ui.min.css"/>
+	<link rel="stylesheet" href="/assets/node_modules/jstree/dist/themes/default/style.min.css" />
+    <link rel="stylesheet" href="/assets/node_modules/jquery.enhsplitter/css/jquery.enhsplitter.css" />
+    
+	<style type="text/css" media="screen">
+	    #editor {
+	        position: fixed;
+	        top: 60px;
+	        bottom: 0;
+	        right: 0;
+	        left: 300px;
+	        z-index: 99999;
+	    }
+	    
+	    #tabs {
+			position: absolute;
+			padding: 0 !important;
+		    top: 0;
+		    right: 0;
+		    left: 0;
+		    bottom: 0;
+	    }
+	    
+	    #paginaCompleta {
+	    	position: fixed;
+	    	top: 0;
+	    	bottom: 0;
+	    	left: 0;
+	    	right: 0;
+	    }
+	    
+	    .pluginEditor {
+    		padding: 0px !important;
+    		
+	    }
+	    
+	    .pluginEditorInner {
+	    
+	    }
+	    
+	    .pluginEditorInner>.ace_editor {
+			position: absolute;
+		    top: 0px;
+		    right: 0;
+		    bottom: 0;
+		    left: 0;
+	    }
+	    
+		#tabs li .ui-icon-close {
+		    cursor: pointer;
+		}
+	    
+	    #tabs .ui-tabs-anchor {
+	    	font-size: 80%;
+	    }
+	    
+	    #contenedorArchivos {
+	    	overflow-x: scroll;
+	    	overflow-y: scroll;
+	    	width: 100%;
+	    	height: 100%;
+	    }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="paginaCompleta">
+	<div id="estadoPagina"></div>
+    <div id="totalArchivos">
+        <div id="buscadorArchivos">
+            <div id="contenedorArchivos"></div>
+        </div>
+        <div id="editorTexto">
+			<div id="tabs">
+			  <ul>
+			  </ul>
+			</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script src="/assets/node_modules/jquery-next-id/jquery.nextid.min.js"></script>
+	<script src="/assets/node_modules/jquery-roving-tabindex/jquery.rovingtabindex.min.js"></script>
+	<script src="/assets/node_modules/jquery-ui-dist/jquery-ui.min.js"></script>
+	<script src="/assets/node_modules/jquery.enhsplitter/js/jquery.enhsplitter.js"></script>
+	<script src="/assets/node_modules/jstree/dist/jstree.min.js"></script>
+	<script src="/assets/node_modules/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+	<script src="/assets/js/comun/jquery.doubletap.js"></script>
+  
+	<script src="/assets/dist/admin/editor.js"></script>
+{% endblock %}

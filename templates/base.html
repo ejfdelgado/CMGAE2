@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+	<base href="/" target="_blank">
+	<link rel="stylesheet" href="/assets/css/util-global.css"/>
+	<link rel="stylesheet" href="/assets/css/actividad.css"/>
+	<link rel="stylesheet" href="/assets/node_modules/bootstrap/bootstrap-iso.css"/>
+	<link rel="stylesheet" href="/assets/node_modules/bootstrap/bootstrap-iso-modal.css"/>
+	{% block encabezado %}{% endblock %}
+	</head>
+	__USER__
+	<body class="bootstrap-iso">
+	{% csrf_token %}
+	{% block content %}{% endblock %}
+	
+	<script src="/assets/node_modules/crypto-js/crypto-js.js"></script>
+	<script src="/assets/node_modules/jquery/dist/jquery.min.js"></script>
+	<script src="/assets/node_modules/bootbox/bootbox.min.js"></script>
+	<script src="/assets/node_modules/bootstrap/bootstrap.min.js"></script>
+	<script src="/assets/node_modules/notify/notify.min.js"></script>
+	
+	<script src="/assets/dist/modulos.min.js"></script>
+	{% if admin %}
+	<script src="/assets/dist/admin/admin.js"></script>
+	{% else %}
+	<script src="/assets/dist/publico/publico.js"></script>
+	{% endif %}
+	
+	{% block scripts %}{% endblock %}	
+	</body>
+</html>
+
