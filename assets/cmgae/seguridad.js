@@ -1,4 +1,4 @@
-var  miseguridad = (function() {
+var  miseguridad = (function($) {
     
 	var usuarioActual = null;
 
@@ -9,6 +9,7 @@ var  miseguridad = (function() {
           'invisible' : 'normal';
     }
 
+    console.log('Inicializando firebase auth');
     // Initialize Firebase
     var config = {};
     var CLIENT_ID = null;
@@ -152,4 +153,4 @@ var  miseguridad = (function() {
           'insertarToken': insertarToken,
           'darId': darId,
       };
-    })();
+    })(jQuery);

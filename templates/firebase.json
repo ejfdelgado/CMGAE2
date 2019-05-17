@@ -1,0 +1,11 @@
+{
+	"config": {
+        "apiKey": "AIzaSyCmZ2333zq8CGiAL93DGkZIOs7sgKoMr5I",
+        "authDomain": "proyeccion-colombia1.firebaseapp.com",
+        "databaseURL": "https://proyeccion-colombia1.firebaseio.com",
+        "projectId": "proyeccion-colombia1",
+        "storageBucket": "proyeccion-colombia1.appspot.com",
+        "messagingSenderId": "569221347334"
+	},
+	"CLIENT_ID": "569221347334-37jpt735fngvk5iob9dpb36491ahfq8v.apps.googleusercontent.com"
+}
