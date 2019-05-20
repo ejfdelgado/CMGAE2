@@ -4,6 +4,16 @@ Recordar:
 https://console.developers.google.com/apis/credentials
 En OAuth 2.0 client IDs:
 Agregar los dominios desde donde se puede acceder.
+
+Para probar en local:
+En el archivo:
+C:\Windows\System32\Drivers\etc\hosts
+Agregar el dominio de desarrollo
+127.0.0.1       proyeccion-colombia1.appspot.com
+
+EN Run Configurations:
+"${workspace_loc:CMGAE2}" --admin_port=9000 --port 80 --enable_host_checking=false
+
 */
 var  miseguridad = (function($) {
     
