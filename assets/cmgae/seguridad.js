@@ -1,3 +1,10 @@
+/*
+
+Recordar:
+https://console.developers.google.com/apis/credentials
+En OAuth 2.0 client IDs:
+Agregar los dominios desde donde se puede acceder.
+*/
 var  miseguridad = (function($) {
     
 	var usuarioActual = null;
@@ -109,9 +116,59 @@ var  miseguridad = (function($) {
         return temp.promise();
     };
     
+    var mostrarToken = function(user) {
+        if (user) {
+            // User is signed in.
+            var displayName = user.displayName;
+            var email = user.email;
+            var emailVerified = user.emailVerified;
+            var photoURL = user.photoURL;
+            var uid = user.uid;
+            var phoneNumber = user.phoneNumber;
+            var providerData = user.providerData;
+            user.getIdToken().then(function(accessToken) {
+              document.getElementById('sign-in-status').textContent = 'Signed in';
+              document.getElementById('sign-in').textContent = 'Sign out';
+              document.getElementById('sign-in').onclick = salir;
+              document.getElementById('account-details').textContent = JSON.stringify({
+                displayName: displayName,
+                email: email,
+                emailVerified: emailVerified,
+                phoneNumber: phoneNumber,
+                photoURL: photoURL,
+                uid: uid,
+                accessToken: accessToken,
+                providerData: providerData
+              }, null, '  ');
+              
+              $('#call-action').on('click', function() {
+                $.ajax({
+    				type: "GET",
+    				url: "/act/identidad",
+                    headers: { 
+                      'Authorization': 'Bearer ' + accessToken
+                    },
+    			}).done(function (msg) {
+    				console.log(msg);
+    			}).fail(function (jqXHR, textStatus) {
+    				console.log('error');
+    			}).always(function () {
+    				
+    			});
+              });
+            });
+          } else {
+            // User is signed out.
+            document.getElementById('sign-in-status').textContent = 'Signed out';
+            document.getElementById('sign-in').textContent = 'Sign in';
+            document.getElementById('account-details').textContent = 'null';
+          }
+    };
+    
     var initApp = function() {
     	firebase.auth().onAuthStateChanged(function(user) {
     		usuarioActual = user;
+    		mostrarToken(usuarioActual);
     	}, function(error) {
     		usuarioActual = null;
     	});
@@ -136,9 +193,7 @@ var  miseguridad = (function($) {
     				  ui.start(refTag, getUiConfig());
     			  }
 
-    			  window.addEventListener('load', function() {
-    				  initApp();
-    			  });
+    			  initApp();
     		  }
     		});
     });
