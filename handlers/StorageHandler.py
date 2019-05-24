@@ -15,6 +15,7 @@ from google.appengine.api import app_identity
 from handlers.respuestas import NoExisteException,\
     ParametrosIncompletosException, NoAutorizadoException, RespuestaNoAutorizado,\
     RespuestaParametrosIncompletos, RespuestaNoExiste
+from handlers.seguridad import inyectarUsuario
 
 
 def generarRuta(papa, hijo):
@@ -149,6 +150,7 @@ def delete_files(response, filename):
     except gcs.NotFoundError:
         raise NoExisteException()
 
+@inyectarUsuario
 def StorageHandler(request, ident, usuario=None):
     if not ident == 'read':
         response = HttpResponse("", content_type='application/json')

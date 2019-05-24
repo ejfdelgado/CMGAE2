@@ -10,7 +10,9 @@ from google.appengine.api import users
 import os
 from google.appengine.api import app_identity
 from google.appengine.api.app_identity import get_application_id
-from handlers.respuestas import NoAutorizadoException
+from handlers.respuestas import NoAutorizadoException, NoHayUsuarioException,\
+    RespuestaNoHayUsuario, RespuestaNoAutorizado
+from handlers import comun
 
 class Usuario:
     
@@ -23,8 +25,11 @@ class Usuario:
                 self.metadatos = verify_firebase_token(self.id_token, get_application_id())
                 #TODO mirar cómo cargar los permisos de un usuario
                 self.roles = ['editor']
+                self.miId = self.darId();
                 
-                if (users.is_current_user_admin()):
+                if (comun.indexOf([
+                                   'google.com/edgar.jose.fernando.delgado@gmail.com'
+                                   ], self.miId) >= 0):
                     self.roles.append('admin')
             except:
                 pass
@@ -54,14 +59,13 @@ class Usuario:
         return respuesta
     
     def darURLStorage(self, completa=False):
-        identificacion = self.darId()
-        ans = ''
+        identificacion = self.miId
+        ans = None
         if (identificacion is not None):
-            ans += '/public/'+identificacion
-        else:
-            ans += '/public'
-        if (completa):
-            ans = darRaizStorageSeg()+ans
+            ans = '/usr/'+identificacion
+            if (completa):
+                ans = darRaizStorageSeg()+ans
+        return ans
 
     def esDuenioDeUrl(self, rutaStorage):
         if (rutaStorage is None):
@@ -70,7 +74,7 @@ class Usuario:
         opc2 = self.darURLStorage(True)
         return (rutaStorage.startswith(opc1) or rutaStorage.startswith(opc2))
 
-    def usuarioTieneAlgunRol(self, roles):
+    def enRol(self, roles):
         return not set(roles).isdisjoint(self.roles) 
 
 def darRaizStorageSeg():
@@ -84,28 +88,38 @@ def inyectarUsuario(funcion):
         return funcion(*args, **kwargs)
     return decorador
 
-def rolesPermitidos(roles):
-    def rolesPermitidosImpl(funcion):
+def enRol(roles):
+    def enRolImpl(funcion):
         def decorador(*args, **kwargs):
             usuario = kwargs['usuario']
             try:
-                soloRolesPermitidos(usuario, roles)
+                enRolFun(usuario, roles)
                 return funcion(*args, **kwargs)
+            except NoHayUsuarioException:
+                return RespuestaNoHayUsuario()
+            except NoAutorizadoException:
+                return RespuestaNoAutorizado()
             except:
                 return HttpResponse(status=401)
         return decorador
-    return rolesPermitidosImpl
+    return enRolImpl
 
-def soloRolesPermitidos(usuario, roles, rutaStorage=None):
-    logging.info('rutaStorage:')
-    logging.info(rutaStorage)
-    if (users.is_current_user_admin()):
-        #Lo deja pasar siempre al admin
-        return
-    elif (usuario is None):
-        raise NoAutorizadoException()
-    elif (not usuario.esDuenioDeUrl(rutaStorage) and not usuario.usuarioTieneAlgunRol(roles)):
-        raise NoAutorizadoException()
+#, rutaStorage=None
+#elif (rutaStorage is None or not usuario.esDuenioDeUrl(rutaStorage) and )
+def enRolFun(usuario, roles=[]):
+    #logging.info('rutaStorage:')
+    #logging.info(rutaStorage)
+    if (len(roles) == 0):
+        return True
+    if (usuario is None):
+        raise NoHayUsuarioException()
+    else:
+        if (usuario.enRol(['admin'])):
+            #Lo deja pasar siempre al admin
+            return True
+        elif (not usuario.enRol(roles)):
+            raise NoAutorizadoException()
+    return True
 
 def base64url_decode(s):
     """ Decode base64 encoded strings with stripped trailing '=' """

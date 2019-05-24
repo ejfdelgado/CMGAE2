@@ -15,7 +15,7 @@ from models import Configuracion
 from google.appengine.api import mail
 import sys, traceback
 from handlers.respuestas import RespuestaNoAutorizado
-from handlers.seguridad import inyectarUsuario
+from handlers.seguridad import inyectarUsuario, enRol
 
 CORREO_ENVIOS = 'edgar.jose.fernando.delgado@gmail.com'
 

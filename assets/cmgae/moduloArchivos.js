@@ -52,7 +52,7 @@ var moduloArchivos = (function() {
 		        		form.append('no-borrar', 'true');
 		        	}
 		        }
-		        //Sobra porque el servidor ya lo est· capturando
+		        //Sobra porque el servidor ya lo est√° capturando
 		        //form.append('mime', file.type);
 		        var diferidoAct = moduloActividad.on();
 		        var peticion = {

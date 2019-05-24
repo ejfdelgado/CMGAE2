@@ -16,6 +16,12 @@ DATETIME_NOW_LAST = fechaAhora.strftime("%Y, %m, %d, 23, 59, 59")
 DATETIME_NOW_FIRST = fechaAhora.strftime("%Y, %m, %d, 0, 0, 0")
 DATE_NOW = fechaAhora.strftime("%Y, %m, %d")
 
+def indexOf(arreglo, obj):
+    try:
+        return arreglo.index(obj)
+    except:
+        return -1
+
 def esProduccion():
     return os.getenv('SERVER_SOFTWARE', '').startswith('Google App Engine/')
 

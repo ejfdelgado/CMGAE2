@@ -7,6 +7,8 @@ Created on 12/12/2017
 from django.http import HttpResponse
 from django.utils import simplejson
 
+class NoHayUsuarioException(Exception):
+    pass
 
 class NoAutorizadoException(Exception):
     pass
@@ -16,6 +18,11 @@ class ParametrosIncompletosException(Exception):
 
 class NoExisteException(Exception):
     pass
+
+class RespuestaNoHayUsuario(HttpResponse):
+    def __init__(self):
+        super(RespuestaNoAutorizado, self).__init__(simplejson.dumps({'error':403, 'msg':'Se requiere usuario logeado'}),'application/json')
+        self.status_code = 403
 
 class RespuestaNoAutorizado(HttpResponse):
     def __init__(self):
