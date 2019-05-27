@@ -4,7 +4,7 @@ import sys
 import traceback
 
 #Anotación que hace manejo de errores
-def erroresJson(funcion):
+def autoRespuestas(funcion):
     def decorador(*args, **kwargs):
         try:
             return funcion(*args, **kwargs)
@@ -14,6 +14,8 @@ def erroresJson(funcion):
             return RespuestaParametrosIncompletos()
         except NoExisteException:
             return RespuestaNoExiste()
+        except NoHayUsuarioException:
+            return RespuestaNoHayUsuario()
         except Exception, e:
             response = HttpResponse("", content_type='application/json')
             exc_type, exc_value, exc_traceback = sys.exc_info()

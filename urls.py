@@ -4,13 +4,13 @@
 from django.conf.urls import defaults
 from handlers.MainHandler import MainHandler
 from handlers.StorageHandler import StorageHandler
-from handlers.admin import AdminGeneral
+from handlers.AdminHandler import AdminHandler
 
 
 urlpatterns = defaults.patterns(
     'handlers',
     (r'^storage/?(.*)', StorageHandler),
-    (r'^act/?(.*)', AdminGeneral),
+    (r'^adm/?(.*)', AdminHandler),
     (r'^(.*)$', MainHandler),
 )
 

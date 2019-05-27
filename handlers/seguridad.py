@@ -19,6 +19,7 @@ class Usuario:
     def __init__(self, request):
         self.id_token = _get_token(request)
         self.roles = []
+        self.miId = None
         self.metadatos = None
         if (self.id_token is not None):
             try:
@@ -92,15 +93,8 @@ def enRol(roles):
     def enRolImpl(funcion):
         def decorador(*args, **kwargs):
             usuario = kwargs['usuario']
-            try:
-                enRolFun(usuario, roles)
-                return funcion(*args, **kwargs)
-            except NoHayUsuarioException:
-                return RespuestaNoHayUsuario()
-            except NoAutorizadoException:
-                return RespuestaNoAutorizado()
-            except:
-                return HttpResponse(status=401)
+            enRolFun(usuario, roles)
+            return funcion(*args, **kwargs)
         return decorador
     return enRolImpl
 

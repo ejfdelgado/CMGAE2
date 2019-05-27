@@ -18,6 +18,10 @@ EN Run Configurations:
 var  miseguridad = (function($) {
 
 	var usuarioActual = null;
+	var datosLocales = {
+		id: null,
+		roles: [],
+	};
 
 	function getRecaptchaMode() {
 		// Quick way of checking query params in the fragment. If we add more config
@@ -30,6 +34,24 @@ var  miseguridad = (function($) {
 	// Initialize Firebase
 	var config = {};
 	var CLIENT_ID = null;
+	
+	var recargarDatos = function() {
+		var diferido = $.Deferred();
+		insertarToken({
+			type: "GET",
+			url: "/adm/identidad",
+		}).then(function(peticion) {
+			$.ajax(peticion).done(function (msg) {
+				$.extend(true, datosLocales, msg);
+				diferido.resolve(datosLocales);
+			}).fail(function (jqXHR, textStatus) {
+				diferido.resolve({'id': null, 'roles': []});
+			}).always(function () {
+	
+			});
+		});
+		return diferido;
+	}
 
 	var getUiConfig = function() {
 		return {
@@ -44,6 +66,8 @@ var  miseguridad = (function($) {
 			},
 			// Opens IDP Providers sign-in flow in a popup.
 			'signInFlow': 'popup',
+			'tosUrl': '/tos/terminos',
+			'privacyPolicyUrl': '/tos/privacidad',
 			'signInOptions': [
 			                  // TODO(developer): Remove the providers you don't need for your app.
 			                  {
@@ -73,7 +97,8 @@ var  miseguridad = (function($) {
 			                	  provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
 			                	  recaptchaParameters: {
 			                		  size: getRecaptchaMode()
-			                	  }
+			                	  },
+			                	  defaultCountry: 'CO',
 			                  }
 			                  ],
 			                  // Terms of service url.
@@ -149,23 +174,12 @@ var  miseguridad = (function($) {
 					photoURL: photoURL,
 					uid: uid,
 					accessToken: accessToken,
-					providerData: providerData
+					providerData: providerData,
+					interno: datosLocales,
 				}, null, 4));
 
 				$('#call-action').on('click', function() {
-					$.ajax({
-						type: "GET",
-						url: "/act/identidad",
-						headers: { 
-							'Authorization': 'Bearer ' + accessToken
-						},
-					}).done(function (msg) {
-						console.log(msg);
-					}).fail(function (jqXHR, textStatus) {
-						console.log('error');
-					}).always(function () {
 
-					});
 				});
 			});
 		} else {
@@ -183,7 +197,10 @@ var  miseguridad = (function($) {
 	var initApp = function() {
 		firebase.auth().onAuthStateChanged(function(user) {
 			usuarioActual = user;
-			mostrarToken(usuarioActual);
+			recargarDatos().then(function(){
+				mostrarToken(usuarioActual);
+			});
+			
 		}, function(error) {
 			usuarioActual = null;
 		});
@@ -207,7 +224,6 @@ var  miseguridad = (function($) {
 				if ($(refTag).length > 0) {
 					ui.start(refTag, getUiConfig());
 				}
-
 				initApp();
 			}
 		});

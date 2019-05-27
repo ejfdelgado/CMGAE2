@@ -16,6 +16,7 @@ from handlers.respuestas import NoExisteException,\
     ParametrosIncompletosException, NoAutorizadoException, RespuestaNoAutorizado,\
     RespuestaParametrosIncompletos, RespuestaNoExiste
 from handlers.seguridad import inyectarUsuario
+from handlers.decoradores import autoRespuestas
 
 
 def generarRuta(papa, hijo):
@@ -151,107 +152,95 @@ def delete_files(response, filename):
         raise NoExisteException()
 
 @inyectarUsuario
+@autoRespuestas
 def StorageHandler(request, ident, usuario=None):
     if not ident == 'read':
         response = HttpResponse("", content_type='application/json')
-    try:
-        if request.method == 'GET':
-            if (ident == 'jstreelist'):
-                ruta = request.GET.get('id', '/')
-                if (ruta == '#'):
-                    ans = list_bucket('', 100, None)
-                    nombreNodo = darNombreNodo(ruta)
-                    nodo = [
-                            {'text': nombreNodo, 'id': ruta, 'children': nodosJsTree(ans)}
-                            ]
-                    if (len(ans) > 0):
-                        nodo[0]['type'] = 'folder'
-                    response.write(simplejson.dumps(nodo))
-                    
-                else:
-                    ans = list_bucket(ruta, 100, None)
-                    response.write(simplejson.dumps(nodosJsTree(ans, ruta)))
-            elif (ident == 'existe'):
-                nombre = request.GET.get('name', None)
-                metadatos = existe(nombre)
-                if (metadatos is None):
-                    raise ParametrosIncompletosException()
-                response.write(simplejson.dumps({'error':0, 'metadata': metadatos}))
-            elif (ident == 'list'):
-                ruta = request.GET.get('ruta', '/')
-                ultimo = request.GET.get('ultimo', None)
-                tamanio = request.GET.get('tamanio', None)
-                ans = list_bucket(ruta, tamanio, ultimo)
-                response.write(simplejson.dumps({'error':0, 'all_objects': ans}))
-            elif (ident == 'basic'):
-                general(response)
-            elif (ident == 'read'):
-                nombre = request.GET.get('name', None)
-                response = read_file(nombre)
-            elif (ident == 'miruta'):
-                if (usuario is not None):
-                    response.write(simplejson.dumps({'error':0, 'url': usuario.darURLStorage()}))
-                else:
-                    response.write(simplejson.dumps({'error':0, 'url': '/public'}))
-            elif (ident == 'renombrar'):
-                viejo = request.GET.get('viejo', None)                
-                nuevo = request.GET.get('nuevo', None)
-                if (viejo is None or nuevo is None):
-                    raise ParametrosIncompletosException()
-                renombrar_archivo(response, viejo, nuevo)
-            elif (ident == 'guid'):
-                response.write(simplejson.dumps({'error':0, 'uid':generarUID()}))
+    if request.method == 'GET':
+        if (ident == 'jstreelist'):
+            ruta = request.GET.get('id', '/')
+            if (ruta == '#'):
+                ans = list_bucket('', 100, None)
+                nombreNodo = darNombreNodo(ruta)
+                nodo = [
+                        {'text': nombreNodo, 'id': ruta, 'children': nodosJsTree(ans)}
+                        ]
+                if (len(ans) > 0):
+                    nodo[0]['type'] = 'folder'
+                response.write(simplejson.dumps(nodo))
             else:
-                response.write(simplejson.dumps({'error':0}))
-        elif request.method == 'DELETE':
-            if (ident == 'borrar'):
-                nombre = request.GET.get('name', None)
-                delete_files(response, nombre)
-        elif request.method == 'POST':
-            archivo = request.FILES['file-0']
-            uploaded_file_filename = archivo.name
-            uploaded_file_content = archivo.read()
-            uploaded_file_type = archivo.content_type
-            nombreAnterior = request.POST.get('name', None)
-            carpeta = request.POST.get('folder', '')
-            auto = request.POST.get('auto', 'true')
-            if (auto == 'true'):
-                #Genera nombres automáticamente usando generarUID
-                #Implica que cda versión tiene un nombre diferente
-                #Puede que se borre siempre la versión anterior, depende de la bandera no-borrar
-                if (not nombreAnterior is None and request.POST.get('no-borrar', None) is None):
-                    try:
-                        nombreAnterior = darRaizStorage()+nombreAnterior
-                        gcs.delete(nombreAnterior)
-                    except:
-                        pass
-                nombre = darRaizStorage()+carpeta+'/'+generarUID()+'-'+uploaded_file_filename
+                ans = list_bucket(ruta, 100, None)
+                response.write(simplejson.dumps(nodosJsTree(ans, ruta)))
+        elif (ident == 'existe'):
+            nombre = request.GET.get('name', None)
+            metadatos = existe(nombre)
+            if (metadatos is None):
+                raise ParametrosIncompletosException()
+            response.write(simplejson.dumps({'error':0, 'metadata': metadatos}))
+        elif (ident == 'list'):
+            ruta = request.GET.get('ruta', '/')
+            ultimo = request.GET.get('ultimo', None)
+            tamanio = request.GET.get('tamanio', None)
+            ans = list_bucket(ruta, tamanio, ultimo)
+            response.write(simplejson.dumps({'error':0, 'all_objects': ans}))
+        elif (ident == 'basic'):
+            general(response)
+        elif (ident == 'read'):
+            nombre = request.GET.get('name', None)
+            response = read_file(nombre)
+        elif (ident == 'miruta'):
+            if (usuario is not None):
+                response.write(simplejson.dumps({'error':0, 'url': usuario.darURLStorage()}))
             else:
-                #Usa el nombre actual del archivo
-                if (nombreAnterior is None):
-                    nombreAnterior = carpeta+'/'+uploaded_file_filename
-                nombre = darRaizStorage()+nombreAnterior
-            write_retry_params = gcs.RetryParams(backoff_factor=1.1)
-            gcs_file = gcs.open(nombre,
-                              'w',
-                              content_type=uploaded_file_type,
-                              options={
-                                       'x-goog-meta-mime': uploaded_file_type,
-                                       'x-goog-acl':'public-read'
-                                       },
-                              retry_params=write_retry_params)
-            gcs_file.write(uploaded_file_content)
-            gcs_file.close()
-            response.write(simplejson.dumps({'error':0, 'id':nombre}))
-    except NoAutorizadoException:
-        return RespuestaNoAutorizado()
-    except ParametrosIncompletosException:
-        return RespuestaParametrosIncompletos()
-    except NoExisteException:
-        return RespuestaNoExiste()
-    except Exception, e:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        response = HttpResponse("", content_type='application/json', status=500)
-        response.write(simplejson.dumps({'error':1, 'msg': 'Error de servidor: '+repr(traceback.format_tb(exc_traceback))+'->'+str(e)}))
-
+                response.write(simplejson.dumps({'error':0, 'url': '/public'}))
+        elif (ident == 'renombrar'):
+            viejo = request.GET.get('viejo', None)                
+            nuevo = request.GET.get('nuevo', None)
+            if (viejo is None or nuevo is None):
+                raise ParametrosIncompletosException()
+            renombrar_archivo(response, viejo, nuevo)
+        elif (ident == 'guid'):
+            response.write(simplejson.dumps({'error':0, 'uid':generarUID()}))
+        else:
+            response.write(simplejson.dumps({'error':0}))
+    elif request.method == 'DELETE':
+        if (ident == 'borrar'):
+            nombre = request.GET.get('name', None)
+            delete_files(response, nombre)
+    elif request.method == 'POST':
+        archivo = request.FILES['file-0']
+        uploaded_file_filename = archivo.name
+        uploaded_file_content = archivo.read()
+        uploaded_file_type = archivo.content_type
+        nombreAnterior = request.POST.get('name', None)
+        carpeta = request.POST.get('folder', '')
+        auto = request.POST.get('auto', 'true')
+        if (auto == 'true'):
+            #Genera nombres automáticamente usando generarUID
+            #Implica que cda versión tiene un nombre diferente
+            #Puede que se borre siempre la versión anterior, depende de la bandera no-borrar
+            if (not nombreAnterior is None and request.POST.get('no-borrar', None) is None):
+                try:
+                    nombreAnterior = darRaizStorage()+nombreAnterior
+                    gcs.delete(nombreAnterior)
+                except:
+                    pass
+            nombre = darRaizStorage()+carpeta+'/'+generarUID()+'-'+uploaded_file_filename
+        else:
+            #Usa el nombre actual del archivo
+            if (nombreAnterior is None):
+                nombreAnterior = carpeta+'/'+uploaded_file_filename
+            nombre = darRaizStorage()+nombreAnterior
+        write_retry_params = gcs.RetryParams(backoff_factor=1.1)
+        gcs_file = gcs.open(nombre,
+                          'w',
+                          content_type=uploaded_file_type,
+                          options={
+                                   'x-goog-meta-mime': uploaded_file_type,
+                                   'x-goog-acl':'public-read'
+                                   },
+                          retry_params=write_retry_params)
+        gcs_file.write(uploaded_file_content)
+        gcs_file.close()
+        response.write(simplejson.dumps({'error':0, 'id':nombre}))
     return response

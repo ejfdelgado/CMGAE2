@@ -13,7 +13,6 @@ from django.views.generic.simple import direct_to_template
 from google.appengine.api import memcache
 from google.appengine.api import users
 from google.appengine.ext import ndb
-from handlers.decoradores import erroresJson
 from handlers.respuestas import *
 
 from scss import Compiler
