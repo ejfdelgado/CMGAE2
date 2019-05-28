@@ -172,15 +172,17 @@ def StorageHandler(request, ident, usuario=None):
             if (ruta == '#'):
                 ans = list_bucket('', 100, None)
                 nombreNodo = darNombreNodo(ruta)
-                nodo = [
-                        {'text': nombreNodo, 'id': ruta, 'children': nodosJsTree(ans)}
-                        ]
+                nodo = [{'text': nombreNodo, 'id': ruta, 'children': nodosJsTree(ans)}]
                 if (len(ans) > 0):
                     nodo[0]['type'] = 'folder'
                 response.write(simplejson.dumps(nodo))
             elif (usuario_es_dueno(usuario, ruta)):
                 ans = list_bucket(ruta, 100, None)
                 response.write(simplejson.dumps(nodosJsTree(ans, ruta)))
+            elif (ruta == '/usr/'):
+                response.write(simplejson.dumps([{'text': usuario.proveedor, 'id': '/usr/'+usuario.proveedor+'/', 'children': True}]))
+            elif (ruta == '/usr/'+usuario.proveedor+'/'):
+                response.write(simplejson.dumps([{'text': usuario.sufijo, 'id': '/usr/'+usuario.miId+'/', 'children': True}]))
             else:
                 response.write(simplejson.dumps([]))
         elif (ident == 'existe'):
@@ -218,14 +220,24 @@ def StorageHandler(request, ident, usuario=None):
     elif request.method == 'DELETE':
         if (ident == 'borrar'):
             nombre = request.GET.get('name', None)
+            if (not usuario_es_dueno(usuario, nombre)):
+                raise NoAutorizadoException()
             delete_files(response, nombre)
     elif request.method == 'POST':
+        nombreAnterior = request.POST.get('name', None)
+        carpeta = request.POST.get('folder', '')
+        if (carpeta.endswith('/')):
+            carpeta = carpeta[:-1]
+        if (nombreAnterior is not None):
+            if (not usuario_es_dueno(usuario, nombreAnterior)):
+                raise NoAutorizadoException()
+        else:
+            if (not usuario_es_dueno(usuario, carpeta)):
+                raise NoAutorizadoException()
         archivo = request.FILES['file-0']
         uploaded_file_filename = archivo.name
         uploaded_file_content = archivo.read()
         uploaded_file_type = archivo.content_type
-        nombreAnterior = request.POST.get('name', None)
-        carpeta = request.POST.get('folder', '')
         auto = request.POST.get('auto', 'true')
         if (auto == 'true'):
             #Genera nombres automáticamente usando generarUID

@@ -20,6 +20,7 @@ class Usuario:
         self.id_token = _get_token(request)
         self.roles = []
         self.miId = None
+        self.proveedor = None
         self.metadatos = None
         if (self.id_token is not None):
             try:
@@ -27,7 +28,8 @@ class Usuario:
                 #TODO mirar cómo cargar los permisos de un usuario
                 self.roles = ['editor']
                 self.miId = self.darId();
-                
+                self.proveedor = self.metadatos['payload']['firebase']['sign_in_provider']
+                self.sufijo = self.darUsername()['usuario']
                 if (comun.indexOf([
                                    'google.com/edgar.jose.fernando.delgado@gmail.com'
                                    ], self.miId) >= 0):
@@ -38,13 +40,8 @@ class Usuario:
     def darId(self):
         respuesta = None
         if (self.metadatos is not None):
-            contenedor = self.metadatos['payload']['firebase']
-            identidades = contenedor['identities']
-            respuesta = contenedor['sign_in_provider']+'/'
-            if (identidades.has_key('email')):
-                respuesta+=identidades['email'][0]
-            elif (identidades.has_key('phone')):
-                respuesta+=identidades['phone'][0]
+            userName = self.darUsername();
+            return userName['dominio']+'/'+userName['usuario']
         return respuesta
         
     def darUsername(self):
@@ -60,10 +57,9 @@ class Usuario:
         return respuesta
     
     def darURLStorage(self, completa=False):
-        identificacion = self.miId
         ans = None
-        if (identificacion is not None):
-            ans = '/usr/'+identificacion
+        if (self.miId is not None):
+            ans = '/usr/'+self.miId
             if (completa):
                 ans = darRaizStorageSeg()+ans
         return ans

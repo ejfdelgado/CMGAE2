@@ -20,6 +20,21 @@ var moduloArchivos = (function() {
 		return atributos;
 	};
 	
+	var subirArchivoMio = function(atributos) {
+		var diferido = $.Deferred();
+		miseguridad.then(function(metadatos) {
+			atributos['dataFolder'] = '/usr/'+metadatos['id']+atributos['dataFolder'];
+			subirArchivo(atributos).then(function(datos) {
+				diferido.resolve(datos);
+			}, function() {
+				diferido.reject();
+			});
+		}, function() {
+			diferido.reject();
+		});
+		return diferido;
+	};
+	
 	var subirArchivo = function(atributos) {
 		var diferido = $.Deferred();
 		atributos = completarPredeterminados(atributos);
@@ -290,6 +305,7 @@ var moduloArchivos = (function() {
 		'leerTextoPlano': leerTextoPlano,
 		'escribirTextoPlano': escribirTextoPlano,
 		'subirArchivo': subirArchivo,
+		'subirArchivoMio': subirArchivoMio,
 		'generarUrlDadoId': generarUrlDadoId,
 		'darIdDadoUrl': darIdDadoUrl,
 		'borrar': borrar,

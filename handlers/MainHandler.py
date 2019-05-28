@@ -20,6 +20,7 @@ from handlers import StorageHandler
 from handlers import comun
 
 from settings import TEMPLATE_DIRS
+from handlers.seguridad import inyectarUsuario
 
 LENGUAJE_PRED = 'esp'
 PREFIJO_MEMCACHE_ADMIN = '@'
@@ -114,7 +115,8 @@ def generarVariablesUsuario(var_full_path, leng):
     texto += '</script>\n'
     return texto
 #Encargado de renderizar los archivos estáticos dinámicos
-def MainHandler(request, data):
+@inyectarUsuario
+def MainHandler(request, data, usuario):
     try:
         #incluye los parametros del get no va a ignorar el lenguaje (solo se usa para memcache)
         var_full_path = request.get_full_path()
@@ -252,12 +254,9 @@ def MainHandler(request, data):
             return respuesta
         elif request.method == 'DELETE':
             #Borra rutas específicas de memcache
-            if users.is_current_user_admin():
-                response = HttpResponse("", content_type='application/json')
-                borrarRutasDeMemcache(request.path, llaveParaMemcache)
-                response.write(simplejson.dumps({'error':0}))
-            else:
-                raise NoAutorizadoException()
+            response = HttpResponse("", content_type='application/json')
+            borrarRutasDeMemcache(request.path, llaveParaMemcache)
+            response.write(simplejson.dumps({'error':0}))
     except Exception, e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         response = HttpResponse("", content_type='application/json', status=500)
