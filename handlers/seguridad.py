@@ -85,7 +85,11 @@ def darRaizStorageSeg():
 #Anotación que inyecta el usuario
 def inyectarUsuario(funcion):
     def decorador(*args, **kwargs):
-        kwargs['usuario'] = Usuario(args[0]) 
+        temp = Usuario(args[0])
+        if (temp.miId is not None):
+            kwargs['usuario'] = temp
+        else:
+            kwargs['usuario'] = None
         return funcion(*args, **kwargs)
     return decorador
 

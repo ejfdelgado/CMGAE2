@@ -21,7 +21,7 @@ class NoExisteException(Exception):
 
 class RespuestaNoHayUsuario(HttpResponse):
     def __init__(self):
-        super(RespuestaNoAutorizado, self).__init__(simplejson.dumps({'error':403, 'msg':'Se requiere usuario logeado'}),'application/json')
+        super(RespuestaNoHayUsuario, self).__init__(simplejson.dumps({'error':403, 'msg':'Se requiere usuario logeado'}),'application/json')
         self.status_code = 403
 
 class RespuestaNoAutorizado(HttpResponse):

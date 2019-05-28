@@ -14,7 +14,7 @@ from cloudstorage.errors import NotFoundError
 from google.appengine.api import app_identity
 from handlers.respuestas import NoExisteException,\
     ParametrosIncompletosException, NoAutorizadoException, RespuestaNoAutorizado,\
-    RespuestaParametrosIncompletos, RespuestaNoExiste
+    RespuestaParametrosIncompletos, RespuestaNoExiste, NoHayUsuarioException
 from handlers.seguridad import inyectarUsuario
 from handlers.decoradores import autoRespuestas
 
@@ -192,7 +192,7 @@ def StorageHandler(request, ident, usuario=None):
             if (usuario is not None):
                 response.write(simplejson.dumps({'error':0, 'url': usuario.darURLStorage()}))
             else:
-                response.write(simplejson.dumps({'error':0, 'url': '/public'}))
+                raise NoHayUsuarioException()
         elif (ident == 'renombrar'):
             viejo = request.GET.get('viejo', None)                
             nuevo = request.GET.get('nuevo', None)

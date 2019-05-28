@@ -66,8 +66,8 @@ var  miseguridad = (function($) {
 			},
 			// Opens IDP Providers sign-in flow in a popup.
 			'signInFlow': 'popup',
-			'tosUrl': '/tos/terminos',
-			'privacyPolicyUrl': '/tos/privacidad',
+			//'tosUrl': '/tos/terminos',
+			//'privacyPolicyUrl': '/tos/privacidad',
 			'signInOptions': [
 			                  // TODO(developer): Remove the providers you don't need for your app.
 			                  {
