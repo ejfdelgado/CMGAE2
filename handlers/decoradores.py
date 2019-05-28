@@ -16,6 +16,8 @@ def autoRespuestas(funcion):
             return RespuestaNoExiste()
         except NoHayUsuarioException:
             return RespuestaNoHayUsuario()
+        except MalaPeticionException:
+            return RespuestaMalaPeticion()
         except Exception, e:
             response = HttpResponse("", content_type='application/json')
             exc_type, exc_value, exc_traceback = sys.exc_info()

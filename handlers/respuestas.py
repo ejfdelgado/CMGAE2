@@ -13,6 +13,9 @@ class NoHayUsuarioException(Exception):
 class NoAutorizadoException(Exception):
     pass
 
+class MalaPeticionException(Exception):
+    pass
+
 class ParametrosIncompletosException(Exception):
     pass
 
@@ -28,6 +31,11 @@ class RespuestaNoAutorizado(HttpResponse):
     def __init__(self):
         super(RespuestaNoAutorizado, self).__init__(simplejson.dumps({'error':403, 'msg':'No tiene permisos'}),'application/json')
         self.status_code = 403
+        
+class RespuestaMalaPeticion(HttpResponse):
+    def __init__(self):
+        super(RespuestaMalaPeticion, self).__init__(simplejson.dumps({'error':403, 'msg':'No se acepta esta peticion'}),'application/json')
+        self.status_code = 400
         
 class RespuestaParametrosIncompletos(HttpResponse):
     def __init__(self):

@@ -12,10 +12,11 @@ from cloudstorage.errors import NotFoundError
 from google.appengine.api import app_identity
 from handlers.respuestas import NoExisteException,\
     ParametrosIncompletosException, NoAutorizadoException, \
-    NoHayUsuarioException
+    NoHayUsuarioException, MalaPeticionException
 from handlers.seguridad import inyectarUsuario
 from handlers.decoradores import autoRespuestas
 
+MAX_TAMANIO_BYTES = 550*1024
 
 def generarRuta(papa, hijo):
     papa = papa.replace('\\', '/').strip()
@@ -237,6 +238,9 @@ def StorageHandler(request, ident, usuario=None):
         archivo = request.FILES['file-0']
         uploaded_file_filename = archivo.name
         uploaded_file_content = archivo.read()
+        tamanio = len(uploaded_file_content)
+        if (tamanio > MAX_TAMANIO_BYTES):
+            raise MalaPeticionException()
         uploaded_file_type = archivo.content_type
         auto = request.POST.get('auto', 'true')
         if (auto == 'true'):
@@ -266,5 +270,5 @@ def StorageHandler(request, ident, usuario=None):
                           retry_params=write_retry_params)
         gcs_file.write(uploaded_file_content)
         gcs_file.close()
-        response.write(simplejson.dumps({'error':0, 'id':nombre}))
+        response.write(simplejson.dumps({'error':0, 'id':nombre, 'tamanio': tamanio}))
     return response

@@ -214,6 +214,10 @@ var  miseguridad = (function($) {
 
 	var initApp = function() {
 		firebase.auth().onAuthStateChanged(function(user) {
+			if (['resolved', 'rejected'].indexOf(diferidoFirebase.state()) >= 0) {
+				location.reload();
+				return;
+			}
 			if (user == null) {
 				diferidoFirebase.reject();
 			} else {
