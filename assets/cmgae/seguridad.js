@@ -40,8 +40,8 @@ var  miseguridad = (function($) {
 				'invisible' : 'normal';
 	}
 	
-	var then = function() {
-		return diferidoDatos.then;
+	var then = function(funExito, funError) {
+		return diferidoDatos.then(funExito, funError);
 	};
 	
 	var recargarDatos = function(usuario) {
