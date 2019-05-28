@@ -1,10 +1,8 @@
 # coding: utf-8
 from __future__ import with_statement
 
-import logging
 import os
 import re
-import sys, traceback
 import uuid
 
 from django.utils import simplejson
@@ -13,8 +11,8 @@ import cloudstorage as gcs
 from cloudstorage.errors import NotFoundError
 from google.appengine.api import app_identity
 from handlers.respuestas import NoExisteException,\
-    ParametrosIncompletosException, NoAutorizadoException, RespuestaNoAutorizado,\
-    RespuestaParametrosIncompletos, RespuestaNoExiste, NoHayUsuarioException
+    ParametrosIncompletosException, NoAutorizadoException, \
+    NoHayUsuarioException
 from handlers.seguridad import inyectarUsuario
 from handlers.decoradores import autoRespuestas
 
@@ -151,6 +149,16 @@ def delete_files(response, filename):
     except gcs.NotFoundError:
         raise NoExisteException()
 
+def usuario_es_dueno(usuario, ruta):
+    if (usuario is None):
+        return False
+    if (usuario.isAdmin()):
+        return True
+    miRaiz = '/usr/'+usuario.miId
+    if (ruta.startswith(miRaiz)):
+        return True
+    return False
+
 @inyectarUsuario
 @autoRespuestas
 def StorageHandler(request, ident, usuario=None):
@@ -158,6 +166,8 @@ def StorageHandler(request, ident, usuario=None):
         response = HttpResponse("", content_type='application/json')
     if request.method == 'GET':
         if (ident == 'jstreelist'):
+            if (usuario is None):
+                raise NoHayUsuarioException()
             ruta = request.GET.get('id', '/')
             if (ruta == '#'):
                 ans = list_bucket('', 100, None)
@@ -168,9 +178,11 @@ def StorageHandler(request, ident, usuario=None):
                 if (len(ans) > 0):
                     nodo[0]['type'] = 'folder'
                 response.write(simplejson.dumps(nodo))
-            else:
+            elif (usuario_es_dueno(usuario, ruta)):
                 ans = list_bucket(ruta, 100, None)
                 response.write(simplejson.dumps(nodosJsTree(ans, ruta)))
+            else:
+                response.write(simplejson.dumps([]))
         elif (ident == 'existe'):
             nombre = request.GET.get('name', None)
             metadatos = existe(nombre)

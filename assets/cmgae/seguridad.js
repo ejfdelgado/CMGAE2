@@ -16,50 +16,65 @@ EN Run Configurations:
 
  */
 var  miseguridad = (function($) {
+	console.log('Inicializando firebase auth');
+	
+	// Initialize Firebase
+	var config = {};
+	var CLIENT_ID = null;
+	var diferidoFirebase = $.Deferred();
+	var diferidoDatos = $.Deferred();
+	var datosLocales = {};
 
-	var usuarioActual = null;
-	var datosLocales = {
-		id: null,
-		roles: [],
+	var borrarDatos = function() {
+		datosLocales = {
+			id: null,
+			usr: null,
+			roles: [],
+		};
 	};
-
+	
 	function getRecaptchaMode() {
 		// Quick way of checking query params in the fragment. If we add more config
 		// we might want to actually parse the fragment as a query string.
 		return location.hash.indexOf('recaptcha=invisible') !== -1 ?
 				'invisible' : 'normal';
 	}
-
-	console.log('Inicializando firebase auth');
-	// Initialize Firebase
-	var config = {};
-	var CLIENT_ID = null;
 	
-	var recargarDatos = function() {
-		var diferido = $.Deferred();
+	var then = function() {
+		return diferidoDatos.then;
+	};
+	
+	var recargarDatos = function(usuario) {
+		datosLocales.usr = usuario;
 		insertarToken({
 			type: "GET",
 			url: "/adm/identidad",
 		}).then(function(peticion) {
 			$.ajax(peticion).done(function (msg) {
 				$.extend(true, datosLocales, msg);
-				diferido.resolve(datosLocales);
+				diferidoDatos.resolve(datosLocales);
 			}).fail(function (jqXHR, textStatus) {
-				diferido.resolve({'id': null, 'roles': []});
-			}).always(function () {
-	
+				borrarDatos();
+				diferidoDatos.reject(datosLocales);
 			});
+		}, function() {
+			borrarDatos();
+			diferidoDatos.reject(datosLocales);
 		});
-		return diferido;
-	}
+		return diferidoDatos;
+	};
 
 	var getUiConfig = function() {
 		return {
 			'callbacks': {
 				// Called when the user has been successfully signed in.
 				'signInSuccess': function(user, credential, redirectUrl) {
-					usuarioActual = user;
-					$.publish('miseguridad.login', user);
+					diferidoFirebase = $.Deferred();
+					diferidoDatos = $.Deferred();
+					recargarDatos(user).then(function() {
+						$.publish('miseguridad.login', user);
+						location.reload();
+					});
 					// Do not redirect.
 					return false;
 				}
@@ -114,8 +129,9 @@ var  miseguridad = (function($) {
 		promesa.then(function() {
 			// Sign-out successful.
 			console.log('Salida exitosa');
-			usuarioActual = null;
+			borrarDatos();
 			$.publish('miseguridad.logout');
+			location.reload();
 		}, function(error) {
 			// An error happened.
 			console.log('No se logró salir');
@@ -131,27 +147,36 @@ var  miseguridad = (function($) {
 					peticion.headers = {};
 				}
 				peticion.headers['Authorization'] = 'Bearer ' + accessToken;
+				temp.resolve(peticion);
+			} else {
+				temp.reject(peticion);
 			}
-			temp.resolve(peticion);
+		}, function() {
+			temp.reject(peticion);
 		});
-		return temp.promise();
+		return temp;
 	};
 
 	var darToken = function() {
 		var temp = $.Deferred();
-		if (hayValor(usuarioActual)) {
-			usuarioActual.getIdToken().then(function(accessToken) {
-				temp.resolve(accessToken);
-			}, function() {
-				temp.resolve(null);
-			});
-		} else {
-			temp.resolve(null);
-		}
-		return temp.promise();
+		diferidoFirebase.then(function(usr) {
+			if (hayValor(usr)) {
+				usr.getIdToken().then(function(accessToken) {
+					temp.resolve(accessToken);
+				}, function() {
+					temp.resolve(null);
+				});				
+			} else {
+				temp.reject(null);
+			}
+		}, function() {
+			temp.reject(null);
+		});
+		return temp;
 	};
 
-	var mostrarToken = function(user) {
+	var mostrarToken = function() {
+		var user = datosLocales.usr;
 		if (user) {
 			// User is signed in.
 			var displayName = user.displayName;
@@ -164,8 +189,6 @@ var  miseguridad = (function($) {
 			user.getIdToken().then(function(accessToken) {
 				$('#firebaseui-auth-container').addClass('invisible');
 				$('#sign-in-status').html('Signed in');
-				$('#sign-in').html('Sign out');
-				$('#sign-in').on('click', salir);
 				$('#account-details').html(JSON.stringify({
 					displayName: displayName,
 					email: email,
@@ -185,24 +208,34 @@ var  miseguridad = (function($) {
 		} else {
 			// User is signed out.
 			$('#sign-in-status').html('Signed out');
-			$('#sign-in').html('Sign in');
-			$('#sign-in').off('click');
-			$('#sign-in').on('click', function() {
-				$('#firebaseui-auth-container').removeClass('invisible');
-			});
 			$('#account-details').html('null');
 		}
 	};
 
 	var initApp = function() {
 		firebase.auth().onAuthStateChanged(function(user) {
-			usuarioActual = user;
-			recargarDatos().then(function(){
-				mostrarToken(usuarioActual);
-			});
-			
+			if (user == null) {
+				diferidoFirebase.reject();
+			} else {
+				diferidoFirebase.resolve(user);
+			}
 		}, function(error) {
-			usuarioActual = null;
+			diferidoFirebase.reject();
+		});
+		
+		diferidoFirebase.then(function(user) {
+			recargarDatos(user).then(function() {
+				$('#sign-in').html('Sign out');
+				$('#sign-in').on('click', salir);
+				mostrarToken();
+			});
+		}, function() {
+			borrarDatos();
+			$('#sign-in').html('Sign in');
+			$('#sign-in').off('click');
+			$('#sign-in').on('click', function() {
+				$('#firebaseui-auth-container').removeClass('invisible');
+			});
 		});
 	};
 
@@ -238,5 +271,6 @@ var  miseguridad = (function($) {
 		'darToken': darToken,
 		'insertarToken': insertarToken,
 		'darId': darId,
+		'then': then,
 	};
 })(jQuery);

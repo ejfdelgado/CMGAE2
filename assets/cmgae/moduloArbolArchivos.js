@@ -392,29 +392,31 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
 		}
     };
     
-	elem.jstree({
-	  "core" : {
-	    "check_callback" : true,
-	    "themes" : { "stripes" : true },
-        'data': {
-            'url': function (node) {
-            	return "/storage/jstreelist";
-             },
-             'dataType': "json",
-			 "data" : function (node) {
-				return { "id" : node.id };
-			 }
-           }
-	    
-	  },
-	  'contextmenu': {
-	        'items': menuALaMedida,
-	    },
-	  "plugins" : [
-	    "contextmenu", "dnd", "search","json_data",
-	    "state", "wholerow",
-	  ]
-	});
+    miseguridad.then(function() {
+    	elem.jstree({
+    		  "core" : {
+    		    "check_callback" : true,
+    		    "themes" : { "stripes" : true },
+    	        'data': {
+    	            'url': function (node) {
+    	            	return "/storage/jstreelist";
+    	             },
+    	             'dataType': "json",
+    				 "data" : function (node) {
+    					return { "id" : node.id };
+    				 }
+    	           }
+    		    
+    		  },
+    		  'contextmenu': {
+    		        'items': menuALaMedida,
+    		    },
+    		  "plugins" : [
+    		    "contextmenu", "dnd", "search","json_data",
+    		    "state", "wholerow",
+    		  ]
+    		});
+    });
 	
     $(document).keydown(function(e) {
         if (e.keyCode == 65 && e.ctrlKey) {

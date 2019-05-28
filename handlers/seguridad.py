@@ -77,6 +77,11 @@ class Usuario:
 
     def enRol(self, roles):
         return not set(roles).isdisjoint(self.roles) 
+    
+    def isAdmin(self):
+        if ('admin' in self.roles):
+            return True
+        return False
 
 def darRaizStorageSeg():
     res = '/'+app_identity.get_default_gcs_bucket_name()
