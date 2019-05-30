@@ -406,12 +406,12 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
     		if (id == '#') {
     			lista = lista[0].children;
         	}
-    		if (lista.length == 0) {
+    		for (var i=0; i<lista.length; i++) {
+    			bufferHijos.push(lista[i]);
+    		}
+    		if (lista.length == 0 || lista.length < MAX_TAM) {
     			diferido.resolve(bufferHijos);
     		} else {
-	    		for (var i=0; i<lista.length; i++) {
-	    			bufferHijos.push(lista[i]);
-	    		}
 	    		//Vuelve a iterar
 	    		setTimeout(function() {
 	    			var ultimo = lista[lista.length-1].id;
