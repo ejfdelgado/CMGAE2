@@ -180,20 +180,24 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
 	elem.on('dblclick','.jstree-anchor', function (e) {
 	   var inst = $.jstree.reference(this),
 	   ref = inst.get_node(this);
-	   abrirNodo(ref);
+	   abrirNodo(ref, inst);
 	});
 	
-	var abrirNodo = function(ref) {
-    	var promesaCargue = moduloArchivos.leerTextoPlano(ref.id);
-    	$.when(promesaCargue).then(function(contenido) {
-    		//TODO detectar que es error de que no existe, diferente a otro error
-    		if (typeof(contenido) != 'string') {
-    			contenido = '';
-    		}
-    		agregarTab(ref.text, contenido, ref.id);
-    	}, function(obj) {
-    		moduloModales.alertar(obj.msg);
-    	});
+	var abrirNodo = function(ref, inst) {
+		if (ref.original.type=='folder') {
+			
+		} else {
+	    	var promesaCargue = moduloArchivos.leerTextoPlano(ref.id);
+	    	$.when(promesaCargue).then(function(contenido) {
+	    		//TODO detectar que es error de que no existe, diferente a otro error
+	    		if (typeof(contenido) != 'string') {
+	    			contenido = '';
+	    		}
+	    		agregarTab(ref.text, contenido, ref.id);
+	    	}, function(obj) {
+	    		moduloModales.alertar(obj.msg);
+	    	});
+		}
 	}
 	
 	var menuALaMedida = function($node) {
@@ -204,7 +208,7 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
             "action": function(data) {
             	var inst = $.jstree.reference(data.reference);
             	var ref = inst.get_node(data.reference);
-            	abrirNodo(ref);
+            	abrirNodo(ref, inst);
             }
         };
 		var crearCarpeta = {
@@ -392,34 +396,58 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
 		}
     };
     
+    var funLeerNodo = function(id) {
+    	var MAX_TAM = 50;
+    	var diferido = $.Deferred();
+    	
+    	//Este itera indefinidamente
+    	var bufferHijos = [];
+    	var funcionRecursiva = function(lista) {
+    		if (id == '#') {
+    			lista = lista[0].children;
+        	}
+    		if (lista.length == 0) {
+    			diferido.resolve(bufferHijos);
+    		} else {
+	    		for (var i=0; i<lista.length; i++) {
+	    			bufferHijos.push(lista[i]);
+	    		}
+	    		//Vuelve a iterar
+	    		setTimeout(function() {
+	    			var ultimo = lista[lista.length-1].id;
+	    			moduloHttp.get('/storage/jstreelist', false, {'id':id, 'tamanio': MAX_TAM, 'ultimo': ultimo}).then(funcionRecursiva);
+	    		}, 0);
+	    	}
+    	};
+    	var temp = moduloHttp.get('/storage/jstreelist', false, {'id':id, 'tamanio': MAX_TAM});
+    	temp.then(funcionRecursiva);
+    	return diferido;
+    };
+    
     miseguridad.then(function() {
-    	miseguridad.darToken().then(function(accessToken) {
-        	elem.jstree({
-      		  "core" : {
-      		    "check_callback" : true,
-      		    "themes" : { "stripes" : true },
-      	        'data': {
-      	            'url': function (node) {
-      	            	return "/storage/jstreelist";
-      	             },
-      	             'dataType': "json",
-      				 "data" : function (node) {
-      					return { "id" : node.id };
-      				 },
-      				 'headers': {
-      					 'Authorization' : 'Bearer ' + accessToken,
-      				 },
-      	           },
-      		  },
-      		  'contextmenu': {
-      		        'items': menuALaMedida,
-      		    },
-      		  "plugins" : [
-      		    "contextmenu", "dnd", "search","json_data",
-      		    "state", "wholerow",
-      		  ]
-      		});
-      });
+    	
+    	elem.jstree({
+    		  "core" : {
+    		    "check_callback" : true,
+    		    "themes" : { "stripes" : true },
+    	        'data': function(obj, cb) {
+    	        	var self = this;
+    	        	funLeerNodo(obj.id).then(function(raiz) {
+    	        		cb.call(self, raiz);
+    	        	});
+    	        },
+    		  },
+    		  'contextmenu': {
+    		        'items': menuALaMedida,
+    		    },
+    		  "plugins" : [
+    		    "contextmenu", "dnd", "search","json_data",
+    		    "state", "wholerow",
+    		  ]
+		});
+    	/*
+        
+    	*/
     });
 	
     $(document).keydown(function(e) {

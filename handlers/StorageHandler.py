@@ -4,6 +4,7 @@ from __future__ import with_statement
 import os
 import re
 import uuid
+import logging
 
 from django.utils import simplejson
 from django.http import HttpResponse
@@ -86,17 +87,11 @@ def list_bucket(ruta, tamanio, ultimo):
         tamanio = 10
     else:
         tamanio = int(tamanio)
+    if (ultimo is not None):
+        ultimo = raiz + ultimo
     stats = gcs.listbucket(rutaCompleta, max_keys=tamanio, delimiter="/", marker=ultimo)
-    while True:
-        count = 0
-        for stat in stats:
-            count += 1
-            ans.append(transformarRegistroDeArchivo(stat, raiz))
-        
-        if count != tamanio or count == 0:
-            break
-        stats = gcs.listbucket(rutaCompleta, max_keys=tamanio,
-                               marker=stat.filename)
+    for stat in stats:
+        ans.append(transformarRegistroDeArchivo(stat, raiz))
     return ans;
 
 def generarUID():
@@ -170,15 +165,17 @@ def StorageHandler(request, ident, usuario=None):
             if (usuario is None):
                 raise NoHayUsuarioException()
             ruta = request.GET.get('id', '/')
+            tamanio = int(request.GET.get('tamanio', None))
+            ultimo = request.GET.get('ultimo', None)
             if (ruta == '#'):
-                ans = list_bucket('', 100, None)
+                ans = list_bucket('', tamanio, ultimo)
                 nombreNodo = darNombreNodo(ruta)
                 nodo = [{'text': nombreNodo, 'id': ruta, 'children': nodosJsTree(ans)}]
                 if (len(ans) > 0):
                     nodo[0]['type'] = 'folder'
                 response.write(simplejson.dumps(nodo))
             elif (usuario_es_dueno(usuario, ruta)):
-                ans = list_bucket(ruta, 100, None)
+                ans = list_bucket(ruta, tamanio, ultimo)
                 response.write(simplejson.dumps(nodosJsTree(ans, ruta)))
             elif (ruta == '/usr/'):
                 response.write(simplejson.dumps([{'text': usuario.proveedor, 'id': '/usr/'+usuario.proveedor+'/', 'children': True}]))
@@ -192,12 +189,6 @@ def StorageHandler(request, ident, usuario=None):
             if (metadatos is None):
                 raise ParametrosIncompletosException()
             response.write(simplejson.dumps({'error':0, 'metadata': metadatos}))
-        elif (ident == 'list'):
-            ruta = request.GET.get('ruta', '/')
-            ultimo = request.GET.get('ultimo', None)
-            tamanio = request.GET.get('tamanio', None)
-            ans = list_bucket(ruta, tamanio, ultimo)
-            response.write(simplejson.dumps({'error':0, 'all_objects': ans}))
         elif (ident == 'basic'):
             general(response)
         elif (ident == 'read'):
