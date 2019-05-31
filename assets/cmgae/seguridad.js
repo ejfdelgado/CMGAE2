@@ -23,6 +23,8 @@ var  miseguridad = (function($) {
 	var CLIENT_ID = null;
 	var diferidoFirebase = $.Deferred();
 	var diferidoDatos = $.Deferred();
+    var diferidoConf = null;
+    var diferidoApp = $.Deferred();
 	var datosLocales = {};
 
 	var borrarDatos = function() {
@@ -31,6 +33,10 @@ var  miseguridad = (function($) {
 			usr: null,
 			roles: [],
 		};
+	};
+	
+	var thenApp = function() {
+		return diferidoApp;
 	};
 	
 	function getRecaptchaMode() {
@@ -245,30 +251,45 @@ var  miseguridad = (function($) {
 
 	$(document).ready(function() {
 		//Se lee la configuración dinámicamente desde un archivo JSON
-		$.ajax({
-			dataType: "json",
-			url: "/firebase.json",
-			success: function(datos) {
-				//La configuración
-				$.extend(true, config, datos.config);
-				//El cliente
-				CLIENT_ID = datos.CLIENT_ID;
-				firebase.initializeApp(config);
-				// Initialize the FirebaseUI Widget using Firebase.
-				var ui = new firebaseui.auth.AuthUI(firebase.auth());
-				// The start method will wait until the DOM is loaded.
-				var refTag = '#firebaseui-auth-container'; 
-				if ($(refTag).length > 0) {
-					ui.start(refTag, getUiConfig());
-				}
-				initApp();
+		firebaseConf().then(function(datos) {
+			//La configuración
+			$.extend(true, config, datos.config);
+			//El cliente
+			CLIENT_ID = datos.CLIENT_ID;
+			var defaultApp = firebase.initializeApp(config);
+			diferidoApp.resolve({
+				'app': defaultApp,
+				'CLIENT_ID': CLIENT_ID,
+				'config': config,
+			});
+			// Initialize the FirebaseUI Widget using Firebase.
+			var ui = new firebaseui.auth.AuthUI(firebase.auth());
+			// The start method will wait until the DOM is loaded.
+			var refTag = '#firebaseui-auth-container'; 
+			if ($(refTag).length > 0) {
+				ui.start(refTag, getUiConfig());
 			}
+			initApp();
 		});
 	});
 
 	var darId = function() {
 		return moduloHttp.get('/storage/miruta');
-	}
+	};
+	
+    var firebaseConf = function() {
+    	if (diferidoConf == null) {
+    		diferidoConf = $.Deferred();
+        	$.ajax({
+        		  dataType: "json",
+        		  url: "/firebase.json",
+        		  success: function(datos) {
+        			diferidoConf.resolve(datos);
+        		  }
+    		});
+    	}
+    	return diferidoConf;
+    };
 
 	return {
 		'logout': salir,
@@ -276,5 +297,7 @@ var  miseguridad = (function($) {
 		'insertarToken': insertarToken,
 		'darId': darId,
 		'then': then,
+		'thenApp': thenApp,
+		'diferidoConf': diferidoConf,
 	};
 })(jQuery);

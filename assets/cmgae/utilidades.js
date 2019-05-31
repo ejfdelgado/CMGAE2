@@ -37,6 +37,16 @@ Number.prototype.toFixedNumber = function(x){
   return parseFloat(texto);
 }
 
+$.urlParam = function(name){
+    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if (results==null){
+       return null;
+    }
+    else{
+       return decodeURIComponent(results[1]) || 0;
+    }
+}
+
 jQuery.fn.setCursorPosition = function(pos) {
   this.each(function(index, elem) {
     if (elem.setSelectionRange) {

@@ -1,0 +1,63 @@
+<script type="text/javascript">
+	
+	var moduloIntMark = (function() {
+		var RAIZ = 'pgs';
+		var diferidoDB = $.Deferred();
+		var diferidoId = $.Deferred();
+		
+		//Se espera a que se inicializa firebase:
+		miseguridad.thenApp().then(function(datos) {
+			var database = firebase.database();
+			diferidoDB.resolve(database);
+		});
+		
+		//Se crea el espacio de trabajo
+		diferidoDB.then(function(db) {
+			var urlParamCtx = $.urlParam('ctx');
+			if (utilidades.hayValorTexto(urlParamCtx)) {
+				var nuevaLlave = db.ref().child(urlParamCtx+'/usr').push().key;
+				var firebaseUrl = urlParamCtx+'/usr/'+nuevaLlave;
+				var updates = {};
+				updates[firebaseUrl] = {
+					'time': new Date().getTime(),
+				};
+				firebase.database().ref().update(updates).then(function() {
+					diferidoId.resolve({
+						'id': nuevaLlave, 
+						'tipo': 'slave',
+					});
+				});
+			} else {
+				var nuevaLlave = db.ref().child(RAIZ).push().key;
+				var masterCtx = location.pathname + '/' + nuevaLlave;
+				var firebaseUrl = '/' + RAIZ + masterCtx;
+				var slaveUrl = location.href + '?' + $.param({'ctx': firebaseUrl});
+				// Write the new post's data simultaneously in the posts list and the user's post list.
+				var updates = {};
+				updates[firebaseUrl] = {
+						'base': {
+							'time': new Date().getTime(),
+						},
+				};
+				firebase.database().ref().update(updates).then(function() {
+					diferidoId.resolve({
+						'id': nuevaLlave, 
+						'masterCtx': masterCtx,
+						'slaveUrl': slaveUrl,
+						'tipo': 'master',
+					});
+				});
+			}
+		});
+		
+		//Se muestra el id para los que se deseen conectar:
+		diferidoId.then(function(datos) {
+			console.log(datos);
+		});
+		
+		return {
+			
+		};
+	})();
+	
+</script>
