@@ -1,6 +1,15 @@
 {% extends "base.html" %}
+
+{% block content %}
+<div id="immaster" class="invisible">
+	<div id="qrcode"></div>
+</div>
+<div id="imslave" class="invisible">
+</div>
+
+{% endblock %}
+
 {% block scripts %}
-
+<script type="text/javascript" src="/assets/node_modules/instascan/jquery.qrcode.min.js"></script>
 {% include "firebase/moduloIntMark.html" %}
-
 {% endblock %}	

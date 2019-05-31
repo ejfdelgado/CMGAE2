@@ -45,6 +45,7 @@
 						'masterCtx': masterCtx,
 						'slaveUrl': slaveUrl,
 						'tipo': 'master',
+						'key': nuevaLlave,
 					});
 				});
 			}
@@ -53,6 +54,12 @@
 		//Se muestra el id para los que se deseen conectar:
 		diferidoId.then(function(datos) {
 			console.log(datos);
+			if (datos.tipo == 'master') {
+				$('#qrcode').qrcode(datos.slaveUrl);
+				$('#immaster').removeClass('invisible');
+			} else {
+				$('#imslave').removeClass('invisible');
+			}
 		});
 		
 		return {

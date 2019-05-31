@@ -2,6 +2,24 @@
 
 var utilidades;
 
+var localizacion = (function($) {
+    var darUbicacion = function() {
+        var diferido = $.Deferred();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                diferido.resolve(position);
+            });
+        } else {
+            diferido.reject();
+        }
+        return diferido.promise();
+    };
+    
+    return {
+        'darUbicacion': darUbicacion, 
+    };
+})(jQuery);
+
 var mapear = function(dato, mapa, pred) {
 	if (!utilidades.hayValorTexto(pred)) {
 		pred = '';

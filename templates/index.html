@@ -1,8 +1,15 @@
 {% extends "base.html" %}
-{% block content %}
-	<div id="firebaseui-auth-container"></div>
-	<div id="sign-in-status"></div>
-	<div id="sign-in"></div>
-	<pre id="account-details"></pre>
-	<div id="call-action">Call Action</div>
+
+{% block scripts %}
+<script type="text/javascript" src="/assets/node_modules/instascan/adapter.min.js"></script>
+<script type="text/javascript" src="/assets/node_modules/instascan/instascan.min.js"></script>
+{% include "qrscanner/create.html" %}
+{% endblock %}	
+
+{% block content %}	
+<div class="video-container">
+    <video id="preview"></video>
+</div>
+<p id="togglecamera">Toggle Camera</p>
+<p id="mirrorcamera">Mirror</p>
 {% endblock %}	
