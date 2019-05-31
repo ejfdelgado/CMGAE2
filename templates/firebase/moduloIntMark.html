@@ -13,7 +13,7 @@
 		
 		//Se crea el espacio de trabajo
 		diferidoDB.then(function(db) {
-			var urlParamCtx = $.urlParam('ctx');
+			var urlParamCtx = $.urlParam('q');
 			if (utilidades.hayValorTexto(urlParamCtx)) {
 				var nuevaLlave = db.ref().child(urlParamCtx+'/usr').push().key;
 				var firebaseUrl = urlParamCtx+'/usr/'+nuevaLlave;
@@ -31,7 +31,7 @@
 				var nuevaLlave = db.ref().child(RAIZ).push().key;
 				var masterCtx = location.pathname + '/' + nuevaLlave;
 				var firebaseUrl = '/' + RAIZ + masterCtx;
-				var slaveUrl = location.href + '?' + $.param({'ctx': firebaseUrl});
+				var slaveUrl = location.href + '?' + $.param({'q': firebaseUrl});
 				// Write the new post's data simultaneously in the posts list and the user's post list.
 				var updates = {};
 				updates[firebaseUrl] = {
