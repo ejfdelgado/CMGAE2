@@ -21,9 +21,11 @@ handlers:
   
 - url: /assets
   static_dir: assets
+  secure: always
   
 - url: .*
   script: main.py
+  secure: always
 
 libraries:
 - name: django
