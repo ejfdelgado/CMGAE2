@@ -5,7 +5,7 @@
 {% endblock %}	
 
 {% block scripts %}
-<script type="text/javascript" src="/assets/node_modules/qr-code-scanner/main.c5596b63c60915de0642.bundle.js"></script>
+<script type="text/javascript" src="/assets/node_modules/qr-code-scanner/main.e9343d48de4b89e13e28.bundle.js"></script>
 {% include "qrscanner/create.html" %}
 {% endblock %}
 
@@ -27,12 +27,12 @@
         <!-- Dialog  -->
         <div class="app__dialog app__dialog--hide">
           <div class="app__dialog-content">
-            <h5>Codigo QR</h5>
-            <input type="text" id="result">
+            <h5 id="mensaje"></h5>
+            <input type="text" id="result" style="display: none;">
           </div>
           <div class="app__dialog-actions">
-            <button type="button" class="app__dialog-open">Abrir</button>
-            <button type="button" class="app__dialog-close">Cerrar</button>
+            <button type="button" class="app__dialog-open">S&iacute;</button>
+            <button type="button" class="app__dialog-close">No</button>
           </div>
         </div>
 
