@@ -20,6 +20,7 @@ class Usuario:
         self.id_token = _get_token(request)
         self.roles = []
         self.miId = None
+        self.uid = None
         self.proveedor = None
         self.metadatos = None
         if (self.id_token is not None):
@@ -28,6 +29,8 @@ class Usuario:
                 #TODO mirar cómo cargar los permisos de un usuario
                 self.roles = ['editor']
                 self.miId = self.darId();
+                #Se captura el id unico de firebase
+                self.uid = self.metadatos['payload']['user_id'];
                 self.proveedor = self.metadatos['payload']['firebase']['sign_in_provider']
                 self.sufijo = self.darUsername()['usuario']
                 if (comun.indexOf([

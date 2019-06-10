@@ -27,7 +27,7 @@ def AdminHandler(request, ident, usuario=None):
         if ident == 'identidad':
             if (usuario is not None):
                 response = HttpResponse("", content_type='application/json', status=200)
-                response.write(simplejson.dumps({'id': usuario.miId, 'roles': usuario.roles, 'proveedor': usuario.proveedor, 'sufijo': usuario.sufijo}))
+                response.write(simplejson.dumps({'id': usuario.miId, 'roles': usuario.roles, 'proveedor': usuario.proveedor, 'sufijo': usuario.sufijo, 'uid': usuario.uid}))
                 return response
             else:
                 return RespuestaNoAutorizado()

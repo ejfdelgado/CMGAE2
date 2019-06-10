@@ -217,6 +217,10 @@ var  miseguridad = (function($) {
 			$('#account-details').html('null');
 		}
 	};
+	
+	var showLogin = function() {
+		$('#firebaseui-auth-container').removeClass('invisible');
+	};
 
 	var initApp = function() {
 		firebase.auth().onAuthStateChanged(function(user) {
@@ -243,9 +247,7 @@ var  miseguridad = (function($) {
 			borrarDatos();
 			$('#sign-in').html('Sign in');
 			$('#sign-in').off('click');
-			$('#sign-in').on('click', function() {
-				$('#firebaseui-auth-container').removeClass('invisible');
-			});
+			$('#sign-in').on('click', showLogin);
 		});
 	};
 
@@ -272,10 +274,6 @@ var  miseguridad = (function($) {
 			initApp();
 		});
 	});
-
-	var darId = function() {
-		return moduloHttp.get('/storage/miruta');
-	};
 	
     var firebaseConf = function() {
     	if (diferidoConf == null) {
@@ -290,14 +288,55 @@ var  miseguridad = (function($) {
     	}
     	return diferidoConf;
     };
+    
+    var hayUsuario = function() {
+    	var undiferido = $.Deferred();
+    	diferidoFirebase.then(function(user) {
+    		undiferido.resolve(true);
+    	}, function() {
+    		undiferido.resolve(false);
+    	});
+    	return undiferido;
+    };
+    
+    var obligarLogin = function() {
+    	var undiferido = $.Deferred();
+		hayUsuario().then(function(hay) {
+			if (!hay) {
+				showLogin();
+			} else {
+				then(function(metadatos) {
+					undiferido.resolve(metadatos);
+				});
+			}
+		});
+		return undiferido;
+    };
+    
+    var buscarUsuario = function(forzar, funcionContinuar) {
+    	if (forzar) {
+			obligarLogin().then(funcionContinuar);	
+		} else {
+			hayUsuario().then(function(hay) {
+				if (hay) {
+					then(funcionContinuar);	
+				} else {
+					funcionContinuar();
+				}
+			});
+		}
+    };
 
 	return {
+		'showLogin': showLogin,
 		'logout': salir,
 		'darToken': darToken,
 		'insertarToken': insertarToken,
-		'darId': darId,
 		'then': then,
 		'thenApp': thenApp,
 		'diferidoConf': diferidoConf,
+		'hayUsuario': hayUsuario,
+		'obligarLogin': obligarLogin,
+		'buscarUsuario': buscarUsuario,
 	};
 })(jQuery);

@@ -1,52 +1,134 @@
 <script type="text/javascript">
 	
-	var moduloIntMark = (function() {
+	var moduloIntMark = (function(opciones) {
+		opciones = $.extend(true, {
+			'masterLoged': false,
+			'slaveLoged': false,
+			'masterIdUsr': false,
+			'slaveIdUsr': false,
+		}, opciones);
 		var RAIZ = 'pgs';
 		var diferidoDB = $.Deferred();
 		var diferidoId = $.Deferred();
 		
+		var urlParamCtx = $.urlParam('q');
+		var LLAVE_LOCAL_STORAGE = MD5(location.href);
+		var tipoCliente;
+		if (utilidades.hayValorTexto(urlParamCtx)) {
+			tipoCliente = 'slave';
+		} else {
+			tipoCliente = 'master';
+		}
+		
+		var darIdAnonimo = function() {
+			var temp = localStorage[LLAVE_LOCAL_STORAGE];
+			if (temp === undefined) {
+				return null;
+			}
+			return temp;
+		};
+		
+		var asignarIdAnonimo = function(id) {
+			localStorage[LLAVE_LOCAL_STORAGE] = id;
+		};
+		
 		//Se espera a que se inicializa firebase:
 		miseguridad.thenApp().then(function(datos) {
-			var database = firebase.database();
-			diferidoDB.resolve(database);
+			
+			var funcionContinuar = function(principal) {
+				var database = firebase.database();
+				diferidoDB.resolve({'database': database, 'principal': principal});
+			};
+			
+			var forzarUsuario = ((tipoCliente == 'master' && (opciones['masterLoged'] || opciones['masterIdUsr'])) 
+					|| (tipoCliente == 'slave' && (opciones['slaveLoged'] || opciones['slaveIdUsr'])));
+			miseguridad.buscarUsuario(forzarUsuario, funcionContinuar);
 		});
 		
 		//Se crea el espacio de trabajo
-		diferidoDB.then(function(db) {
-			var urlParamCtx = $.urlParam('q');
-			if (utilidades.hayValorTexto(urlParamCtx)) {
-				var nuevaLlave = db.ref().child(urlParamCtx+'/usr').push().key;
+		diferidoDB.then(function(paquete) {
+			var db = paquete['database'];
+			var principal = paquete['principal'];
+			
+			if (tipoCliente == 'slave') {
+				var nuevaLlave;
+				
+				if (opciones['slaveIdUsr']) {
+					nuevaLlave = principal.uid;
+				} else {
+					nuevaLlave = darIdAnonimo();
+					if (nuevaLlave == null) {
+						nuevaLlave = db.ref().child(urlParamCtx+'/usr').push().key;
+						asignarIdAnonimo(nuevaLlave);	
+					}
+				}
+				
 				var firebaseUrl = urlParamCtx+'/usr/'+nuevaLlave;
-				var updates = {};
-				updates[firebaseUrl] = {
-					'time': new Date().getTime(),
+				
+				var crearSlaveCtx = function() {
+					var updates = {};
+					updates[firebaseUrl] = {
+							'time': new Date().getTime(),
+					};
+					return db.ref().update(updates);
 				};
-				firebase.database().ref().update(updates).then(function() {
+				
+				var notificarSlaveCtx = function() {
 					diferidoId.resolve({
 						'id': nuevaLlave, 
-						'tipo': 'slave',
+						'tipo': tipoCliente,
 					});
+				};
+				
+				db.ref(firebaseUrl).once('value').then(function(snapshot) {
+					if (snapshot.val() == null) {
+						crearSlaveCtx().then(notificarSlaveCtx);
+					} else {
+						notificarSlaveCtx();
+					}
 				});
 			} else {
-				var nuevaLlave = db.ref().child(RAIZ).push().key;
+				var nuevaLlave;
+				
+				if (opciones['masterIdUsr']) {
+					nuevaLlave = principal.uid;
+				} else {
+					nuevaLlave = darIdAnonimo();
+					if (nuevaLlave == null) {
+						nuevaLlave = db.ref().child(RAIZ).push().key;
+						asignarIdAnonimo(nuevaLlave);
+					}
+				}
+				
 				var masterCtx = location.pathname + '/' + nuevaLlave;
-				var firebaseUrl = '/' + RAIZ + masterCtx;
+				var firebaseUrl = '/' + RAIZ + masterCtx;//ruta dentro de firebase
 				var slaveUrl = location.href + '?' + $.param({'q': firebaseUrl});
-				// Write the new post's data simultaneously in the posts list and the user's post list.
-				var updates = {};
-				updates[firebaseUrl] = {
-						'base': {
-							'time': new Date().getTime(),
-						},
+				
+				var crearMasterCtx = function() {
+					var updates = {};
+					updates[firebaseUrl] = {
+							'base': {
+								'time': new Date().getTime(),
+							},
+					};
+					return db.ref().update(updates);
 				};
-				firebase.database().ref().update(updates).then(function() {
+				
+				var notificarMasterCtx = function() {
 					diferidoId.resolve({
 						'id': nuevaLlave, 
 						'masterCtx': masterCtx,
 						'slaveUrl': slaveUrl,
-						'tipo': 'master',
-						'key': nuevaLlave,
+						'tipo': tipoCliente,
 					});
+				};
+				
+				db.ref(firebaseUrl).once('value').then(function(snapshot) {
+					if (snapshot.val() == null) {
+						crearMasterCtx().then(notificarMasterCtx);
+					} else {
+						notificarMasterCtx();
+					}
 				});
 			}
 		});
@@ -65,6 +147,12 @@
 		return {
 			
 		};
-	})();
+	})({
+		'masterLoged': false,
+		'masterIdUsr': false,
+		
+		'slaveLoged': false,
+		'slaveIdUsr': false,
+	});
 	
 </script>
