@@ -104,31 +104,35 @@
 				var firebaseUrl = '/' + RAIZ + masterCtx;//ruta dentro de firebase
 				var slaveUrl = location.href + '?' + $.param({'q': firebaseUrl});
 				
-				var crearMasterCtx = function() {
-					var updates = {};
-					updates[firebaseUrl] = {
-							'base': {
-								'time': new Date().getTime(),
-							},
+				//Se debe hacer un post para obtener la ruta corta
+				moduloHttp.post('/a', {'theurl': slaveUrl}).then(function(respuesta) {
+					//console.log('respuesta', respuesta);
+					var crearMasterCtx = function() {
+						var updates = {};
+						updates[firebaseUrl] = {
+								'base': {
+									'time': new Date().getTime(),
+								},
+						};
+						return db.ref().update(updates);
 					};
-					return db.ref().update(updates);
-				};
-				
-				var notificarMasterCtx = function() {
-					diferidoId.resolve({
-						'id': nuevaLlave, 
-						'masterCtx': masterCtx,
-						'slaveUrl': slaveUrl,
-						'tipo': tipoCliente,
+					
+					var notificarMasterCtx = function() {
+						diferidoId.resolve({
+							'id': nuevaLlave, 
+							'masterCtx': masterCtx,
+							'slaveUrl': location.origin+'/a/'+respuesta['id'],
+							'tipo': tipoCliente,
+						});
+					};
+					
+					db.ref(firebaseUrl).once('value').then(function(snapshot) {
+						if (snapshot.val() == null) {
+							crearMasterCtx().then(notificarMasterCtx);
+						} else {
+							notificarMasterCtx();
+						}
 					});
-				};
-				
-				db.ref(firebaseUrl).once('value').then(function(snapshot) {
-					if (snapshot.val() == null) {
-						crearMasterCtx().then(notificarMasterCtx);
-					} else {
-						notificarMasterCtx();
-					}
 				});
 			}
 		});

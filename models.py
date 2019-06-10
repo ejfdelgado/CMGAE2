@@ -8,7 +8,6 @@ import time
 
 from google.appengine.ext import ndb
 
-
 def to_dict_(entidad):
     ans = {}
     for key in entidad._properties.keys():
@@ -26,11 +25,6 @@ class Documento(ndb.Expando):
     def to_dict(self):
         return to_dict_(self)
 
-class lista(ndb.Expando):
-    _default_indexed = False
-    def to_dict(self):
-        return to_dict_(self)
-
 class Caracteristica(ndb.Expando):
     _default_indexed = False
     date = ndb.DateTimeProperty(auto_now_add=True)
@@ -41,5 +35,10 @@ class Caracteristica(ndb.Expando):
 
 class Configuracion(ndb.Expando):
     _default_indexed = False
+    def to_dict(self):
+        return to_dict_(self)
+    
+class ShortUrlM(ndb.Model):
+    theurl = ndb.StringProperty()
     def to_dict(self):
         return to_dict_(self)
