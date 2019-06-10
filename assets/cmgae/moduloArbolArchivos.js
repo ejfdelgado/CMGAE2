@@ -43,7 +43,7 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
     	}
     });
 	
-	jQuery(document).keydown(function(event) {
+	$(document).keydown(function(event) {
 	        // If Control or Command key is pressed and the S key is pressed
 	        // run save function. 83 is the key code for S.
 	        if((event.ctrlKey || event.metaKey) && event.which == 83) {
@@ -117,43 +117,6 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
 	
 	elem.bind("move_node.jstree", function (e, data) {
 		console.log(data);
-	});
-    
-	elem.on("rename_node.jstree", function (event, data) {
-		var anterior = data.old;
-		var nuevo = data.text;
-		var elNodo = data.node;
-		var refArbol = data.instance;
-		
-		if (elNodo.original.type == 'folder') {
-			data.instance.set_id(elNodo, data.node.parent + nuevo + '/');
-		} else {
-			var viejoId = data.node.parent + anterior;
-			var nuevoId = data.node.parent + nuevo;
-			
-			var funError = function() {
-				elNodo.text = anterior;
-				elNodo.original.text = anterior;
-				refArbol.redraw([elNodo]);
-				moduloModales.alertar('Ha ocurrido un error')
-			};
-			
-			//Validar que otro no se llame igual
-        	var padre = refArbol.get_node(data.node.parent);
-        	var hermanos = darNombresHijos(padre);
-        	if (estaEnLista(nuevo, hermanos)) {
-        		funError();
-        	} else {
-				var promesa = moduloArchivos.renombrar(viejoId, nuevoId);
-				$.when(promesa).then(function(datos) {
-					if (datos.error != 0) {
-						funError();
-					} else {
-						data.instance.set_id(elNodo, nuevoId);
-					}
-				}, funError);
-        	}
-		}
 	});
 	
 	elem.on("load_node.jstree", function(event, data) {
@@ -239,11 +202,24 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
 				$.when(promesaEscritura).then(function() {
 	                inst.create_node(obj, nuevoNodo, "last", function (new_node) {
 	                    //new_node.data = {file: true};
-	                    setTimeout(function () { inst.edit(new_node); },0);
+	                    setTimeout(function () { renombrarLocal(inst, new_node); },0);
 	                });
 				});
             }
         };
+		
+		var renombrarLocal = function(inst, $node) {
+        	var nuevoTexto = null;
+        	inst.edit($node, null, function() {
+        		setTimeout(function() {
+        			inst.rename_node($node, nuevoTexto);
+        		});
+        	});
+        	var inputs = elem.find('input').last();
+        	inputs.on('change', function() {
+        		nuevoTexto = inputs.val();
+        	});
+		};
 		
 		var renombrar = {
             "separator_before": false,
@@ -251,7 +227,7 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
             "label": "Renombrar",
             "action": function(obj) {
             	var inst = $.jstree.reference(obj.reference);
-            	inst.edit($node);
+            	renombrarLocal(inst, $node);
             }
         };
 		
@@ -444,6 +420,40 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
     		    "contextmenu", "dnd", "search","json_data",
     		    "state", "wholerow",
     		  ]
+		});
+		
+		elem.on("rename_node.jstree", function (event, data) {
+			var anterior = data.old;
+			var nuevo = data.text;
+			var elNodo = data.node;
+			var refArbol = data.instance;
+			if (elNodo.original.type == 'folder') {
+				data.instance.set_id(elNodo, data.node.parent + nuevo + '/');
+			} else {
+				var viejoId = data.node.parent + anterior;
+				var nuevoId = data.node.parent + nuevo;
+				var funError = function() {
+					elNodo.text = anterior;
+					elNodo.original.text = anterior;
+					refArbol.redraw([elNodo]);
+					moduloModales.alertar('Ha ocurrido un error')
+				};
+				//Validar que otro no se llame igual
+	        	var padre = refArbol.get_node(data.node.parent);
+	        	var hermanos = darNombresHijos(padre);
+	        	if (estaEnLista(nuevo, hermanos)) {
+	        		funError();
+	        	} else {
+					var promesa = moduloArchivos.renombrar(viejoId, nuevoId);
+					$.when(promesa).then(function(datos) {
+						if (datos.error != 0) {
+							funError();
+						} else {
+							data.instance.set_id(elNodo, nuevoId);
+						}
+					}, funError);
+	        	}
+			}
 		});
     	/*
         
