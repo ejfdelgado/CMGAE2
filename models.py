@@ -13,7 +13,7 @@ def to_dict_(entidad, puntos=False):
     for key in entidad._properties.keys():
         val = getattr(entidad, key)
         if (puntos):
-            key2 = key.replace('--', '.')
+            key2 = key.replace('/', '.')
         else:
             key2 = key
         if val != None and val.__class__ == datetime.datetime:

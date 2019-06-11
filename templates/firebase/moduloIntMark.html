@@ -13,8 +13,21 @@
 	
 	var moduloPagina = (function() {
 		
+		var hashActual = null;
 		var valorActual = null;
 		var diferidoLectura = $.Deferred();
+		
+		var esDiferente = function(dato) {
+			return (hashActual != darHash(dato));
+		};
+		
+		var tomarImagen = function() {
+			hashActual = darHash(valorActual);
+		};
+		
+		var darHash = function(dato) {
+			return MD5(JSON.sortify(dato));
+		};
 		
 		var leer = function(opciones) {
 			opciones = $.extend(true, {}, {
@@ -24,26 +37,38 @@
 				var pg = $.urlParam('pg');
 				moduloHttp.get('/api/xpage/', false, {'pg': pg}).then(function(rta) {
 					valorActual = moduloTransformacion.modo('simple').from(rta.valor);
-					console.log(JSON.stringify(valorActual, null, 4));
 					if (location.pathname != valorActual.path) {
 						//Url mal armada, redirigir
 						location.pathname = valorActual.path;
 					} else {
 						//Se prepara para leer el modelo de datos
+						tomarImagen();
 						diferidoLectura.resolve(valorActual);
 					}
+				}, function() {
+					diferidoLectura.reject();
 				});
 			});
 			return diferidoLectura;
 		};
 		
 		var guardar = function(nuevo) {
-			diferidoLectura.then(function(valor) {
-				var temp = moduloTransformacion.modo('simple').to(nuevo);
-				moduloHttp.put('/api/xpage/'+valor.id, temp).then(function(rta) {
-					valorActual = moduloTransformacion.modo('simple').from(rta.valor);
+			var diferido = $.Deferred();
+			if (esDiferente(nuevo)) {
+				diferidoLectura.then(function(valor) {
+					var temp = moduloTransformacion.modo('simple').to(nuevo);
+					moduloHttp.put('/api/xpage/'+valor.id, temp).then(function(rta) {
+						valorActual = moduloTransformacion.modo('simple').from(rta.valor);
+						tomarImagen();
+						diferido.resolve(valorActual);
+					});
+				}, function() {
+					diferido.reject();
 				});
-			});
+			} else {
+				diferido.resolve(valorActual);
+			}
+			return diferido;
 		};
 		
 		return {
@@ -95,7 +120,9 @@
 			var forzarUsuario = ((tipoCliente == 'master' && (opciones['masterLoged'] || opciones['masterIdUsr'])) 
 					|| (tipoCliente == 'slave' && (opciones['slaveLoged'] || opciones['slaveIdUsr'])));
 			miseguridad.buscarUsuario(forzarUsuario, funcionContinuar);
-			moduloPagina.leer();
+			moduloPagina.leer().then(function(valorPg) {
+				console.log(JSON.stringify(valorPg, null, 4));
+			})
 		});
 		
 		//Se crea el espacio de trabajo

@@ -44,7 +44,7 @@ def llenarYpersistir(class_, nuevo, valoresNuevos, listanegra, puntos=False):
     restantes = list(set(restantes) - set(valoresNuevos.keys()))
     for key, value in valoresNuevos.iteritems():
         if (puntos):
-            key = key.replace('.', '--')
+            key = key.replace('.', '/')
         if (not key in listanegra):
             attributo = getattr(class_, key, None)
             if attributo != None and attributo.__class__ == ndb.model.DateTimeProperty:
@@ -53,7 +53,9 @@ def llenarYpersistir(class_, nuevo, valoresNuevos, listanegra, puntos=False):
                 value = int(value)
             setattr(nuevo, key, value)
     for key in restantes:
-        delattr(nuevo, key)
+        if (puntos):
+            key = key.replace('.', '/')
+            delattr(nuevo, key)
     nuevo.put()
     return to_dict(nuevo, None, puntos)
     #return valoresNuevos.keys()
