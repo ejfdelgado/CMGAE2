@@ -274,7 +274,9 @@
 		var db = datos['db'];
 		var firebaseUrl = datos['firebaseUrl'];
 		var procesarEventos = function(usuario, lista) {
-			console.log(usuario, JSON.stringify(lista));
+			var pre = $('<pre></pre>');
+			pre.text(JSON.stringify(lista))
+			$('#vereventos').prepend(pre);
 		};
 		
 		var ref = db.ref(firebaseUrl+'/usr');
@@ -334,7 +336,6 @@
 			}
 		};
 		
-		/*
 		mc.on("panend pancancel", function(ev) {
 			ultimoPan1 = null;
 			ultimoPan2 = null;
@@ -347,7 +348,7 @@
 			divSlave.text(JSON.stringify(ev));
 			agregarEvento2(ev.type);
 		});
-		*/
+		
 		mc.on("tap press pinchin pinchout swipeleft swiperight swipeup swipedown", function(ev) {
 			divSlave.text(JSON.stringify(ev));
 			funcionRealAgregarEvento(ev.type);
