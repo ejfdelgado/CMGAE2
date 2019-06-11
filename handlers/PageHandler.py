@@ -12,7 +12,7 @@ from django.utils import simplejson
 from google.appengine.ext import ndb
 from models import Pagina
 from handlers.respuestas import RespuestaNoAutorizado, NoAutorizadoException,\
-    NoExisteException, ParametrosIncompletosException
+    NoExisteException, ParametrosIncompletosException, NoHayUsuarioException
 from handlers.seguridad import inyectarUsuario, enRol, enRolFun
 from handlers.decoradores import autoRespuestas
 from handlers import comun
@@ -21,7 +21,14 @@ def leerRefererPath(request):
     elhost = request.META['HTTP_HOST']
     elreferer = request.META['HTTP_REFERER']
     elindice = elreferer.find(elhost) + len(elhost)
-    return request.META['HTTP_REFERER'][elindice:]
+    temp = request.META['HTTP_REFERER'][elindice:]
+    indiceQuery = temp.find('?') 
+    if (indiceQuery >= 0):
+        temp = temp[:indiceQuery]
+    indiceQuery = temp.find('#') 
+    if (indiceQuery >= 0):
+        temp = temp[:indiceQuery]
+    return temp
 
 def leerNumero(s):
     if (s is None):
@@ -56,8 +63,8 @@ def PageHandler(request, ident, usuario=None):
                     unapagina.put()
                     ans['valor'] = comun.to_dict(unapagina, None, True)
             else:
-                #No hay usuario logeado
-                pass
+                #Por ahora no se sabe qué hacer cuando no hay usuario logeado
+                raise NoHayUsuarioException()
         else:
             llave = ndb.Key('Pagina', idPagina)
             unapagina = llave.get()

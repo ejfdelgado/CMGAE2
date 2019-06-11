@@ -39,6 +39,7 @@
 					valorActual = moduloTransformacion.modo('simple').from(rta.valor);
 					if (location.pathname != valorActual.path) {
 						//Url mal armada, redirigir
+						//console.log(location.pathname, valorActual.path);
 						location.pathname = valorActual.path;
 					} else {
 						//Se prepara para leer el modelo de datos
@@ -122,7 +123,7 @@
 			miseguridad.buscarUsuario(forzarUsuario, funcionContinuar);
 			moduloPagina.leer().then(function(valorPg) {
 				console.log(JSON.stringify(valorPg, null, 4));
-			})
+			});
 		});
 		
 		//Se crea el espacio de trabajo
@@ -157,6 +158,8 @@
 					diferidoId.resolve({
 						'id': nuevaLlave, 
 						'tipo': tipoCliente,
+						'db': db,
+						'firebaseUrl': firebaseUrl,
 					});
 				};
 				
@@ -168,6 +171,7 @@
 					}
 				});
 			} else {
+				//Master:
 				var nuevaLlave;
 				
 				if (opciones['masterIdUsr']) {
@@ -203,6 +207,8 @@
 							'masterCtx': masterCtx,
 							'slaveUrl': location.origin+'/a/'+respuesta['id'],
 							'tipo': tipoCliente,
+							'db': db,
+							'firebaseUrl': firebaseUrl,
 						});
 					};
 					
@@ -224,19 +230,128 @@
 				$('#qrcode').qrcode(datos.slaveUrl);
 				$('#immaster').removeClass('invisible');
 			} else {
-				$('#imslave').removeClass('invisible');
+				var divSlave = $('#imslave'); 
+				divSlave.removeClass('invisible');
 			}
 		});
 		
-		return {
-			
+		var afterSlave = function() {
+			var ans = $.Deferred();
+			diferidoId.then(function(datos) {
+				if (datos.tipo == 'slave') {
+					ans.resolve(datos);
+				}
+			});
+			return ans;
 		};
-	})({
+		
+		var afterMaster = function() {
+			var ans = $.Deferred();
+			diferidoId.then(function(datos) {
+				if (datos.tipo == 'master') {
+					ans.resolve(datos);
+				}
+			});
+			return ans;
+		};
+		
+		return {
+			'afterSlave': afterSlave,
+			'afterMaster': afterMaster,
+		};
+	});
+	
+	
+	
+	var moduloIntMarkInst = moduloIntMark({
 		'masterLoged': false,
 		'masterIdUsr': false,
-		
 		'slaveLoged': false,
 		'slaveIdUsr': false,
+	});
+	
+	moduloIntMarkInst.afterMaster().then(function(datos) {
+		var db = datos['db'];
+		var firebaseUrl = datos['firebaseUrl'];
+		var procesarEventos = function(usuario, lista) {
+			console.log(usuario, JSON.stringify(lista));
+		};
+		
+		var ref = db.ref(firebaseUrl+'/usr');
+		ref.on('value', function(snapshot) {
+			var usuarios = snapshot.val();
+			var idUsrs = Object.keys(usuarios);
+			for (var i=0; i<idUsrs.length; i++) {
+				var idUsr = idUsrs[i];
+				var unUsr = usuarios[idUsr];
+				var listaEventos = unUsr['ev'];
+				if (listaEventos != null) {
+					var idEvts = Object.keys(listaEventos);
+					var listaLocal = [];
+					var refEvts = db.ref(firebaseUrl+'/usr/'+idUsr+'/ev');
+					var updates = {}; 
+					for (var j=0; j<idEvts.length; j++) {
+						var idEvt = idEvts[j];
+						listaLocal.push(listaEventos[idEvt]);
+						updates[idEvt] = null;
+					}
+					//Se deben borrar
+					procesarEventos(idUsr, listaLocal);
+					refEvts.update(updates);
+				}
+			}
+		});
+	});
+	
+	moduloIntMarkInst.afterSlave().then(function(datos) {
+		var divSlave = $('#imslave'); 
+		
+		var mc = new Hammer(divSlave[0]);
+
+		var funcionRealAgregarEvento = function(tipo) {
+			var listaEventos = datos['firebaseUrl']+'/ev';
+			var nuevaLlave = datos['db'].ref().child(listaEventos).push().key;
+			var llaveEvento = listaEventos+'/'+nuevaLlave;
+			var updates = {};
+			updates[llaveEvento] = {
+				't': tipo,
+			};
+			datos['db'].ref().update(updates);
+		};
+		
+		var ultimoPan1 = null;
+		var ultimoPan2 = null;
+		var agregarEvento1 = function(tipo) {
+			if (ultimoPan1 == null) {
+				ultimoPan1 = tipo;
+				funcionRealAgregarEvento(tipo);
+			}
+		};
+		var agregarEvento2 = function(tipo) {
+			if (ultimoPan2 == null) {
+				ultimoPan2 = tipo;
+				funcionRealAgregarEvento(tipo);
+			}
+		};
+		
+		/*
+		mc.on("panend pancancel", function(ev) {
+			ultimoPan1 = null;
+			ultimoPan2 = null;
+		});
+		mc.on("panleft panright", function(ev) {
+			divSlave.text(JSON.stringify(ev));
+			agregarEvento1(ev.type);
+		});
+		mc.on("panup pandown", function(ev) {
+			divSlave.text(JSON.stringify(ev));
+			agregarEvento2(ev.type);
+		});
+		*/
+		mc.on("tap press pinchin pinchout swipeleft swiperight swipeup swipedown", function(ev) {
+			divSlave.text(JSON.stringify(ev));
+			funcionRealAgregarEvento(ev.type);
+		});
 	});
 	
 </script>
