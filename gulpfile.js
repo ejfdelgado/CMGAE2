@@ -11,6 +11,7 @@ gulp.task('default', function() {
 	'./assets/cmgae/utils.js',
 	'./assets/cmgae/utilidades.js',
 	'./assets/cmgae/seguridad.js',
+	'./assets/cmgae/moduloTransformacion.js',
 	'./assets/cmgae/moduloSonidos.js',
     './assets/cmgae/moduloActividad.js',
     './assets/cmgae/moduloModales.js',

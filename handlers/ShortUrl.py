@@ -6,13 +6,10 @@ Created on 10/06/2019
 '''
 import logging
 from django.http import HttpResponse
-from google.appengine.api import users
 from google.appengine.api import memcache
 from django.utils import simplejson
 from google.appengine.ext import ndb
-from models import Configuracion, ShortUrlM
-from google.appengine.api import mail
-import sys, traceback
+from models import ShortUrlM
 from handlers.respuestas import RespuestaNoAutorizado, NoAutorizadoException
 from handlers.seguridad import inyectarUsuario, enRol, enRolFun
 from handlers.decoradores import autoRespuestas

@@ -38,34 +38,25 @@ def diferenciarIdDeQueryParam(ident):
                 respuesta['parametros'][llave].append(valor)
     return respuesta
 
-def llenarYpersistir(class_, nuevo, todo, leng):
-    for key, value in todo.iteritems():
-        renombrar = False
-        attributo = getattr(class_, key, None)
-        attributo2 = getattr(nuevo, key, None)
-        if attributo != None and attributo.__class__ == ndb.model.DateTimeProperty:
-            value = datetime.datetime.fromtimestamp(float(value))
-        if attributo != None and attributo.__class__ == ndb.model.IntegerProperty:
-            value = int(value)
-        if issubclass(class_, ndb.Expando):
-            if attributo != None and (attributo.__class__ == ndb.model.StringProperty or attributo.__class__ == ndb.model.TextProperty):
-                #Si la clase tiene definido el campo
-                renombrar = True
-            else:
-                if attributo2 != None:
-                    #Si la instancia ya tiene el campo
-                    if isinstance(attributo2, str) or isinstance(attributo2, unicode):
-                        renombrar = True;
-                else:
-                    #Si la instancia no tiene el campo
-                    if isinstance(value, str) or isinstance(value, unicode):
-                        renombrar = True
-        if renombrar and not leng == None:
-            key=key+'_'+leng
-        setattr(nuevo, key, value)
+def llenarYpersistir(class_, nuevo, valoresNuevos, listanegra, puntos=False):
+    attrViejos = to_dict(nuevo, None, puntos).keys()
+    restantes = list(set(attrViejos) - set(listanegra))
+    restantes = list(set(restantes) - set(valoresNuevos.keys()))
+    for key, value in valoresNuevos.iteritems():
+        if (puntos):
+            key = key.replace('.', '--')
+        if (not key in listanegra):
+            attributo = getattr(class_, key, None)
+            if attributo != None and attributo.__class__ == ndb.model.DateTimeProperty:
+                value = datetime.datetime.fromtimestamp(float(value))
+            if attributo != None and attributo.__class__ == ndb.model.IntegerProperty:
+                value = int(value)
+            setattr(nuevo, key, value)
+    for key in restantes:
+        delattr(nuevo, key)
     nuevo.put()
-    todo = to_dict(nuevo)
-    return todo
+    return to_dict(nuevo, None, puntos)
+    #return valoresNuevos.keys()
 
 def buscarGQL(objeto):
     
@@ -97,18 +88,18 @@ def buscarGQL2(objeto):
         ans['next'] = next_cursor.urlsafe()
     return ans
 
-def to_dict(model, propio=None):
+def to_dict(model, propio=None, puntos=False):
     if model == None:
         return None
     if isinstance(model, list):
         output = []
         for valor in model:
-            output.append(to_dict(valor, propio))
+            output.append(to_dict(valor, propio, puntos))
     else:
         if (propio == None):
-            output = model.to_dict()
+            output = model.to_dict(puntos)
         else:
-            output = getattr(model, propio)()
+            output = getattr(model, propio)
     return output
 
 def siempreUtf8(a):

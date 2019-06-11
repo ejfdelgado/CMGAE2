@@ -1,5 +1,57 @@
 <script type="text/javascript">
 	
+	var moduloDatos = (function() {
+		
+		var leer = function() {
+				
+		};
+		
+		return {
+			
+		};
+	})();
+	
+	var moduloPagina = (function() {
+		
+		var valorActual = null;
+		var diferidoLectura = $.Deferred();
+		
+		var leer = function(opciones) {
+			opciones = $.extend(true, {}, {
+				'logged': false,
+			}, opciones);
+			miseguridad.buscarUsuario(opciones['logged'], function() {
+				var pg = $.urlParam('pg');
+				moduloHttp.get('/api/xpage/', false, {'pg': pg}).then(function(rta) {
+					valorActual = moduloTransformacion.modo('simple').from(rta.valor);
+					console.log(JSON.stringify(valorActual, null, 4));
+					if (location.pathname != valorActual.path) {
+						//Url mal armada, redirigir
+						location.pathname = valorActual.path;
+					} else {
+						//Se prepara para leer el modelo de datos
+						diferidoLectura.resolve(valorActual);
+					}
+				});
+			});
+			return diferidoLectura;
+		};
+		
+		var guardar = function(nuevo) {
+			diferidoLectura.then(function(valor) {
+				var temp = moduloTransformacion.modo('simple').to(nuevo);
+				moduloHttp.put('/api/xpage/'+valor.id, temp).then(function(rta) {
+					valorActual = moduloTransformacion.modo('simple').from(rta.valor);
+				});
+			});
+		};
+		
+		return {
+			'leer': leer,
+			'guardar': guardar,
+		};
+	})();
+	
 	var moduloIntMark = (function(opciones) {
 		opciones = $.extend(true, {
 			'masterLoged': false,
@@ -43,6 +95,7 @@
 			var forzarUsuario = ((tipoCliente == 'master' && (opciones['masterLoged'] || opciones['masterIdUsr'])) 
 					|| (tipoCliente == 'slave' && (opciones['slaveLoged'] || opciones['slaveIdUsr'])));
 			miseguridad.buscarUsuario(forzarUsuario, funcionContinuar);
+			moduloPagina.leer();
 		});
 		
 		//Se crea el espacio de trabajo
