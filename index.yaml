@@ -13,6 +13,12 @@ indexes:
 - kind: Pagina
   properties:
   - name: path
+  - name: date
+    direction: desc
+
+- kind: Pagina
+  properties:
+  - name: path
   - name: usr
   - name: date
     direction: desc

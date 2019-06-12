@@ -5,6 +5,7 @@ Created on 10/06/2019
 @author: Edgar
 '''
 
+import time
 import logging
 from django.http import HttpResponse
 from google.appengine.api import memcache
@@ -16,6 +17,10 @@ from handlers.respuestas import RespuestaNoAutorizado, NoAutorizadoException,\
 from handlers.seguridad import inyectarUsuario, enRol, enRolFun
 from handlers.decoradores import autoRespuestas
 from handlers import comun
+from google.appengine.api.search import search
+from datetime import datetime
+
+LLAVE_INDICE = 'docs'
 
 def leerRefererPath(request):
     elhost = request.META['HTTP_HOST']
@@ -38,9 +43,27 @@ def leerNumero(s):
     except ValueError:
         return None
 
+def docToJson(doc):
+    if isinstance(doc, list):
+        output = []
+        for valor in doc:
+            output.append(docToJson(valor))
+        return output
+    else:
+        output = {}
+        output['tit'] = doc.field('tit').value
+        output['desc'] = doc.field('desc').value
+        output['img'] = doc.field('img').value
+        output['usr'] = doc.field('usr').value
+        output['path'] = doc.field('path').value
+        output['date'] = time.mktime(doc.field('date').value.timetuple())
+        output['id'] = doc.doc_id
+        return output
+        
+
 @inyectarUsuario
 @autoRespuestas
-def PageHandler(request, ident, usuario=None):
+def DocHandler(request, ident, usuario=None):
     if request.method == 'GET':
         response = HttpResponse("", content_type='application/json', status=200)
         ans = {}
@@ -48,27 +71,55 @@ def PageHandler(request, ident, usuario=None):
         if (ident == ''):
             idPagina = leerNumero(request.GET.get('pg', None))
             if (idPagina is None):
+                index = search.Index(LLAVE_INDICE)
                 if (usuario is not None):
                     elpath = leerRefererPath(request)
                     elUsuario = usuario.uid
                     
-                    temporal = ndb.gql('SELECT * FROM Pagina WHERE usr = :1 and path = :2 ORDER BY date DESC', elUsuario, elpath)
-                    datos, next_cursor, more = temporal.fetch_page(1)
+                    query_string = 'usr = '+elUsuario+' AND path = '+elpath
+                    sort_date = search.SortExpression(
+                        expression='date',
+                        direction=search.SortExpression.DESCENDING,
+                        default_value=None)
+                    sort_options = search.SortOptions(expressions=[sort_date])
+                    #cursor = search.Cursor(web_safe_string=cursor_string)
+                    #options = search.QueryOptions(cursor=cursor)
+                    query_options = search.QueryOptions(
+                            limit=1,
+                            sort_options=sort_options)
+                    query = search.Query(query_string=query_string, options=query_options)
+                    results = index.search(query)
+                    datos = results.results
+                    
+                    #Este es el cursor para la siguiente búsqueda
+                    #cursor = results.cursor
+                    #cursor_string = cursor.web_safe_string
+                    
                     if (len(datos) > 0):
                         #Ya existe y no lo debo crear
-                        ans['valor'] = comun.to_dict(datos[0], None, True)
+                        ans['valor'] = docToJson(datos[0])
                     else:
                         #Se debe crear
-                        unapagina = Pagina(usr=elUsuario, path=elpath)
-                        unapagina.put()
-                        ans['valor'] = comun.to_dict(unapagina, None, True)
+                        document = search.Document(
+                                fields=[
+                                    search.TextField(name='tit', value='', language='es'),
+                                    search.TextField(name='desc', value='', language='es'),
+                                    
+                                    search.AtomField(name='img', value='', language='es'),
+                                    search.AtomField(name='usr', value=elUsuario, language='es'),
+                                    search.AtomField(name='path', value=elpath, language='es'),
+                                    
+                                    search.DateField(name='date', value=datetime.now()),
+                                ])
+                        index.put(document)
+                        ans['valor'] = docToJson(document)
                 else:
                     #Por ahora no se sabe qué hacer cuando no hay usuario logeado
                     raise NoHayUsuarioException()
             else:
-                llave = ndb.Key('Pagina', idPagina)
-                unapagina = llave.get()
-                ans['valor'] = comun.to_dict(unapagina, None, True)
+                index = search.Index(LLAVE_INDICE)
+                document = index.get(idPagina)
+                ans['valor'] = docToJson(document)
         elif (ident == 'q'):
             ans['next'] = None;
             busqueda = {}
