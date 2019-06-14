@@ -15,7 +15,9 @@ from handlers.respuestas import RespuestaNoAutorizado, NoAutorizadoException,\
     NoExisteException, ParametrosIncompletosException, NoHayUsuarioException
 from handlers.seguridad import inyectarUsuario, enRol, enRolFun
 from handlers.decoradores import autoRespuestas
-from handlers import comun
+from handlers import comun, DocHandler
+
+LIGTH_WEIGHT_KEYS = ['tit', 'desc', 'img', 'q']
 
 def leerRefererPath(request):
     elhost = request.META['HTTP_HOST']
@@ -38,6 +40,17 @@ def leerNumero(s):
     except ValueError:
         return None
 
+def filtrarParametros(request, filtro):
+    buscables={}
+    if isinstance(request,dict):
+        for key in filtro:
+            if (key in request):
+                buscables[key] = request[key]
+    else:
+        for key in filtro:
+            buscables[key] = request.GET.get(key, None)
+    return buscables
+
 @inyectarUsuario
 @autoRespuestas
 def PageHandler(request, ident, usuario=None):
@@ -47,37 +60,51 @@ def PageHandler(request, ident, usuario=None):
         ans['error'] = 0
         if (ident == ''):
             idPagina = leerNumero(request.GET.get('pg', None))
+            buscables=filtrarParametros(request, LIGTH_WEIGHT_KEYS)
+            elpath = leerRefererPath(request)
             if (idPagina is None):
                 if (usuario is not None):
-                    elpath = leerRefererPath(request)
                     elUsuario = usuario.uid
                     
                     temporal = ndb.gql('SELECT * FROM Pagina WHERE usr = :1 and path = :2 ORDER BY date DESC', elUsuario, elpath)
                     datos, next_cursor, more = temporal.fetch_page(1)
+                    unapagina = None
                     if (len(datos) > 0):
                         #Ya existe y no lo debo crear
-                        ans['valor'] = comun.to_dict(datos[0], None, True)
+                        unapagina = datos[0]
                     else:
                         #Se debe crear
-                        unapagina = Pagina(usr=elUsuario, path=elpath)
+                        unapagina = Pagina(usr=elUsuario, path=elpath, **buscables)
                         unapagina.put()
-                        ans['valor'] = comun.to_dict(unapagina, None, True)
+                    ans['valor'] = comun.to_dict(unapagina, None, True)
+                    buscables=filtrarParametros(ans['valor'], LIGTH_WEIGHT_KEYS)
+                    DocHandler.autoCrearDoc(str(unapagina.key.id()), usuario, elpath, buscables)
                 else:
                     #Por ahora no se sabe qué hacer cuando no hay usuario logeado
                     raise NoHayUsuarioException()
             else:
                 llave = ndb.Key('Pagina', idPagina)
                 unapagina = llave.get()
+                #Validar que exista el buscable
+                DocHandler.autoCrearDoc(str(unapagina.key.id()), usuario, elpath, buscables)
                 ans['valor'] = comun.to_dict(unapagina, None, True)
         elif (ident == 'q'):
+            ans = DocHandler.busquedaGeneral(request, usuario)
+            todo = request.GET.get('todo', None)
+            if (todo is not None):
+                ids = []
+                for undoc in ans['valor']:
+                    ids.append(undoc['id'])
+                laspaginas = ndb.get_multi([ndb.Key('Pagina', leerNumero(k)) for k in ids])
+                ans['valor'] = comun.to_dict(laspaginas, None, True)
+        elif (ident == 'q2'):
             ans['next'] = None;
             busqueda = {}
-            busqueda['like'] = request.GET.get('like', None)
             busqueda['path'] = request.GET.get('path', None)
             busqueda['mio'] = request.GET.get('mio', '0')
             busqueda['n'] = leerNumero(request.GET.get('n', 10))
             busqueda['next'] = request.GET.get('next', None)#Para paginar
-            ans['q'] = busqueda
+            #ans['q'] = busqueda
             
             parametros = []
             sqltext = 'SELECT * FROM Pagina WHERE '
@@ -90,9 +117,6 @@ def PageHandler(request, ident, usuario=None):
                 sqltext+='usr = :'+str(ixparam)
                 parametros.append(usuario.uid)
                 ixparam=ixparam+1;
-            if (busqueda['like'] is not None):
-                #Pensar como hacer
-                pass
                 
             if (ixparam == 1):
                 sqltext = 'SELECT * FROM Pagina '
@@ -126,7 +150,32 @@ def PageHandler(request, ident, usuario=None):
                     raise NoAutorizadoException()
                 else:
                     otro = comun.llenarYpersistir(Pagina, modelo, peticion, ['usr', 'path', 'date', 'id'], True)
+                    elpath = leerRefererPath(request)
+                    buscables=filtrarParametros(peticion, LIGTH_WEIGHT_KEYS)
+                    #Optimizar, si no ha cambiado, no recrear
+                    DocHandler.actualizar(str(idPagina), usuario, elpath, buscables)
+                    
                     ans['valor'] = otro
+            else:
+                raise NoExisteException()
+        else:
+            raise ParametrosIncompletosException()
+        response.write(simplejson.dumps(ans))
+        return response
+    elif request.method == 'DELETE':
+        response = HttpResponse("", content_type='application/json', status=200)
+        ans = {}
+        ans['error'] = 0
+        idPagina = leerNumero(ident)
+        if (idPagina is not None):
+            llave = ndb.Key('Pagina', idPagina)
+            modelo = llave.get()
+            if (modelo is not None):
+                if (usuario is None or modelo.usr != usuario.uid):
+                    raise NoAutorizadoException()
+                else:
+                    modelo.key.delete()
+                    DocHandler.borrar(str(idPagina), usuario)
             else:
                 raise NoExisteException()
         else:

@@ -34,6 +34,10 @@ class Pagina(ndb.Expando):
     usr = ndb.StringProperty()
     path = ndb.StringProperty()
     
+    tit = ndb.StringProperty()
+    desc = ndb.StringProperty()
+    img = ndb.StringProperty()
+    
     def to_dict(self, puntos):
         return to_dict_(self, puntos)
 

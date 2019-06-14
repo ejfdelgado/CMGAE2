@@ -10,8 +10,6 @@ import logging
 from django.http import HttpResponse
 from google.appengine.api import memcache
 from django.utils import simplejson
-from google.appengine.ext import ndb
-from models import Pagina
 from handlers.respuestas import RespuestaNoAutorizado, NoAutorizadoException,\
     NoExisteException, ParametrosIncompletosException, NoHayUsuarioException
 from handlers.seguridad import inyectarUsuario, enRol, enRolFun
@@ -21,6 +19,8 @@ from google.appengine.api.search import search
 from datetime import datetime
 
 LLAVE_INDICE = 'docs'
+NO_BUSCABLES = ['usr', 'path', 'img']
+IGNORAR = ['id']
 
 def leerRefererPath(request):
     elhost = request.META['HTTP_HOST']
@@ -50,16 +50,162 @@ def docToJson(doc):
             output.append(docToJson(valor))
         return output
     else:
+        campos = doc.fields
         output = {}
-        output['tit'] = doc.field('tit').value
-        output['desc'] = doc.field('desc').value
-        output['img'] = doc.field('img').value
-        output['usr'] = doc.field('usr').value
-        output['path'] = doc.field('path').value
-        output['date'] = time.mktime(doc.field('date').value.timetuple())
+        for campo in campos:
+            if (isinstance(campo.value, datetime)):
+                output[campo.name] = time.mktime(campo.value.timetuple())
+            else:
+                output[campo.name] = campo.value
+        
         output['id'] = doc.doc_id
         return output
+
+#Crea un documento nuevo
+def recrearDocumento(idPagina, usuario, elpath, buscables={}, lenguaje='es'):
+    campos = []
+    buscables['usr'] = usuario
+    buscables['path'] = elpath
+    #logging.info(buscables)
+    for key, value in buscables.iteritems():
+        if (not key in IGNORAR):
+            if (key in NO_BUSCABLES):
+                campos.append(search.AtomField(name=key, value=value, language=lenguaje))
+            else:
+                campos.append(search.TextField(name=key, value=value, language=lenguaje))
+            
+    campos.append(search.DateField(name='date', value=datetime.now()))
+    
+    document = search.Document(
+            doc_id=idPagina,
+            fields=campos)
+    
+    return document
+    
+def complementarConsulta(index, query_string, n=10, cursor_string=None):
+    sort_date = search.SortExpression(
+        expression='date',
+        direction=search.SortExpression.DESCENDING,
+        default_value=None)
+    sort_options = search.SortOptions(expressions=[sort_date])
+    if (cursor_string is not None):
+        cursor = search.Cursor(web_safe_string=cursor_string)
+    else:
+        cursor = search.Cursor()
+    query_options = search.QueryOptions(
+            limit=n,
+            sort_options=sort_options,
+            cursor=cursor)
+    query = search.Query(query_string=query_string, options=query_options)
+    results = index.search(query)
+    return results
+
+def autoCrearDoc(idPagina, usuario, elpath, buscables={}, lenguaje='es'):
+    index = search.Index(LLAVE_INDICE)
+    if (usuario is not None):
+        if (idPagina is not None and len(idPagina.strip()) > 0):
+            document = index.get(idPagina)
+        else:
+            query_string = 'usr = '+usuario.uid+' AND path = '+elpath
+            results = complementarConsulta(index, query_string, 1)
+            datos = results.results
+            if (len(datos) > 0):
+                document = datos[0]
+            else:
+                document = None
         
+        if (document is not None):
+            #Ya existe y no lo debo crear
+            return document
+        else:
+            #Se debe crear
+            document = recrearDocumento(idPagina, usuario.uid, elpath, buscables, lenguaje)
+            index.put(document)
+            return document
+    else:
+        #Por ahora no se sabe qué hacer cuando no hay usuario logeado
+        raise NoHayUsuarioException()
+
+def borrar(idPagina, usuario):
+    if (idPagina is not None or idPagina == ''):
+        index = search.Index(LLAVE_INDICE)
+        modelo = index.get(idPagina)
+        if (modelo is not None):
+            if (usuario is None or modelo.field('usr').value != usuario.uid):
+                raise NoAutorizadoException()
+            else:
+                index.delete(idPagina)
+        else:
+            raise NoExisteException()
+    else:
+        raise ParametrosIncompletosException()
+
+def actualizar(idPagina, usuario, elpath, peticion):
+    if (idPagina is not None or idPagina == ''):
+        index = search.Index(LLAVE_INDICE)
+        modelo = index.get(idPagina)
+        if (modelo is not None):
+            if (usuario is None or modelo.field('usr').value != usuario.uid):
+                raise NoAutorizadoException()
+            else:
+                #Solo si ha cambiado la informacion se recrea
+                viejo = docToJson(modelo)
+                cambio = False
+                for key, value in peticion.iteritems():
+                    if key in viejo:
+                        if (value != viejo[key]):
+                            cambio = True
+                            break
+                    else:
+                        cambio = True
+                        break
+                if (cambio):
+                    nuevo = recrearDocumento(idPagina, usuario.uid, elpath, peticion)
+                    index.put(nuevo)
+                    return docToJson(nuevo)
+                else:
+                    return docToJson(modelo)
+        else:
+            raise NoExisteException()
+    else:
+        raise ParametrosIncompletosException()
+
+def busquedaGeneral(request, usuario):
+    ans = {}
+    ans['error'] = 0
+    ans['next'] = None;
+    busqueda = {}
+    busqueda['like'] = request.GET.get('like', '')
+    busqueda['path'] = request.GET.get('path', None)
+    busqueda['mio'] = request.GET.get('mio', '0')
+    busqueda['n'] = leerNumero(request.GET.get('n', 10))
+    busqueda['next'] = request.GET.get('next', None)#Para paginar
+    #ans['q'] = busqueda
+    
+    index = search.Index(LLAVE_INDICE)
+    #TODO Se debe borrar todo lo que no es alfanumerico AND OR
+    query_string = busqueda['like']
+    if (busqueda['path'] is not None):
+        query_string+=' AND path='+busqueda['path']
+    if (busqueda['mio'] == '1' and usuario is not None):
+        query_string+=' AND usr='+usuario.uid
+    
+    if (query_string.startswith(' AND')):
+        query_string = query_string[5:]
+    
+    ans['query_string']=query_string
+    
+    results = complementarConsulta(index, query_string, busqueda['n'], busqueda['next'])
+    datos = results.results
+    
+    ans['valor'] = docToJson(datos)
+    
+    #Este es el cursor para la siguiente búsqueda
+    cursor = results.cursor
+    if (cursor is not None):
+        cursor_string = cursor.web_safe_string
+        ans['next'] = cursor_string
+    return ans
 
 @inyectarUsuario
 @autoRespuestas
@@ -69,98 +215,12 @@ def DocHandler(request, ident, usuario=None):
         ans = {}
         ans['error'] = 0
         if (ident == ''):
-            idPagina = leerNumero(request.GET.get('pg', None))
-            if (idPagina is None):
-                index = search.Index(LLAVE_INDICE)
-                if (usuario is not None):
-                    elpath = leerRefererPath(request)
-                    elUsuario = usuario.uid
-                    
-                    query_string = 'usr = '+elUsuario+' AND path = '+elpath
-                    sort_date = search.SortExpression(
-                        expression='date',
-                        direction=search.SortExpression.DESCENDING,
-                        default_value=None)
-                    sort_options = search.SortOptions(expressions=[sort_date])
-                    #cursor = search.Cursor(web_safe_string=cursor_string)
-                    #options = search.QueryOptions(cursor=cursor)
-                    query_options = search.QueryOptions(
-                            limit=1,
-                            sort_options=sort_options)
-                    query = search.Query(query_string=query_string, options=query_options)
-                    results = index.search(query)
-                    datos = results.results
-                    
-                    #Este es el cursor para la siguiente búsqueda
-                    #cursor = results.cursor
-                    #cursor_string = cursor.web_safe_string
-                    
-                    if (len(datos) > 0):
-                        #Ya existe y no lo debo crear
-                        ans['valor'] = docToJson(datos[0])
-                    else:
-                        #Se debe crear
-                        document = search.Document(
-                                fields=[
-                                    search.TextField(name='tit', value='', language='es'),
-                                    search.TextField(name='desc', value='', language='es'),
-                                    
-                                    search.AtomField(name='img', value='', language='es'),
-                                    search.AtomField(name='usr', value=elUsuario, language='es'),
-                                    search.AtomField(name='path', value=elpath, language='es'),
-                                    
-                                    search.DateField(name='date', value=datetime.now()),
-                                ])
-                        index.put(document)
-                        ans['valor'] = docToJson(document)
-                else:
-                    #Por ahora no se sabe qué hacer cuando no hay usuario logeado
-                    raise NoHayUsuarioException()
-            else:
-                index = search.Index(LLAVE_INDICE)
-                document = index.get(idPagina)
-                ans['valor'] = docToJson(document)
+            idPagina = request.GET.get('pg', None)
+            elpath = leerRefererPath(request)
+            midocumento = autoCrearDoc(idPagina, usuario, elpath)
+            ans['valor'] = docToJson(midocumento)
         elif (ident == 'q'):
-            ans['next'] = None;
-            busqueda = {}
-            busqueda['like'] = request.GET.get('like', None)
-            busqueda['path'] = request.GET.get('path', None)
-            busqueda['mio'] = request.GET.get('mio', '0')
-            busqueda['n'] = leerNumero(request.GET.get('n', 10))
-            busqueda['next'] = request.GET.get('next', None)#Para paginar
-            ans['q'] = busqueda
-            
-            parametros = []
-            sqltext = 'SELECT * FROM Pagina WHERE '
-            ixparam = 1
-            if (busqueda['path'] is not None):
-                sqltext+='path = :'+str(ixparam)
-                parametros.append(busqueda['path'])
-                ixparam=ixparam+1;
-            if (busqueda['mio'] == '1' and usuario is not None):
-                sqltext+='usr = :'+str(ixparam)
-                parametros.append(usuario.uid)
-                ixparam=ixparam+1;
-            if (busqueda['like'] is not None):
-                #Pensar como hacer
-                pass
-                
-            if (ixparam == 1):
-                sqltext = 'SELECT * FROM Pagina '
-                
-            sqltext+=' ORDER BY date DESC'
-            
-            ans['sqltext'] = sqltext
-            
-            temporal = ndb.gql(sqltext, *parametros)
-            if (busqueda['next'] is not None):
-                datos, next_cursor, more = temporal.fetch_page(busqueda['n'], start_cursor=ndb.query.Cursor(urlsafe=busqueda['next']))
-            else:
-                datos, next_cursor, more = temporal.fetch_page(busqueda['n'])
-            ans['ans'] = comun.to_dict(datos, None, True)
-            if (more):
-                ans['next'] = next_cursor.urlsafe()
-        
+            ans = busquedaGeneral(request, usuario)
         response.write(simplejson.dumps(ans))
         return response
     elif request.method == 'PUT':
@@ -168,20 +228,17 @@ def DocHandler(request, ident, usuario=None):
         ans = {}
         ans['error'] = 0
         peticion = simplejson.loads(request.raw_post_data)
-        idPagina = leerNumero(ident)
-        if (idPagina is not None):
-            llave = ndb.Key('Pagina', idPagina)
-            modelo = llave.get()
-            if (modelo is not None):
-                if (usuario is None or modelo.usr != usuario.uid):
-                    raise NoAutorizadoException()
-                else:
-                    otro = comun.llenarYpersistir(Pagina, modelo, peticion, ['usr', 'path', 'date', 'id'], True)
-                    ans['valor'] = otro
-            else:
-                raise NoExisteException()
-        else:
-            raise ParametrosIncompletosException()
+        idPagina = ident
+        elpath = leerRefererPath(request)
+        ans['valor'] = actualizar(idPagina, usuario, elpath, peticion)
+        response.write(simplejson.dumps(ans))
+        return response
+    elif request.method == 'DELETE':
+        response = HttpResponse("", content_type='application/json', status=200)
+        ans = {}
+        ans['error'] = 0
+        idPagina = ident
+        borrar(idPagina, usuario)
         response.write(simplejson.dumps(ans))
         return response
     

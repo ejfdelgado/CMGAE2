@@ -32,10 +32,18 @@
 		var leer = function(opciones) {
 			opciones = $.extend(true, {}, {
 				'logged': false,
+				'tit': 'Titulo',
+				'desc': 'Descripcion',
+				'img': '/img/default.png',
 			}, opciones);
 			miseguridad.buscarUsuario(opciones['logged'], function() {
 				var pg = $.urlParam('pg');
-				moduloHttp.get('/api/xdoc/', false, {'pg': pg}).then(function(rta) {
+				moduloHttp.get('/api/xpage/', false, {
+					'pg': pg, 
+					'tit': opciones['tit'],
+					'desc': opciones['desc'],
+					'img': opciones['img'],
+					}).then(function(rta) {
 					valorActual = moduloTransformacion.modo('simple').from(rta.valor);
 					if (location.pathname != valorActual.path) {
 						//Url mal armada, redirigir
@@ -58,7 +66,7 @@
 			if (esDiferente(nuevo)) {
 				diferidoLectura.then(function(valor) {
 					var temp = moduloTransformacion.modo('simple').to(nuevo);
-					moduloHttp.put('/api/xdoc/'+valor.id, temp).then(function(rta) {
+					moduloHttp.put('/api/xpage/'+valor.id, temp).then(function(rta) {
 						valorActual = moduloTransformacion.modo('simple').from(rta.valor);
 						tomarImagen();
 						diferido.resolve(valorActual);
@@ -72,9 +80,31 @@
 			return diferido;
 		};
 		
+		var borrar = function(otroId, servicio) {
+			if (!(typeof servicio == 'string' && servicio.trim().length > 0)) {
+				servicio = '/api/xpage/';
+			}
+			var diferido = $.Deferred();
+			diferidoLectura.then(function(valor) {
+				var idBorrar = valor.id;
+				if ((typeof otroId == 'string' && otroId.trim().length > 0) || typeof otroId == 'number') {
+					idBorrar = otroId;
+				}
+				moduloHttp.borrar(servicio+idBorrar).then(function(rta) {
+					valorActual = null;
+					tomarImagen();
+					diferido.resolve(valorActual);
+				});
+			}, function() {
+				diferido.reject();
+			});
+			return diferido;
+		};
+		
 		return {
 			'leer': leer,
 			'guardar': guardar,
+			'borrar': borrar,
 		};
 	})();
 	
@@ -116,15 +146,15 @@
 					'tipoCliente': tipoCliente
 					});
 			};
-			
-			moduloPagina.leer().then(function(contextoPagina) {
-				//Si no tiene parametro pg debe ser master y debe estar logeado
-				var forzarUsuario = ($.urlParam('pg') == null || (opciones['slaveLoged'] || opciones['slaveIdUsr']));
-				miseguridad.buscarUsuario(forzarUsuario, function(principal) {
+
+			//Si no tiene parametro pg debe ser master y debe estar logeado
+			var forzarUsuario = ($.urlParam('pg') == null || (opciones['slaveLoged'] || opciones['slaveIdUsr']));
+			miseguridad.buscarUsuario(forzarUsuario, function(principal) {
+				moduloPagina.leer().then(function(contextoPagina) {
 					funcionContinuar(principal, contextoPagina);
+				}, function(datos) {
+					//Si usuario no logeado
 				});
-			}, function(datos) {
-				//Si usuario no logeado
 			});
 		});
 		
@@ -203,6 +233,7 @@
 						'tipo': tipoCliente,
 						'db': db,
 						'firebaseUrl': firebaseUrl,
+						'ctx': ctx,
 					});
 				};
 				
