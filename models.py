@@ -23,11 +23,6 @@ def to_dict_(entidad, puntos=False):
         
     ans['id'] = entidad.key.id()
     return ans
-
-class Documento(ndb.Expando):
-    _default_indexed = False
-    def to_dict(self):
-        return to_dict_(self)
     
 class Pagina(ndb.Expando):
     date = ndb.DateTimeProperty(auto_now_add=True)
@@ -41,20 +36,43 @@ class Pagina(ndb.Expando):
     def to_dict(self, puntos):
         return to_dict_(self, puntos)
 
-class Caracteristica(ndb.Expando):
-    _default_indexed = False
-    date = ndb.DateTimeProperty(auto_now_add=True)
-    modif = ndb.DateTimeProperty(auto_now=True)
-    
-    def to_dict(self):
-        return to_dict_(self)
-
 class Configuracion(ndb.Expando):
     _default_indexed = False
-    def to_dict(self):
-        return to_dict_(self)
+    def to_dict(self, puntos):
+        return to_dict_(self, puntos)
     
 class ShortUrlM(ndb.Model):
     theurl = ndb.StringProperty()
-    def to_dict(self):
-        return to_dict_(self)
+    date = ndb.DateTimeProperty(auto_now_add=True)
+    
+    def to_dict(self, puntos):
+        return to_dict_(self, puntos)
+
+class Opinion(ndb.Model):
+    usr = ndb.StringProperty()
+    page = ndb.IntegerProperty()
+    modif = ndb.DateTimeProperty(auto_now=True)
+    
+    v0 = ndb.StringProperty()
+    v1 = ndb.StringProperty()
+    v2 = ndb.StringProperty()
+    v3 = ndb.StringProperty()
+    v4 = ndb.StringProperty()
+    
+    
+    def to_dict(self, puntos):
+        return to_dict_(self, puntos)
+
+class Contador(ndb.Model):
+    page = ndb.IntegerProperty()
+    sub = ndb.IntegerProperty()
+    n = ndb.IntegerProperty()
+    
+    v0 = ndb.StringProperty()
+    v1 = ndb.StringProperty()
+    v2 = ndb.StringProperty()
+    v3 = ndb.StringProperty()
+    v4 = ndb.StringProperty()
+    
+    def to_dict(self, puntos):
+        return to_dict_(self, puntos)

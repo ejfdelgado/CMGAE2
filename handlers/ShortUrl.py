@@ -16,8 +16,6 @@ from handlers.decoradores import autoRespuestas
 from handlers import comun
 from django.http import HttpResponseRedirect
 
-CORREO_ENVIOS = 'edgar.jose.fernando.delgado@gmail.com'
-
 BASE_CONVERSION = 36
 
 def digit_to_char(digit):

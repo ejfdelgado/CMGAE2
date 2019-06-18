@@ -38,7 +38,7 @@ def diferenciarIdDeQueryParam(ident):
                 respuesta['parametros'][llave].append(valor)
     return respuesta
 
-def llenarYpersistir(class_, nuevo, valoresNuevos, listanegra, puntos=False):
+def llenarYpersistir(class_, nuevo, valoresNuevos, listanegra=[], puntos=False):
     attrViejos = to_dict(nuevo, None, puntos).keys()
     restantes = list(set(attrViejos) - set(listanegra))
     restantes = list(set(restantes) - set(valoresNuevos.keys()))
@@ -125,3 +125,11 @@ def remplazar(a, b, c, autf8=False):
         return a.replace(b, c).encode('utf-8')
     else:
         return a.replace(b, c)
+    
+def leerNumero(s):
+    if (s is None):
+        return s
+    try:
+        return int(s)
+    except ValueError:
+        return None

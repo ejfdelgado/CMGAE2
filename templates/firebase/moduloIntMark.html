@@ -11,6 +11,143 @@
 		};
 	})();
 	
+	var moduloCont = (function() {
+		
+		var darHash = function(dato) {
+			var id = [dato['v0'], dato['v1'], dato['v2'], dato['v3'], dato['v4']];
+			return {
+				'id': id, 
+				'hash': MD5(JSON.sortify(id))
+				};
+		};
+		
+		//Se pasa una lista de valores categorizados ['a', '1', '2']
+		var opinar= function(lista) {
+			var diferido = $.Deferred();
+			moduloIntMarkInst.afterSlave().then(function(datos) {
+				moduloHttp.post('/api/cont/'+datos['ctx']['id'], {
+					'v': lista,//Lista de valores
+					}).then(function(rta) {
+						diferido.resolve(rta);
+					}, function() {
+						diferido.reject();
+					});
+			});
+			
+			diferido.then(function(datos) {
+				console.log(JSON.stringify(datos, null, 4));
+			})
+			
+			return diferido;
+		};
+		
+		//Lee la opinion del usuario actual para la pagina actual
+		//Se asume que esta en modo slave y es usuario logeado
+		var leer = function() {
+			var diferido = $.Deferred();
+			moduloIntMarkInst.afterSlave().then(function(datos) {
+				console.log('moduloCont', datos);
+				
+				moduloHttp.get('/api/cont/per', false, {
+					'pg': datos['ctx']['id'],
+					}).then(function(rta) {
+						diferido.resolve(rta);
+					}, function() {
+						diferido.reject();
+					});
+			});
+			
+			diferido.then(function(datos) {
+				console.log(JSON.stringify(datos, null, 4));
+			})
+			
+			return diferido;
+		};
+		
+		var total = function() {
+			var diferido = $.Deferred();
+			moduloIntMarkInst.afterSlave().then(function(datos) {
+				
+				var todo = [];
+				var next = null;
+				var N = 100;
+				
+				//Se juntan todos los que tengan un mismo v0-v4
+				//[{id:['a', '1'], 'n': 2}]
+				var totalizar = function() {
+					//Recorro total
+					var mega = {};
+					for (var i=0; i<todo.length; i++){
+						var elem = todo[i];
+						var uid = darHash(elem);
+						var llave = uid['hash'];
+						var actual = null;
+						if (llave in mega) {
+							actual = mega[llave];
+							actual['n']+=elem['n'];
+						} else {
+							actual = {'id': uid['id'], 'n': elem['n']};
+							mega[llave] = actual;
+						}
+					}
+					console.log(JSON.stringify(mega, null, 4));
+				};
+				
+				var recursiva = function() {
+					var peticion = {
+						'pg': datos['ctx']['id'],
+						'n': N,
+					};
+					if (next != null) {
+						peticion['next'] = next;
+					}
+					moduloHttp.get('/api/cont/pub', false, peticion).then(function(rta) {
+							var lista = rta.ans;
+							for (var i=0; i<lista.length; i++) {
+								todo.push(lista[i]);
+							}
+							if (rta['next'] == null || lista.length == 0) {
+								totalizar();
+							} else {
+								next = rta['next'];
+								recursiva();
+							}
+						}, function() {
+							
+						});	
+				};
+				
+				recursiva();
+				
+			});
+			
+			diferido.then(function(datos) {
+				console.log(JSON.stringify(datos));
+			})
+			
+			return diferido;
+		};
+		
+		var borrar = function() {
+			var diferido = $.Deferred();
+			moduloIntMarkInst.afterSlave().then(function(datos) {
+				moduloHttp.borrar('/api/cont/'+datos['ctx']['id']).then(function(rta) {
+					diferido.resolve();
+				}, function() {
+					diferido.reject();
+				});
+			});
+			return diferido;
+		};
+		
+		return {
+			'opinar': opinar,
+			'leer': leer,
+			'total': total,
+			'borrar': borrar,
+		};
+	})();
+	
 	var moduloPagina = (function() {
 		
 		var hashActual = null;
@@ -138,7 +275,10 @@
 			
 			var funcionContinuar = function(principal, contextoPagina) {
 				var database = firebase.database();
-				var tipoCliente = (((principal !== undefined && principal !== null) && contextoPagina['usr'] == principal['uid']) ? 'master' : 'slave');
+				var principalEsDuenio = ((principal !== undefined && principal !== null) && contextoPagina['usr'] == principal['uid']);
+				var solicitudSlave = ($.urlParam('sl') == 'si');
+				//es slave si lo solicita o si no es el duenio de la pagina
+				var tipoCliente = ((solicitudSlave || !principalEsDuenio) ? 'slave' : 'master');
 				diferidoDB.resolve({
 					'database': database, 
 					'principal': principal, 
@@ -169,7 +309,7 @@
 				//Master:
 				//La ruta de firebase debe quedar /pg/usrmaster/path/idpage/users
 				var firebaseUrl = RAIZ + '/' + principal.uid + location.pathname + '/' + ctx['id'];//ruta dentro de firebase
-				var slaveUrl = location.href + '?' + $.param({'pg': ctx['id']});
+				var slaveUrl = location.href + '?' + $.param({'pg': ctx['id'], 'sl': 'si'});
 				
 				//Se debe hacer un post para obtener la ruta corta
 				moduloHttp.post('/a', {'theurl': slaveUrl}).then(function(respuesta) {

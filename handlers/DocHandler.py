@@ -78,7 +78,8 @@ def recrearDocumento(idPagina, usuario, elpath, buscables={}, lenguaje='es'):
     
     document = search.Document(
             doc_id=idPagina,
-            fields=campos)
+            fields=campos,
+            language='es')
     
     return document
     
@@ -131,7 +132,7 @@ def borrar(idPagina, usuario):
         index = search.Index(LLAVE_INDICE)
         modelo = index.get(idPagina)
         if (modelo is not None):
-            if (usuario is None or modelo.field('usr').value != usuario.uid):
+            if (usuario is None or (len(modelo['usr']) > 0 and modelo.field('usr').value != usuario.uid)):
                 raise NoAutorizadoException()
             else:
                 index.delete(idPagina)

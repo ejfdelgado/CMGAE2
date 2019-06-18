@@ -32,14 +32,6 @@ def leerRefererPath(request):
         temp = temp[:indiceQuery]
     return temp
 
-def leerNumero(s):
-    if (s is None):
-        return s
-    try:
-        return int(s)
-    except ValueError:
-        return None
-
 def filtrarParametros(request, filtro):
     buscables={}
     if isinstance(request,dict):
@@ -59,7 +51,7 @@ def PageHandler(request, ident, usuario=None):
         ans = {}
         ans['error'] = 0
         if (ident == ''):
-            idPagina = leerNumero(request.GET.get('pg', None))
+            idPagina = comun.leerNumero(request.GET.get('pg', None))
             buscables=filtrarParametros(request, LIGTH_WEIGHT_KEYS)
             elpath = leerRefererPath(request)
             if (idPagina is None):
@@ -95,14 +87,14 @@ def PageHandler(request, ident, usuario=None):
                 ids = []
                 for undoc in ans['valor']:
                     ids.append(undoc['id'])
-                laspaginas = ndb.get_multi([ndb.Key('Pagina', leerNumero(k)) for k in ids])
+                laspaginas = ndb.get_multi([ndb.Key('Pagina', comun.leerNumero(k)) for k in ids])
                 ans['valor'] = comun.to_dict(laspaginas, None, True)
         elif (ident == 'q2'):
             ans['next'] = None;
             busqueda = {}
             busqueda['path'] = request.GET.get('path', None)
             busqueda['mio'] = request.GET.get('mio', '0')
-            busqueda['n'] = leerNumero(request.GET.get('n', 10))
+            busqueda['n'] = comun.leerNumero(request.GET.get('n', 10))
             busqueda['next'] = request.GET.get('next', None)#Para paginar
             #ans['q'] = busqueda
             
@@ -141,7 +133,7 @@ def PageHandler(request, ident, usuario=None):
         ans = {}
         ans['error'] = 0
         peticion = simplejson.loads(request.raw_post_data)
-        idPagina = leerNumero(ident)
+        idPagina = comun.leerNumero(ident)
         if (idPagina is not None):
             llave = ndb.Key('Pagina', idPagina)
             modelo = llave.get()
@@ -166,7 +158,7 @@ def PageHandler(request, ident, usuario=None):
         response = HttpResponse("", content_type='application/json', status=200)
         ans = {}
         ans['error'] = 0
-        idPagina = leerNumero(ident)
+        idPagina = comun.leerNumero(ident)
         if (idPagina is not None):
             llave = ndb.Key('Pagina', idPagina)
             modelo = llave.get()
