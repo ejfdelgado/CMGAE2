@@ -16,6 +16,60 @@ from handlers.seguridad import inyectarUsuario, enRol, enRolFun
 from handlers.decoradores import autoRespuestas
 from handlers import comun
 
+#@ndb.transactional
+def crearTuplas(idPagina, peticion):
+    #Armo la llave padre
+    paginaKey = ndb.Key(Pagina, idPagina)
+    #Saco las llaves de la peticion
+    llaves = []
+    todas = []
+    datosPayload = peticion['dat']
+    for tupla in datosPayload:
+        llaves.append(tupla)
+        todas.append(tupla)
+    
+    temporal = ndb.gql('SELECT * FROM Tupla WHERE i = :1 and k IN :2 and ANCESTOR IS :3', idPagina, llaves, paginaKey).order(Tupla._key)
+    datos, next_cursor, more = temporal.fetch_page(len(llaves))
+    
+    amodificar = []
+    
+    #Modifico los que existen
+    for existente in datos:
+        llaves.remove(existente.k)
+        if (existente.v != datosPayload[existente.k]):
+            if datosPayload[existente.k] is None:
+                existente.v = None
+            else:
+                existente.v = str(datosPayload[existente.k])
+            amodificar.append(existente)
+        
+    #Itero los que toca crear...
+    for llave in llaves:
+        if (datosPayload[llave] is None):
+            unatupla = Tupla(i=idPagina, k=llave, v=None, parent=paginaKey)
+        else:
+            unatupla = Tupla(i=idPagina, k=llave, v=str(datosPayload[llave]), parent=paginaKey)
+        amodificar.append(unatupla)
+            
+    if (len(amodificar) > 0):
+        ndb.put_multi(amodificar)
+    return len(amodificar)
+
+#@ndb.transactional
+def borrarTuplas(idPagina, llaves):
+    #Armo la llave padre
+    paginaKey = ndb.Key(Pagina, idPagina)
+    temporal = ndb.gql('SELECT * FROM Tupla WHERE i = :1 and k IN :2 and ANCESTOR IS :3', idPagina, llaves, paginaKey).order(Tupla._key)
+    datos, next_cursor, more = temporal.fetch_page(len(llaves))
+    
+    llavesBorrar = []
+    #tomo las llaves
+    for dato in datos:
+        llavesBorrar.append(dato.key)
+    if (len(llavesBorrar) > 0):
+        ndb.delete_multi(llavesBorrar)
+    return len(llavesBorrar)
+
 @inyectarUsuario
 @autoRespuestas
 def TuplaHandler(request, ident, usuario=None):
@@ -53,59 +107,10 @@ def TuplaHandler(request, ident, usuario=None):
         
         if (peticion['acc'] == '+'):
             #Se asume una lista de tuplas [{"a.b.c.v": "ass"}]
-            idPagina = ident
-            #Armo la llave padre
-            paginaKey = ndb.Key(Pagina, idPagina)
-            #Saco las llaves de la peticion
-            llaves = []
-            todas = []
-            datosPayload = peticion['dat']
-            for tupla in datosPayload:
-                llaves.append(tupla)
-                todas.append(tupla)
-            
-            temporal = ndb.gql('SELECT * FROM Tupla WHERE i = :1 and k IN :2 and ANCESTOR IS :3', idPagina, llaves, paginaKey)
-            datos, next_cursor, more = temporal.fetch_page(len(llaves))
-            
-            amodificar = []
-            
-            #Modifico los que existen
-            for existente in datos:
-                llaves.remove(existente.k)
-                if (existente.v != datosPayload[existente.k]):
-                    if datosPayload[existente.k] is None:
-                        existente.v = None
-                    else:
-                        existente.v = str(datosPayload[existente.k])
-                    amodificar.append(existente)
-                
-            #Itero los que toca crear...
-            for llave in llaves:
-                if (datosPayload[llave] is None):
-                    unatupla = Tupla(i=idPagina, k=llave, v=None, parent=paginaKey)
-                else:
-                    unatupla = Tupla(i=idPagina, k=llave, v=str(datosPayload[llave]), parent=paginaKey)
-                amodificar.append(unatupla)
-                    
-            if (len(amodificar) > 0):
-                ndb.put_multi(amodificar)
-            
-            ans['n'] = len(amodificar)
+            ans['n'] = crearTuplas(ident, peticion)
         elif (peticion['acc'] == '-'):
             llaves = peticion['dat']
-            idPagina = ident
-            #Armo la llave padre
-            paginaKey = ndb.Key(Pagina, idPagina)
-            temporal = ndb.gql('SELECT * FROM Tupla WHERE i = :1 and k IN :2 and ANCESTOR IS :3', idPagina, llaves, paginaKey)
-            datos, next_cursor, more = temporal.fetch_page(len(llaves))
-            
-            llavesBorrar = []
-            #tomo las llaves
-            for dato in datos:
-                llavesBorrar.append(dato.key)
-            if (len(llavesBorrar) > 0):
-                ndb.delete_multi(llavesBorrar)
-            ans['n'] = len(llavesBorrar)
+            ans['n'] = borrarTuplas(ident, llaves)
         
         response.write(simplejson.dumps(ans))
         return response
