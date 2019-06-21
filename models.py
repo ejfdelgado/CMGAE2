@@ -50,7 +50,7 @@ class ShortUrlM(ndb.Model):
 
 class Opinion(ndb.Model):
     usr = ndb.StringProperty()
-    page = ndb.IntegerProperty()
+    tip = ndb.StringProperty()
     modif = ndb.DateTimeProperty(auto_now=True)
     
     v0 = ndb.StringProperty()
@@ -63,8 +63,8 @@ class Opinion(ndb.Model):
     def to_dict(self, puntos):
         return to_dict_(self, puntos)
 
-class Contador(ndb.Model):
-    page = ndb.IntegerProperty()
+class Contador(ndb.Expando):
+    tip = ndb.StringProperty()
     sub = ndb.IntegerProperty()
     n = ndb.IntegerProperty()
     
@@ -76,3 +76,16 @@ class Contador(ndb.Model):
     
     def to_dict(self, puntos):
         return to_dict_(self, puntos)
+    
+    
+class Tupla(ndb.Model):
+    #idPagina/path
+    i = ndb.StringProperty()
+    #key, llave. Incluye el id de usuarios especificos despues de u.
+    k = ndb.StringProperty()
+    #valor
+    v = ndb.StringProperty()
+    
+    def to_dict(self, puntos):
+        return to_dict_(self, puntos)
+    

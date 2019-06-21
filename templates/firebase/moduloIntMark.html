@@ -22,11 +22,15 @@
 		};
 		
 		//Se pasa una lista de valores categorizados ['a', '1', '2']
-		var opinar= function(lista) {
+		var opinar= function(tip, lista, opciones) {
+			opciones = $.extend(true, {}, {
+				'max': 5,//la cantidad maxima de contadores distribuidos
+			}, opciones);
 			var diferido = $.Deferred();
 			moduloIntMarkInst.afterSlave().then(function(datos) {
-				moduloHttp.post('/api/cont/'+datos['ctx']['id'], {
+				moduloHttp.post('/api/cont/'+datos['ctx']['id']+'?'+$.param({'max':opciones['max']}), {
 					'v': lista,//Lista de valores
+					'tip': tip,
 					}).then(function(rta) {
 						diferido.resolve(rta);
 					}, function() {
@@ -43,13 +47,14 @@
 		
 		//Lee la opinion del usuario actual para la pagina actual
 		//Se asume que esta en modo slave y es usuario logeado
-		var leer = function() {
+		var leer = function(tip) {
 			var diferido = $.Deferred();
 			moduloIntMarkInst.afterSlave().then(function(datos) {
 				console.log('moduloCont', datos);
 				
 				moduloHttp.get('/api/cont/per', false, {
 					'pg': datos['ctx']['id'],
+					'tip': tip,
 					}).then(function(rta) {
 						diferido.resolve(rta);
 					}, function() {
@@ -64,7 +69,7 @@
 			return diferido;
 		};
 		
-		var total = function() {
+		var total = function(tip) {
 			var diferido = $.Deferred();
 			moduloIntMarkInst.afterSlave().then(function(datos) {
 				
@@ -96,6 +101,7 @@
 				var recursiva = function() {
 					var peticion = {
 						'pg': datos['ctx']['id'],
+						'tip': tip,
 						'n': N,
 					};
 					if (next != null) {
@@ -128,10 +134,13 @@
 			return diferido;
 		};
 		
-		var borrar = function() {
+		var borrar = function(tip, opciones) {
+			opciones = $.extend(true, {}, {
+				'max': 5,//la cantidad maxima de contadores distribuidos
+			}, opciones);
 			var diferido = $.Deferred();
 			moduloIntMarkInst.afterSlave().then(function(datos) {
-				moduloHttp.borrar('/api/cont/'+datos['ctx']['id']).then(function(rta) {
+				moduloHttp.borrar('/api/cont/'+datos['ctx']['id']+'?'+$.param({'tip':tip, 'max':opciones['max']})).then(function(rta) {
 					diferido.resolve();
 				}, function() {
 					diferido.reject();
@@ -150,23 +159,33 @@
 	
 	var moduloPagina = (function() {
 		
-		var hashActual = null;
-		var valorActual = null;
-		var diferidoLectura = $.Deferred();
+		var hashActual = {
+				'0': null,
+				'1': null,
+		};
+		var diferidoLectura = null;
+		var diferidoLectura2 = null;
 		
-		var esDiferente = function(dato) {
-			return (hashActual != darHash(dato));
+		var esDiferente = function(dato, subllave) {
+			return (hashActual[subllave] != darHash(dato)['md5']);
 		};
 		
-		var tomarImagen = function() {
-			hashActual = darHash(valorActual);
+		var tomarImagen = function(valorActual, subllave) {
+			var comp = darHash(valorActual);
+			hashActual[subllave] = comp['md5'];
+			return comp;
 		};
 		
 		var darHash = function(dato) {
-			return MD5(JSON.sortify(dato));
+			var ans = {
+					'txt': JSON.sortify(dato),
+			};
+			ans['md5'] = MD5(ans['txt']); 
+			return ans;
 		};
 		
 		var leer = function(opciones) {
+			diferidoLectura = $.Deferred();
 			opciones = $.extend(true, {}, {
 				'logged': false,
 				'tit': 'Titulo',
@@ -181,14 +200,13 @@
 					'desc': opciones['desc'],
 					'img': opciones['img'],
 					}).then(function(rta) {
-					valorActual = moduloTransformacion.modo('simple').from(rta.valor);
+					var valorActual = moduloTransformacion.modo('simple').from(rta.valor);
 					if (location.pathname != valorActual.path) {
 						//Url mal armada, redirigir
-						//console.log(location.pathname, valorActual.path);
 						location.pathname = valorActual.path;
 					} else {
 						//Se prepara para leer el modelo de datos
-						tomarImagen();
+						tomarImagen(valorActual, '0');
 						diferidoLectura.resolve(valorActual);
 					}
 				}, function() {
@@ -200,19 +218,23 @@
 		
 		var guardar = function(nuevo) {
 			var diferido = $.Deferred();
-			if (esDiferente(nuevo)) {
-				diferidoLectura.then(function(valor) {
-					var temp = moduloTransformacion.modo('simple').to(nuevo);
-					moduloHttp.put('/api/xpage/'+valor.id, temp).then(function(rta) {
-						valorActual = moduloTransformacion.modo('simple').from(rta.valor);
-						tomarImagen();
-						diferido.resolve(valorActual);
+			if (diferidoLectura !== null) {
+				if (esDiferente(nuevo, '0')) {
+					diferidoLectura.then(function(valor) {
+						var temp = moduloTransformacion.modo('simple').to(nuevo);
+						moduloHttp.put('/api/xpage/'+valor.id, temp).then(function(rta) {
+							var valorActual = moduloTransformacion.modo('simple').from(rta.valor);
+							tomarImagen(valorActual, '0');
+							diferido.resolve(valorActual);
+						});
+					}, function() {
+						diferido.reject();
 					});
-				}, function() {
-					diferido.reject();
-				});
+				} else {
+					diferido.resolve(nuevo);
+				}
 			} else {
-				diferido.resolve(valorActual);
+				diferido.reject();
 			}
 			return diferido;
 		};
@@ -221,17 +243,262 @@
 			if (!(typeof servicio == 'string' && servicio.trim().length > 0)) {
 				servicio = '/api/xpage/';
 			}
-			var diferido = $.Deferred();
-			diferidoLectura.then(function(valor) {
-				var idBorrar = valor.id;
-				if ((typeof otroId == 'string' && otroId.trim().length > 0) || typeof otroId == 'number') {
-					idBorrar = otroId;
-				}
-				moduloHttp.borrar(servicio+idBorrar).then(function(rta) {
-					valorActual = null;
-					tomarImagen();
-					diferido.resolve(valorActual);
+			if (diferidoLectura !== null) {
+				var diferido = $.Deferred();
+				diferidoLectura.then(function(valor) {
+					var idBorrar = valor.id;
+					if ((typeof otroId == 'string' && otroId.trim().length > 0) || typeof otroId == 'number') {
+						idBorrar = otroId;
+					}
+					moduloHttp.borrar(servicio+idBorrar).then(function(rta) {
+						tomarImagen(null, '0');
+						diferido.resolve(null);
+					});
+				}, function() {
+					diferido.reject();
 				});
+			} else {
+				diferido.reject();
+			}
+			return diferido;
+		};
+		
+		var memento2 = null;
+		var registrarMemento2 = function(plano) {
+			var temp = JSON.parse(tomarImagen(plano, '1')['txt']);
+			memento2 = {
+				'v': temp,
+				'k': Object.keys(temp),
+			};
+			//Debe convertir de version plana
+			var temp = moduloTransformacion.modo('simple').from(plano);
+			if (typeof temp == 'undefined'){
+				temp = {};
+			}
+			return temp;
+		};
+		
+		var leer2 = function() {
+			diferidoLectura2 = $.Deferred();
+			if (diferidoLectura !== null) {
+				diferidoLectura.then(function(valor) {
+					var idPagina = valor.id;
+					
+					var todo = {};
+					var next = null;
+					var N = 100;
+					
+					var totalizar = function() {
+						//Se toma la foto de la version plana
+						var valorActual = registrarMemento2(todo);
+						diferidoLectura2.resolve(valorActual);
+					};
+					
+					var recursiva = function() {
+						var peticion = {
+							'pg': idPagina,
+							'n': N,
+						};
+						if (next != null) {
+							peticion['next'] = next;
+						}
+						moduloHttp.get('/api/tup/all', false, peticion).then(function(rta) {
+								var lista = rta.ans;
+								for (var i=0; i<lista.length; i++) {
+									todo[lista[i].k] = lista[i].v;
+								}
+								if (rta['next'] == null || lista.length == 0) {
+									totalizar();
+								} else {
+									next = rta['next'];
+									recursiva();
+								}
+							}, function() {
+								//Podria reintentar
+								diferidoLectura2.reject();
+							});	
+					};
+					
+					recursiva();
+					
+				}, function() {
+					diferidoLectura2.reject();
+				});
+			} else {
+				diferidoLectura2.reject();
+			}
+			return diferidoLectura2;
+		};
+		
+		var guardar2 = function(modelo) {
+			var diferido = $.Deferred();
+			if (diferidoLectura !== null) {
+				diferidoLectura.then(function(valor) {
+					
+					var idPagina = valor.id;
+					//Debe calcular la diferencia entre:
+					var payload = {
+						'+':[],//crear
+						'*':{},//modificar
+						'-':[],//borrar
+					};
+					var valNuevos = moduloTransformacion.modo('simple').to(modelo);
+					if (typeof valNuevos == 'undefined') {
+						valNuevos = {};
+					}
+					var nuevoKeys = Object.keys(valNuevos);
+					var viejoKeys = memento2['k'];
+					
+					var valViejos = memento2['v'];
+					
+					//Lo que debe crear
+					payload['+'] = nuevoKeys.diff(viejoKeys);
+					//Lo que debe eliminar
+					payload['-'] = viejoKeys.diff(nuevoKeys);
+					//Lo que debe modificar
+					var restantes = nuevoKeys;
+					restantes = restantes.diff(payload['+']);
+					restantes = restantes.diff(payload['-']);
+					
+					for (var i=0; i<restantes.length; i++) {
+						var llave = restantes[i];
+						var cambio = false;
+						var val0 = valViejos[llave];
+						var val1 = valNuevos[llave];
+						if (val0 !== val1) {
+							if (val0 == null || val1 == null) {
+								//Alguno de los dos es nulo
+								cambio = true;
+							} else {
+								cambio = (''+val0 !== ''+val1);	
+							}
+						}
+						if (cambio) {
+							payload['*'][llave] = val1;
+						}
+					}
+					//Cambio las listas por objetos
+					var mapaNuevo;
+					var listaNueva;
+					
+					mapaNuevo = {};
+					listaNueva = payload['+'];
+					for (var i=0; i<listaNueva.length; i++) {
+						var llave = listaNueva[i];
+						mapaNuevo[llave] = valNuevos[llave];
+					}
+					payload['+'] = mapaNuevo;
+					
+					//Itero en grupos de 30...
+					//Google define que maximo se pueden hacer 30
+					var N = 30;
+					//Hago una copia...
+					valViejos = JSON.parse(JSON.stringify(valViejos));
+					var unionCrearModificar = {};
+					for (llave in payload['+']) {
+						unionCrearModificar[llave] = payload['+'][llave];
+					}
+					for (llave in payload['*']) {
+						unionCrearModificar[llave] = payload['*'][llave];
+					}
+					var funcionFinal = function() {
+						registrarMemento2(valViejos);	
+					};
+					
+					var diferidoCreacion = $.Deferred();
+					var diferidoEliminacion = $.Deferred();
+					
+					var recursivaModificar = function() {
+						console.log('modificando...');
+						var subgrupo = {};
+						var conteo = 0;
+						for (llave in unionCrearModificar) {
+							if (conteo >= N) {
+								break;
+							}
+							subgrupo[llave] = unionCrearModificar[llave];
+							delete unionCrearModificar[llave];
+							conteo++;
+						}
+						if (conteo == 0) {
+							//Se acabo
+							diferidoCreacion.resolve();
+						} else {
+							//Hace invocacion a servicio
+							//console.log('invocando servicio + con', JSON.stringify(subgrupo));
+							moduloHttp.post('/api/tup/'+idPagina, {'dat': subgrupo, 'acc': '+'}).then(function(respuesta) {
+								funcionExitoLocal()
+							}, function() {
+								//Hubo error, que hacer?
+								//Reintentar?
+								//Seguir con lo que falta?
+							});
+							
+							var funcionExitoLocal = function() {
+								for (unallave in subgrupo) {
+									valViejos[unallave] = subgrupo[unallave];
+								}
+								recursivaModificar();
+							};
+						}
+					};
+					
+					recursivaModificar();
+					
+					diferidoCreacion.then(function() {
+						//
+						var recursivaEliminar = function() {
+							console.log('eliminando...');
+							var subgrupo = payload['-'].splice(0, N);
+							if (subgrupo.length == 0) {
+								//Se acabo
+								diferidoEliminacion.resolve();
+							} else {
+								//Hace invocacion a servicio
+								console.log('invocando servicio - con', JSON.stringify(subgrupo));
+								moduloHttp.post('/api/tup/'+idPagina, {'dat': subgrupo, 'acc': '-'}).then(function(respuesta) {
+									funcionExitoLocal()
+								}, function() {
+									//Hubo error, que hacer?
+									//Reintentar?
+									//Seguir con lo que falta?
+								});
+								
+								var funcionExitoLocal = function() {
+									for (var j=0; j<subgrupo.length; j++) {
+										delete valViejos[subgrupo[j]];
+									}
+									recursivaEliminar();
+								};
+							}
+						};
+						
+						recursivaEliminar();
+					});
+					
+					diferidoEliminacion.then(function() {
+						diferido.resolve();
+					});
+					
+					diferido.then(function() {
+						console.log('termino');
+						funcionFinal();
+					});
+				});
+			} else {
+				diferido.reject();
+			}
+			
+			return diferido;
+		};
+		
+		var leerTodo = function() {
+			var diferido = $.Deferred();
+			var promesas = [];
+			promesas.push(leer().promise);
+			promesas.push(leer2().promise);
+			all(promesas).then(function(respuesta) {
+				diferido.resolve(respuesta);
 			}, function() {
 				diferido.reject();
 			});
@@ -240,7 +507,10 @@
 		
 		return {
 			'leer': leer,
+			'leer2': leer2,
+			'leerTodo': leerTodo,
 			'guardar': guardar,
+			'guardar2': guardar2,
 			'borrar': borrar,
 		};
 	})();
@@ -273,7 +543,7 @@
 		//Se espera a que se inicializa firebase:
 		miseguridad.thenApp().then(function(datos) {
 			
-			var funcionContinuar = function(principal, contextoPagina) {
+			var funcionContinuar = function(principal, contextoPagina, lecturaLarga) {
 				var database = firebase.database();
 				var principalEsDuenio = ((principal !== undefined && principal !== null) && contextoPagina['usr'] == principal['uid']);
 				var solicitudSlave = ($.urlParam('sl') == 'si');
@@ -282,7 +552,8 @@
 				diferidoDB.resolve({
 					'database': database, 
 					'principal': principal, 
-					'ctx': contextoPagina, 
+					'ctx': contextoPagina,
+					'ctx2': lecturaLarga, 
 					'tipoCliente': tipoCliente
 					});
 			};
@@ -290,8 +561,10 @@
 			//Si no tiene parametro pg debe ser master y debe estar logeado
 			var forzarUsuario = ($.urlParam('pg') == null || (opciones['slaveLoged'] || opciones['slaveIdUsr']));
 			miseguridad.buscarUsuario(forzarUsuario, function(principal) {
-				moduloPagina.leer().then(function(contextoPagina) {
-					funcionContinuar(principal, contextoPagina);
+				moduloPagina.leerTodo().then(function(contextoPagina) {
+					var lecturaBasica = contextoPagina[0];
+					var lecturaLarga = contextoPagina[1];
+					funcionContinuar(principal, lecturaBasica, lecturaLarga);
 				}, function(datos) {
 					//Si usuario no logeado
 				});
@@ -302,6 +575,7 @@
 		diferidoDB.then(function(paquete) {
 			var db = paquete['database'];
 			var ctx = paquete['ctx'];
+			var ctx2 = paquete['ctx2'];
 			var principal = paquete['principal'];
 			var tipoCliente = paquete['tipoCliente'];
 			
@@ -331,6 +605,7 @@
 							'db': db,
 							'firebaseUrl': firebaseUrl,
 							'ctx': ctx,
+							'ctx2': ctx2,
 						});
 					};
 					
@@ -374,6 +649,7 @@
 						'db': db,
 						'firebaseUrl': firebaseUrl,
 						'ctx': ctx,
+						'ctx2': ctx2,
 					});
 				};
 				

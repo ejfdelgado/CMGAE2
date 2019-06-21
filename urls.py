@@ -9,6 +9,7 @@ from handlers.ShortUrl import ShortUrlHandler
 from handlers.PageHandler import PageHandler
 from handlers.DocHandler import DocHandler
 from handlers.ContHandler import ContHandler
+from handlers.TuplaHandler import TuplaHandler
 
 
 urlpatterns = defaults.patterns(
@@ -16,6 +17,7 @@ urlpatterns = defaults.patterns(
     (r'^api/xpage/?(.*)', PageHandler),
     (r'^api/xdoc/?(.*)', DocHandler),
     (r'^api/cont/?(.*)', ContHandler),
+    (r'^api/tup/?(.*)', TuplaHandler),
     (r'^storage/?(.*)', StorageHandler),
     (r'^adm/?(.*)', AdminHandler),
     (r'^a/?(.*)', ShortUrlHandler),
