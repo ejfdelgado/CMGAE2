@@ -586,7 +586,7 @@
 				var slaveUrl = location.href + '?' + $.param({'pg': ctx['id'], 'sl': 'si'});
 				
 				//Se debe hacer un post para obtener la ruta corta
-				moduloHttp.post('/a', {'theurl': slaveUrl}).then(function(respuesta) {
+				moduloHttp.post('/a/', {'theurl': slaveUrl}).then(function(respuesta) {
 					//console.log('respuesta', respuesta);
 					var crearMasterCtx = function() {
 						var updates = {};

@@ -19,8 +19,8 @@ urlpatterns = defaults.patterns(
     (r'^api/cont/?(.*)', ContHandler),
     (r'^api/tup/?(.*)', TuplaHandler),
     (r'^storage/?(.*)', StorageHandler),
-    (r'^adm/?(.*)', AdminHandler),
-    (r'^a/?(.*)', ShortUrlHandler),
+    (r'^adm/(.*)', AdminHandler),
+    (r'^a/(.*)', ShortUrlHandler),
     (r'^(.*)$', MainHandler),
 )
 

@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<base href="/" target="_blank">
+		<link rel="stylesheet" href="/assets/css/util-global.css"/>
+		<link rel="stylesheet" href="/assets/css/actividad.css"/>
+
+		<link rel="stylesheet" href="/assets/node_modules/firebase/firebaseui.css"/>
+		
+	    <title>My App</title>
+	
+	    <!-- Only required for desktop -->
+	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-hover.min.css" />
+	
+	    <!-- Always required -->
+	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-base.min.css" />
+	
+	    <!-- Only required for desktop -->
+	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-desktop.min.css" />
+	
+	    <script src="/assets/node_modules/angular/angular.min.js"></script>
+	    <script src="/assets/node_modules/angular-route/angular-route.min.js"></script>
+	    <script src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.min.js"></script>
+	    <script src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.gestures.min.js"></script>
+		
+		{% block encabezado %}{% endblock %}
+	</head>
+	__USER__
+	<body class="" ng-app="myApp" ng-controller="MainController" ui-prevent-touchmove-defaults>
+	<div id="firebaseui-auth-container" class="invisible"></div>
+	{% csrf_token %}
+	{% block content %}{% endblock %}
+	
+	<script src="/assets/node_modules/crypto-js/crypto-js.js"></script>
+	<script src="/assets/node_modules/firebase/firebase.js"></script>
+	<script src="/assets/node_modules/firebase/firebaseui.js"></script>
+	<script src="/assets/node_modules/jquery/dist/jquery.min.js"></script>
+	
+	<script src="/assets/dist/modulos.min.js"></script>
+	{% if admin %}
+	<script src="/assets/dist/admin/admin.js"></script>
+	{% else %}
+	<script src="/assets/dist/publico/publico.js"></script>
+	{% endif %}
+	
+	{% block scripts %}{% endblock %}	
+	</body>
+</html>

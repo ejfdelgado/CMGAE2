@@ -197,24 +197,44 @@ var moduloTransformacion = (function($) {
 	
 	var modoSimple = (function() {
 		
-		var to = function(objeto) {
+		var to = function(objeto, cod) {
 			var respuesta = {};
 			
 			var llaves = utilidades.darRutasObjeto(objeto);
-			for (var i=0; i<llaves.length; i++) {
-				var llave = llaves[i];
-				respuesta[llave] = utilidades.leerObj(objeto, llave, null);
+			if (cod === true) {
+				for (var i=0; i<llaves.length; i++) {
+					var llave = llaves[i];
+					var val = utilidades.leerObj(objeto, llave, null);
+					if (val !== null) {
+						val = JSON.stringify(val);
+					}
+					respuesta[llave] = val;
+				}
+			} else {
+				for (var i=0; i<llaves.length; i++) {
+					var llave = llaves[i];
+					respuesta[llave] = utilidades.leerObj(objeto, llave, null);
+				}
 			}
 			return respuesta;
 		}
 		
-		var from = function(objeto) {
+		var from = function(objeto, cod) {
 			var respuesta = {};
 			var llaves = Object.keys(objeto);
-			for (var i=0; i<llaves.length; i++) {
-				var llave = llaves[i];
-				var dato = objeto[llave];
-				utilidades.asignarObj(respuesta, 'ans.'+llave, dato);
+			if (cod === true) {
+				for (var i=0; i<llaves.length; i++) {
+					var llave = llaves[i];
+					var dato = objeto[llave];
+					try {dato = JSON.parse(dato);} catch (e) {}
+					utilidades.asignarObj(respuesta, 'ans.'+llave, dato);
+				}
+			} else {
+				for (var i=0; i<llaves.length; i++) {
+					var llave = llaves[i];
+					var dato = objeto[llave];
+					utilidades.asignarObj(respuesta, 'ans.'+llave, dato);
+				}
 			}
 			return respuesta['ans'];
 		};		
