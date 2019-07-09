@@ -8,9 +8,11 @@ import time
 
 from google.appengine.ext import ndb
 
-def to_dict_(entidad, puntos=False):
+def to_dict_(entidad, puntos=False, ignorar=[]):
     ans = {}
     for key in entidad._properties.keys():
+        if (key in ignorar):
+            continue
         val = getattr(entidad, key)
         if (puntos):
             key2 = key.replace('/', '.')
@@ -20,8 +22,8 @@ def to_dict_(entidad, puntos=False):
             ans[key2] = time.mktime(val.timetuple())
         else:
             ans[key2] = val
-        
-    ans['id'] = entidad.key.id()
+    if (not ('id' in ignorar)):
+        ans['id'] = entidad.key.id()
     return ans
     
 class Pagina(ndb.Expando):
@@ -33,20 +35,20 @@ class Pagina(ndb.Expando):
     desc = ndb.StringProperty()
     img = ndb.StringProperty()
     
-    def to_dict(self, puntos):
-        return to_dict_(self, puntos)
+    def to_dict(self, puntos, ignorar=[]):
+        return to_dict_(self, puntos, ignorar)
 
 class Configuracion(ndb.Expando):
     _default_indexed = False
-    def to_dict(self, puntos):
-        return to_dict_(self, puntos)
+    def to_dict(self, puntos, ignorar=[]):
+        return to_dict_(self, puntos, ignorar)
     
 class ShortUrlM(ndb.Model):
     theurl = ndb.StringProperty()
     date = ndb.DateTimeProperty(auto_now_add=True)
     
-    def to_dict(self, puntos):
-        return to_dict_(self, puntos)
+    def to_dict(self, puntos, ignorar=[]):
+        return to_dict_(self, puntos, ignorar)
 
 class Opinion(ndb.Model):
     usr = ndb.StringProperty()
@@ -60,8 +62,8 @@ class Opinion(ndb.Model):
     v4 = ndb.StringProperty()
     
     
-    def to_dict(self, puntos):
-        return to_dict_(self, puntos)
+    def to_dict(self, puntos, ignorar=[]):
+        return to_dict_(self, puntos, ignorar)
 
 class Contador(ndb.Expando):
     tip = ndb.StringProperty()
@@ -74,8 +76,8 @@ class Contador(ndb.Expando):
     v3 = ndb.StringProperty()
     v4 = ndb.StringProperty()
     
-    def to_dict(self, puntos):
-        return to_dict_(self, puntos)
+    def to_dict(self, puntos, ignorar=[]):
+        return to_dict_(self, puntos, ignorar)
     
     
 class Tupla(ndb.Model):
@@ -86,6 +88,6 @@ class Tupla(ndb.Model):
     #valor
     v = ndb.StringProperty()
     
-    def to_dict(self, puntos):
-        return to_dict_(self, puntos)
+    def to_dict(self, puntos, ignorar=[]):
+        return to_dict_(self, puntos, ignorar)
     

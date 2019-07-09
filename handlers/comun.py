@@ -90,16 +90,16 @@ def buscarGQL2(objeto):
         ans['next'] = next_cursor.urlsafe()
     return ans
 
-def to_dict(model, propio=None, puntos=False):
+def to_dict(model, propio=None, puntos=False, ignorar=[]):
     if model == None:
         return None
     if isinstance(model, list):
         output = []
         for valor in model:
-            output.append(to_dict(valor, propio, puntos))
+            output.append(to_dict(valor, propio, puntos, ignorar))
     else:
         if (propio == None):
-            output = model.to_dict(puntos)
+            output = model.to_dict(puntos, ignorar)
         else:
             output = getattr(model, propio)
     return output

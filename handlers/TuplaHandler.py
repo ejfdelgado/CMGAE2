@@ -16,7 +16,7 @@ from handlers.seguridad import inyectarUsuario, enRol, enRolFun
 from handlers.decoradores import autoRespuestas
 from handlers import comun
 
-#@ndb.transactional
+@ndb.transactional
 def crearTuplas(idPagina, peticion):
     #Armo la llave padre
     paginaKey = ndb.Key(Pagina, idPagina)
@@ -55,7 +55,7 @@ def crearTuplas(idPagina, peticion):
         ndb.put_multi(amodificar)
     return len(amodificar)
 
-#@ndb.transactional
+@ndb.transactional
 def borrarTuplas(idPagina, llaves):
     #Armo la llave padre
     paginaKey = ndb.Key(Pagina, idPagina)
@@ -91,7 +91,7 @@ def TuplaHandler(request, ident, usuario=None):
                 datos, next_cursor, more = temporal.fetch_page(n, start_cursor=ndb.query.Cursor(urlsafe=siguiente))
             else:
                 datos, next_cursor, more = temporal.fetch_page(n)
-            ans['ans'] = comun.to_dict(datos, None, True)
+            ans['ans'] = comun.to_dict(datos, None, True, ['id', 'i'])
             if (more):
                 ans['next'] = next_cursor.urlsafe()
         response.write(simplejson.dumps(ans))

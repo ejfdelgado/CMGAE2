@@ -200,7 +200,7 @@
 					'desc': opciones['desc'],
 					'img': opciones['img'],
 					}).then(function(rta) {
-					var valorActual = moduloTransformacion.modo('simple').from(rta.valor);
+					var valorActual = moduloTransformacion.modo('simple').from(rta.valor, true);
 					if (location.pathname != valorActual.path) {
 						//Url mal armada, redirigir
 						location.pathname = valorActual.path;
@@ -221,9 +221,9 @@
 			if (diferidoLectura !== null) {
 				if (esDiferente(nuevo, '0')) {
 					diferidoLectura.then(function(valor) {
-						var temp = moduloTransformacion.modo('simple').to(nuevo);
+						var temp = moduloTransformacion.modo('simple').to(nuevo, true);
 						moduloHttp.put('/api/xpage/'+valor.id, temp).then(function(rta) {
-							var valorActual = moduloTransformacion.modo('simple').from(rta.valor);
+							var valorActual = moduloTransformacion.modo('simple').from(rta.valor, true);
 							tomarImagen(valorActual, '0');
 							diferido.resolve(valorActual);
 						});
@@ -271,7 +271,7 @@
 				'k': Object.keys(temp),
 			};
 			//Debe convertir de version plana
-			var temp = moduloTransformacion.modo('simple').from(plano);
+			var temp = moduloTransformacion.modo('simple').from(plano, true);
 			if (typeof temp == 'undefined'){
 				temp = {};
 			}
@@ -342,7 +342,7 @@
 						'*':{},//modificar
 						'-':[],//borrar
 					};
-					var valNuevos = moduloTransformacion.modo('simple').to(modelo);
+					var valNuevos = moduloTransformacion.modo('simple').to(modelo, true);
 					if (typeof valNuevos == 'undefined') {
 						valNuevos = {};
 					}
