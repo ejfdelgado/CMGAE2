@@ -125,7 +125,8 @@ def autoCrearDoc(idPagina, usuario, elpath, buscables={}, lenguaje='es'):
             return document
     else:
         #Por ahora no se sabe qué hacer cuando no hay usuario logeado
-        raise NoHayUsuarioException()
+        #raise NoHayUsuarioException()
+        pass
 
 def borrar(idPagina, usuario):
     if (idPagina is not None or idPagina == ''):

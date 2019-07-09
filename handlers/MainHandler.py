@@ -21,6 +21,7 @@ from handlers import comun
 
 from settings import TEMPLATE_DIRS
 from handlers.seguridad import inyectarUsuario
+from handlers.PageHandler import buscarPagina
 
 LENGUAJE_PRED = 'esp'
 PREFIJO_MEMCACHE_ADMIN = '@'
@@ -148,8 +149,6 @@ def MainHandler(request, data, usuario):
                     break
             if not esBinario:
                 mime = mime+'; charset=utf-8'
-                
-            user = users.get_current_user()
             
             if False:#Usar cache
                 anterior = memcache.get(llaveParaMemcache)
@@ -212,6 +211,7 @@ def MainHandler(request, data, usuario):
                 
                 data_q = request.GET.get('data-q', None)
                 data_next = request.GET.get('data-next', None)
+                id_pagina = request.GET.get('pg', None)
                 
                 for llaveEntidad in llavesEntidades:
                     objeto_busqueda = simplejson.loads(llaveEntidad)
@@ -222,10 +222,22 @@ def MainHandler(request, data, usuario):
                     if (objeto.has_key('next')):
                         cursores[llaveEntidad] = objeto['next']
                 
+                if (id_pagina is not None):
+                    try:
+                        detalle = buscarPagina(request, usuario, True)
+                        detalle['tit'] = simplejson.loads(detalle['tit'])
+                        detalle['desc'] = simplejson.loads(detalle['desc'])
+                        detalle['q'] = simplejson.loads(detalle['q'])
+                        detalle['img'] = simplejson.loads(detalle['img'])
+                    except:
+                        detalle = {'tit': 'pais.tv','desc': 'pais.tv','img': 'pais.tv',}
+                else:
+                    detalle = None
                 
                 context = {
                     'admin':users.is_current_user_admin(),
                     'path':var_path,
+                    'detalle': detalle,
                 }
                 
                 respuesta = direct_to_template(request, data, context, mime)

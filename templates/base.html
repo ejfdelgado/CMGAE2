@@ -4,6 +4,23 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<base href="/" target="_blank">
+		
+		<title>{{ detalle.tit }}</title>
+		<meta name="og:title" content="{{ detalle.tit }}" />
+		<meta name="twitter:title" content="{{ detalle.tit }}" />
+		
+		<meta name="og:description" content="{{ detalle.desc }}" />
+		<meta name="twitter:description" content="{{ detalle.desc }}" />
+		
+		<meta name="keywords" content="{{ detalle.q }}">
+		
+		<meta name="og:image" content="{{ detalle.img }}" />
+		<meta name="twitter:image" content="{{ detalle.img }}" />
+		
+		<meta name="og:site_name" content="PaisTv" />
+		<meta name="og:url" content="https://www.pais.tv" />
+		<meta name="og:type" content="website" />
+		
 		<link rel="stylesheet" href="/assets/css/util-global.css"/>
 		<link rel="stylesheet" href="/assets/css/actividad.css"/>
 		<link rel="stylesheet" href="/assets/node_modules/bootstrap/bootstrap-iso.css"/>

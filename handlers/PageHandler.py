@@ -19,11 +19,16 @@ from handlers import comun, DocHandler
 
 LIGTH_WEIGHT_KEYS = ['tit', 'desc', 'img', 'q']
 
-def leerRefererPath(request):
+def leerRefererPath(request, usarPathLocal):
+    if (usarPathLocal):
+        urlTotal = request.get_full_path()
+    else:
+        urlTotal = request.META['HTTP_REFERER']
+    
     elhost = request.META['HTTP_HOST']
-    elreferer = request.META['HTTP_REFERER']
+    elreferer = urlTotal
     elindice = elreferer.find(elhost) + len(elhost)
-    temp = request.META['HTTP_REFERER'][elindice:]
+    temp = urlTotal[elindice:]
     indiceQuery = temp.find('?') 
     if (indiceQuery >= 0):
         temp = temp[:indiceQuery]
@@ -43,6 +48,40 @@ def filtrarParametros(request, filtro):
             buscables[key] = request.GET.get(key, None)
     return buscables
 
+def buscarPagina(request, usuario, usarPathLocal):
+    idPagina = comun.leerNumero(request.GET.get('pg', None))
+    buscables=filtrarParametros(request, LIGTH_WEIGHT_KEYS)
+    elpath = leerRefererPath(request, usarPathLocal)
+    temp = None
+    if (idPagina is None):
+        if (usuario is not None):
+            elUsuario = usuario.uid
+            
+            temporal = ndb.gql('SELECT * FROM Pagina WHERE usr = :1 and path = :2 ORDER BY date DESC', elUsuario, elpath)
+            datos, next_cursor, more = temporal.fetch_page(1)
+            unapagina = None
+            if (len(datos) > 0):
+                #Ya existe y no lo debo crear
+                unapagina = datos[0]
+            else:
+                #Se debe crear
+                unapagina = Pagina(usr=elUsuario, path=elpath, **buscables)
+                unapagina.put()
+            temp = comun.to_dict(unapagina, None, True)
+            buscables=filtrarParametros(temp, LIGTH_WEIGHT_KEYS)
+            DocHandler.autoCrearDoc(str(unapagina.key.id()), usuario, elpath, buscables)
+            return temp
+        else:
+            #Por ahora no se sabe qué hacer cuando no hay usuario logeado
+            raise NoHayUsuarioException()
+    else:
+        llave = ndb.Key('Pagina', idPagina)
+        unapagina = llave.get()
+        #Validar que exista el buscable
+        DocHandler.autoCrearDoc(str(unapagina.key.id()), usuario, elpath, buscables)
+        temp = comun.to_dict(unapagina, None, True)
+    return temp
+
 @inyectarUsuario
 @autoRespuestas
 def PageHandler(request, ident, usuario=None):
@@ -51,35 +90,7 @@ def PageHandler(request, ident, usuario=None):
         ans = {}
         ans['error'] = 0
         if (ident == ''):
-            idPagina = comun.leerNumero(request.GET.get('pg', None))
-            buscables=filtrarParametros(request, LIGTH_WEIGHT_KEYS)
-            elpath = leerRefererPath(request)
-            if (idPagina is None):
-                if (usuario is not None):
-                    elUsuario = usuario.uid
-                    
-                    temporal = ndb.gql('SELECT * FROM Pagina WHERE usr = :1 and path = :2 ORDER BY date DESC', elUsuario, elpath)
-                    datos, next_cursor, more = temporal.fetch_page(1)
-                    unapagina = None
-                    if (len(datos) > 0):
-                        #Ya existe y no lo debo crear
-                        unapagina = datos[0]
-                    else:
-                        #Se debe crear
-                        unapagina = Pagina(usr=elUsuario, path=elpath, **buscables)
-                        unapagina.put()
-                    ans['valor'] = comun.to_dict(unapagina, None, True)
-                    buscables=filtrarParametros(ans['valor'], LIGTH_WEIGHT_KEYS)
-                    DocHandler.autoCrearDoc(str(unapagina.key.id()), usuario, elpath, buscables)
-                else:
-                    #Por ahora no se sabe qué hacer cuando no hay usuario logeado
-                    raise NoHayUsuarioException()
-            else:
-                llave = ndb.Key('Pagina', idPagina)
-                unapagina = llave.get()
-                #Validar que exista el buscable
-                DocHandler.autoCrearDoc(str(unapagina.key.id()), usuario, elpath, buscables)
-                ans['valor'] = comun.to_dict(unapagina, None, True)
+            ans['valor'] = buscarPagina(request, usuario, False)
         elif (ident == 'q'):
             ans = DocHandler.busquedaGeneral(request, usuario)
             todo = request.GET.get('todo', None)
@@ -142,7 +153,7 @@ def PageHandler(request, ident, usuario=None):
                     raise NoAutorizadoException()
                 else:
                     otro = comun.llenarYpersistir(Pagina, modelo, peticion, ['usr', 'path', 'date', 'id'], True)
-                    elpath = leerRefererPath(request)
+                    elpath = leerRefererPath(request, False)
                     buscables=filtrarParametros(peticion, LIGTH_WEIGHT_KEYS)
                     #Optimizar, si no ha cambiado, no recrear
                     DocHandler.actualizar(str(idPagina), usuario, elpath, buscables)

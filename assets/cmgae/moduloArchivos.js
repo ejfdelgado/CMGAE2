@@ -20,10 +20,20 @@ var moduloArchivos = (function() {
 		return atributos;
 	};
 	
-	var subirArcivoMioDePagina = function(atributos) {
-		moduloPagina.leer().then(function() {
-
+	var subirArchivoMioDePagina = function(atributos) {
+		var diferido = $.Deferred();
+		moduloPagina.leer().then(function(contexto) {
+			atributos['dataFolder']=contexto['path']+'/'+contexto['id']+atributos['dataFolder'];
+			//atributos['dataFolder']='/'+contexto['id']+atributos['dataFolder'];
+			subirArchivoMio(atributos).then(function(datos) {
+				diferido.resolve(datos);
+			}, function() {
+				diferido.reject();
+			});
+		}, function() {
+			diferido.reject();
 		});
+		return diferido;
 	};
 	
 	var subirArchivoMio = function(atributos) {
@@ -90,6 +100,8 @@ var moduloArchivos = (function() {
 			        	if (data.error != 0) {
 			        		diferido.reject();
 			        	} else {
+			        		data['local'] = generarUrlDadoId(data['id'], true);
+			        		data['remoto'] = generarUrlDadoId(data['id'], false);
 			        		diferido.resolve(data);
 			        	}
 			        }).fail(function() {
@@ -311,6 +323,7 @@ var moduloArchivos = (function() {
 		'leerTextoPlano': leerTextoPlano,
 		'escribirTextoPlano': escribirTextoPlano,
 		'subirArchivo': subirArchivo,
+		'subirArchivoMioDePagina': subirArchivoMioDePagina,
 		'subirArchivoMio': subirArchivoMio,
 		'generarUrlDadoId': generarUrlDadoId,
 		'darIdDadoUrl': darIdDadoUrl,

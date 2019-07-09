@@ -518,6 +518,20 @@
 			return diferido;
 		};
 		
+		var subirImagenSocial = function() {
+			leer().then(function(actual) {
+				moduloArchivos.subirArchivoMioDePagina({
+					auto: 'false', 
+					tipos:'image/*', 
+					opcionesNegras: [],
+					dataFolder:'/meta',
+				}).then(function(metadata) {
+					actual.img = metadata.remoto;
+					guardar(actual);
+				});
+			});
+		};
+		
 		return {
 			'leer': leer,
 			'leer2': leer2,
@@ -525,6 +539,7 @@
 			'guardar': guardar,
 			'guardar2': guardar2,
 			'borrar': borrar,
+			'subirImagenSocial': subirImagenSocial,
 		};
 	})();
 	
@@ -596,7 +611,15 @@
 				//Master:
 				//La ruta de firebase debe quedar /pg/usrmaster/path/idpage/users
 				var firebaseUrl = RAIZ + '/' + principal.uid + location.pathname + '/' + ctx['id'];//ruta dentro de firebase
-				var slaveUrl = location.href + '?' + $.param({'pg': ctx['id'], 'sl': 'si'});
+				var slaveUrl;
+				
+				if (typeof location.search == 'string' && location.search.trim().length > 0) {
+					slaveUrl = location.origin + location.pathname + (location.search.replace(/(^\?|&)(pg=\d+)($|&)/, function(a, b, c, d) {return b+d}))+'&'+$.param({'pg': ctx['id'], 'sl': 'si'});
+					slaveUrl = slaveUrl.replace(/\?&/g, '?');
+					slaveUrl = slaveUrl.replace(/&{2,}/g, '&');
+				} else {
+					slaveUrl = location.href + '?' + $.param({'pg': ctx['id'], 'sl': 'si'});
+				}
 				
 				//Se debe hacer un post para obtener la ruta corta
 				moduloHttp.post('/a/', {'theurl': slaveUrl}).then(function(respuesta) {
