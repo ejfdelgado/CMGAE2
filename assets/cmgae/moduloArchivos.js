@@ -20,6 +20,12 @@ var moduloArchivos = (function() {
 		return atributos;
 	};
 	
+	var subirArcivoMioDePagina = function(atributos) {
+		moduloPagina.leer().then(function() {
+
+		});
+	};
+	
 	var subirArchivoMio = function(atributos) {
 		var diferido = $.Deferred();
 		miseguridad.then(function(metadatos) {

@@ -185,6 +185,9 @@
 		};
 		
 		var leer = function(opciones) {
+			if (diferidoLectura != null && ['resolved', 'pending'].indexOf(diferidoLectura.state()) >= 0) {
+				return diferidoLectura;
+			}
 			diferidoLectura = $.Deferred();
 			opciones = $.extend(true, {}, {
 				'logged': false,
@@ -236,6 +239,11 @@
 			} else {
 				diferido.reject();
 			}
+			
+			diferido.then(function(valorActual) {
+				diferidoLectura = $.Deferred();
+				diferidoLectura.resolve(valorActual);
+			});
 			return diferido;
 		};
 		
@@ -279,6 +287,9 @@
 		};
 		
 		var leer2 = function() {
+			if (diferidoLectura2 != null && ['resolved', 'pending'].indexOf(diferidoLectura2.state()) >= 0) {
+				return diferidoLectura2;
+			}
 			diferidoLectura2 = $.Deferred();
 			if (diferidoLectura !== null) {
 				diferidoLectura.then(function(valor) {
@@ -402,7 +413,9 @@
 						unionCrearModificar[llave] = payload['*'][llave];
 					}
 					var funcionFinal = function() {
-						registrarMemento2(valViejos);	
+						var reconstruido = registrarMemento2(valViejos);
+						diferidoLectura2 = $.Deferred();
+						diferidoLectura2.resolve(reconstruido);
 					};
 					
 					var diferidoCreacion = $.Deferred();
@@ -455,7 +468,7 @@
 								diferidoEliminacion.resolve();
 							} else {
 								//Hace invocacion a servicio
-								console.log('invocando servicio - con', JSON.stringify(subgrupo));
+								//console.log('invocando servicio - con', JSON.stringify(subgrupo));
 								moduloHttp.post('/api/tup/'+idPagina, {'dat': subgrupo, 'acc': '-'}).then(function(respuesta) {
 									funcionExitoLocal()
 								}, function() {
