@@ -1,0 +1,31 @@
+{% extends "angularjs/mobile/base.html" %}
+
+{% block encabezado %}
+<style type="text/css">
+#qrcode {
+	padding: 20px;
+	text-align: center;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}
+
+#qrcode canvas {
+	width: 200px;
+	height: 200px;
+}
+</style>
+{% include "angularjs/mobile/pb/app.html" %}
+{% endblock %}
+
+{% block content %}
+{% include "angularjs/mobile/pb/master.html" %}
+<div id="immaster" class="invisible">
+</div>
+<div id="imslave" class="invisible">
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}	

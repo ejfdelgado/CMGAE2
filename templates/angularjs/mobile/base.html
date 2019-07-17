@@ -35,6 +35,23 @@
 	    <!-- Only required for desktop -->
 	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-desktop.min.css" />
 	
+		<script src="/assets/node_modules/crypto-js/crypto-js.js"></script>
+		<script src="/assets/node_modules/firebase/firebase.js"></script>
+		<script src="/assets/node_modules/firebase/firebaseui.js"></script>
+		<script src="/assets/node_modules/jquery/dist/jquery.min.js"></script>
+		
+		__USER__
+
+		<script src="/assets/dist/modulos.min.js"></script>
+		{% if admin %}
+		<script src="/assets/dist/admin/admin.js"></script>
+		{% else %}
+		<script src="/assets/dist/publico/publico.js"></script>
+		{% endif %}
+
+		<script type="text/javascript" src="/assets/node_modules/instascan/jquery.qrcode.min.js"></script>
+		{% include "firebase/cliente.html" %}
+
 	    <script src="/assets/node_modules/angular/angular.min.js"></script>
 	    <script src="/assets/node_modules/angular-route/angular-route.min.js"></script>
 	    <script src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.min.js"></script>
@@ -42,23 +59,11 @@
 		
 		{% block encabezado %}{% endblock %}
 	</head>
-	__USER__
+	
 	<body class="" ng-app="myApp" ng-controller="MainController" ui-prevent-touchmove-defaults>
 	<div id="firebaseui-auth-container" class="invisible"></div>
 	{% csrf_token %}
 	{% block content %}{% endblock %}
-	
-	<script src="/assets/node_modules/crypto-js/crypto-js.js"></script>
-	<script src="/assets/node_modules/firebase/firebase.js"></script>
-	<script src="/assets/node_modules/firebase/firebaseui.js"></script>
-	<script src="/assets/node_modules/jquery/dist/jquery.min.js"></script>
-	
-	<script src="/assets/dist/modulos.min.js"></script>
-	{% if admin %}
-	<script src="/assets/dist/admin/admin.js"></script>
-	{% else %}
-	<script src="/assets/dist/publico/publico.js"></script>
-	{% endif %}
 	
 	{% block scripts %}{% endblock %}	
 	</body>
