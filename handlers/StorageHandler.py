@@ -151,6 +151,9 @@ def usuario_es_dueno(usuario, ruta):
     if (usuario.isAdmin()):
         return True
     miRaiz = '/usr/'+usuario.miId
+    miBase = darRaizStorage()
+    if (ruta.startswith(miBase)):
+        ruta = ruta.replace(miBase, '')
     if (ruta.startswith(miRaiz)):
         return True
     return False

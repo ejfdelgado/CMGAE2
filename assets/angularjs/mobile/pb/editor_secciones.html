@@ -1,19 +1,156 @@
     <div class="section">
-      <div class="panel-group" 
-        ui-shared-state="myAccordion" 
-        ui-default='2'>
+      <div class="panel-group bootstrapiso">
 
-        <div class="panel panel-default" ng-repeat="i in [1,2,3]">
-          <div class="panel-heading" ui-set="{'myAccordion': i}">
-        
-            <h4 class="panel-title">
-                Collapsible Group Item #{{i}}
-            </h4>
+        <div class="panel panel-default" ng-repeat="miseccion in metadata.ctx2.disenio.secciones">
+          <div class="">
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <button class="btn btn-warning" type="button" ng-click="miseccion.ver=!miseccion.ver">
+                  <i class="fa" ng-class="{'fa-eye-slash': !miseccion.ver, 'fa-eye': miseccion.ver}"></i>
+                </button>
+              </div>
+              <input type="text" class="form-control" ng-model="miseccion.nom">
+              <div class="input-group-append">
+                <button class="btn btn-danger" type="button" ng-click="borrarSeccion(miseccion)">
+                  <i class="fa fa-times"></i>
+                </button>
+                <button class="btn btn-primary" type="button" ng-click="subirSeccion(miseccion)" ng-show="!($first)">
+                  <i class="fa fa-chevron-up"></i>
+                </button>
+                <button class="btn btn-primary" type="button" ng-click="bajarSeccion(miseccion)" ng-show="!($last)">
+                  <i class="fa fa-chevron-down"></i>
+                </button>
+                <button class="btn btn-outline-secondary" type="button" ng-click="miseccion.open=!miseccion.open">
+                  <i class="fa" ng-class="{'fa-plus': !miseccion.open, 'fa-minus': miseccion.open}"></i>
+                </button>
+              </div>
+            </div>
           </div>
-
-          <div ui-if="myAccordion == {{i}}">
+          <div ng-if="miseccion.open">
             <div class="panel-body">
-              {{lorem}}
+
+              <div class="panel panel-default">
+                <div class="panel-body">
+
+                  <div class="form-group col-xs-12">
+                    <label for="formControlRange">Margen</label>
+                    <input type="range" class="form-control-range" ng-model="miseccion.paddingh" min="0" max="50">
+                  </div>
+
+                  <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <label class="input-group-text">Tipo de fondo</label>
+                    </div>
+                    <select class="custom-select" ng-model="miseccion.tipf">
+                      <option selected>Seleccionar...</option>
+                      <option value="col">Color</option>
+                      <option value="img">Imagen</option>
+                    </select>
+                  </div>
+
+                  <div class="col-xs-6" ng-show="miseccion.tipf == 'img'">
+                    <img ng-src="{{ darUrlDeIdImagen(miseccion.img) }}">
+                  </div>
+                  <div class="col-xs-6 lrnopadding" ng-show="miseccion.tipf == 'img'">
+                    <a href="" ng-click="asignarImagenDeSeccion(miseccion)" class="btn btn-default col-xs-12">Cargar Fondo</a>
+                    <a href="" ng-click="borrarImagenGenerica(miseccion)" class="btn btn-default col-xs-12">Borrar Fondo</a>
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="panel panel-default" ng-repeat="micapa in miseccion.capas">
+                <div class="">
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <button class="btn btn-warning" type="button" ng-click="micapa.ver=!micapa.ver">
+                        <i class="fa" ng-class="{'fa-eye-slash': !micapa.ver, 'fa-eye': micapa.ver}"></i>
+                      </button>
+                    </div>
+                    <input type="text" class="form-control" ng-model="micapa.nom">
+                    <div class="input-group-append">
+                      <button class="btn btn-danger" type="button" ng-click="borrarCapa(miseccion, micapa)">
+                        <i class="fa fa-times"></i>
+                      </button>
+                      <button class="btn btn-primary" type="button" ng-click="subirCapa(miseccion, micapa)" ng-show="!($first)">
+                        <i class="fa fa-chevron-up"></i>
+                      </button>
+                      <button class="btn btn-primary" type="button" ng-click="bajarCapa(miseccion, micapa)" ng-show="!($last)">
+                        <i class="fa fa-chevron-down"></i>
+                      </button>
+                      <button class="btn btn-outline-secondary" type="button" ng-click="micapa.open=!micapa.open">
+                        <i class="fa" ng-class="{'fa-plus': !micapa.open, 'fa-minus': micapa.open}"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div ng-if="micapa.open">
+                  <div class="panel-body">
+
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <label class="input-group-text">Tipo de capa</label>
+                      </div>
+                      <select class="custom-select" ng-model="micapa.tipo">
+                        <option selected>Seleccionar...</option>
+                        <option value="img">Imagen</option>
+                      </select>
+                    </div>
+
+                    <div class="col-xs-6" ng-show="micapa.tipo == 'img'">
+                      <img ng-src="{{ darUrlDeIdImagen(micapa.img) }}">
+                    </div>
+                    <div class="col-xs-6 lrnopadding" ng-show="micapa.tipo == 'img'">
+                      <a href="" ng-click="asignarImagenDeCapa(micapa)" class="btn btn-default col-xs-12">Cargar Imagen</a>
+                      <a href="" ng-click="borrarImagenGenerica(micapa)" class="btn btn-default col-xs-12">Borrar Imagen</a>
+                    </div>
+                    <div class="form-group col-xs-12">
+                      <label for="formControlRange">Velocidad</label>
+                      <input type="range" class="form-control-range" ng-model="micapa.vel" min="-10" max="10">
+                    </div>
+                    <!-- Alineación vertical -->
+                    <div class="form-group col-xs-12">
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="{{ 'cap_'+micapa.id+'_v' }}" value="" ng-model="micapa.vert">
+                        <label class="form-check-label">Ninguno</label>
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="{{ 'cap_'+micapa.id+'_v' }}" value="top" ng-model="micapa.vert">
+                        <label class="form-check-label">Arriba</label>
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="{{ 'cap_'+micapa.id+'_v' }}" value="bottom" ng-model="micapa.vert">
+                        <label class="form-check-label">Abajo</label>
+                      </div>
+                    </div>
+                    <div class="form-group col-xs-12" ng-show="['top', 'bottom'].indexOf(micapa.vert) >= 0">
+                      <label for="formControlRange">Porcentaje</label>
+                      <input type="range" class="form-control-range" ng-model="micapa.verv" min="0" max="100">
+                    </div>
+                    <!-- Alineación horizontal -->
+                    <div class="form-group col-xs-12">
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="{{ 'cap_'+micapa.id+'_h' }}" value="" ng-model="micapa.hort">
+                        <label class="form-check-label">Ninguno</label>
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="{{ 'cap_'+micapa.id+'_h' }}" value="left" ng-model="micapa.hort">
+                        <label class="form-check-label">Izquierda</label>
+                      </div>
+                      <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="{{ 'cap_'+micapa.id+'_h' }}" value="right" ng-model="micapa.hort">
+                        <label class="form-check-label">Derecha</label>
+                      </div>
+                    </div>
+                    <div class="form-group col-xs-12" ng-show="['left', 'right'].indexOf(micapa.hort) >= 0">
+                      <label for="formControlRange">Porcentaje</label>
+                      <input type="range" class="form-control-range" ng-model="micapa.horv" min="0" max="100">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <a href="" ng-click="agregarCapa(miseccion)" class="btn btn-default col-xs-12"><i class="fa fa-plus"></i> Agregar Capa</a>
+
             </div>
           </div>
         </div>

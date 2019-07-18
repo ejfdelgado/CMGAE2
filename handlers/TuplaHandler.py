@@ -40,7 +40,7 @@ def crearTuplas(idPagina, peticion):
             if datosPayload[existente.k] is None:
                 existente.v = None
             else:
-                existente.v = str(datosPayload[existente.k])
+                existente.v = comun.siempreUtf8(datosPayload[existente.k])
             amodificar.append(existente)
         
     #Itero los que toca crear...
@@ -48,7 +48,7 @@ def crearTuplas(idPagina, peticion):
         if (datosPayload[llave] is None):
             unatupla = Tupla(i=idPagina, k=llave, v=None, parent=paginaKey)
         else:
-            unatupla = Tupla(i=idPagina, k=llave, v=str(datosPayload[llave]), parent=paginaKey)
+            unatupla = Tupla(i=idPagina, k=llave, v=comun.siempreUtf8(datosPayload[llave]), parent=paginaKey)
         amodificar.append(unatupla)
             
     if (len(amodificar) > 0):

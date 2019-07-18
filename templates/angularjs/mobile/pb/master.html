@@ -1,9 +1,12 @@
   <!-- Sidebars -->
-  <div class="sidebar sidebar-left">
+  <div class="sidebar sidebar-left" ng-if="metadata.tipo == 'master'">
     <div class="scrollable">
       <h1 class="scrollable-header app-name">Editor Parallax</h1>
       <div class="scrollable-content">
         <div ng-include="'/assets/angularjs/mobile/pb/editor_secciones.html'"></div>
+        <div class="section">
+          <a href="" ng-click="agregarSeccion()" class="btn btn-default col-xs-12"><i class="fa fa-plus"></i> Agregar Sección</a>
+        </div>
         <div class="list-group" ui-turn-off='uiSidebarLeft'>
           <a class="list-group-item" href="/angularjs/mobile/pb/a#!/">Vista<i class="fa fa-chevron-right pull-right"></i></a>
           <a class="list-group-item" href="/angularjs/mobile/pb/a#!/debug">Debug<i class="fa fa-chevron-right pull-right"></i></a>
@@ -15,22 +18,9 @@
   <div class="sidebar sidebar-right"><!-- ... --></div>
 
   <div class="app">
-    <div class="navbar navbar-app navbar-absolute-top">
-
-      <div class="navbar-brand navbar-brand-center">Navbar Brand</div>
-
-      <div class="btn-group pull-left">
-        <a href class="btn btn-navbar btn-icon-only" ui-toggle='uiSidebarLeft'><i class="fa fa-list fa-navbar"></i></a>
-      </div>
-
-      <div class="btn-group pull-right" yield-to="navbarAction">
-        <div class="btn btn-navbar">
-          <i class="fa fa-plus"></i> Crear</div>
-      </div>
-    </div>
-    <div class="navbar navbar-app navbar-absolute-bottom">
+    <div class="navbar navbar-app navbar-absolute-bottom" ng-if="metadata.tipo == 'master'">
       <div class="btn-group justified">
-          <a href class="btn btn-navbar btn-icon-only"><i class="fa fa-home fa-navbar"></i></a>
+          <div class="btn btn-navbar" ng-click="guardarTodo()"><i class="fa fa-save"></i> Guardar</div>
           <a href class="btn btn-navbar btn-icon-only" ui-toggle='uiSidebarRight'><i class="fa fa-list fa-navbar"></i></a>
       </div>
     </div>
@@ -44,4 +34,6 @@
     </div>
   </div>
 
-  <div ui-yield-to="modals"></div>
+  <div ng-include="'/assets/angularjs/mobile/pb/modalBorrar.html'"></div>
+
+

@@ -22,8 +22,15 @@
 
 app.controller('MainController', function($rootScope, $scope) {
 
-  $scope.metadata = {};
+  $scope.metadata = {
+    'ctx2': {
+      'disenio': {
+        'secciones': [],
+      },
+    },
+  };
   moduloIntMarkInst.afterAny().then(function(datos) {
+    console.log(datos);
     $.extend(true, $scope.metadata, datos);
     $scope.$digest();
   });
@@ -44,5 +51,186 @@ app.controller('MainController', function($rootScope, $scope) {
     console.log('esIgual', myAccordion, i);
     return myAccordion == i;
   }
+
+  $scope.guardarTodo = function() {
+    var diferidoGuardado = moduloActividad.on();
+    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)));
+    var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
+    all([diferido1.promise, diferido2.promise]).always(function() {
+      diferidoGuardado.resolve();
+    });
+    return diferidoGuardado;
+  };
+
+  $scope.agregarSeccion = function() {
+    var plantilla = {
+      'nom': null,
+      'open': true,
+      'ver': true,
+      'capas': [],
+      'paddingh': 0,
+      'tipf': 'img',
+    };
+    plantilla.nom = 'Sección '+($scope.metadata.ctx2.disenio.secciones.length+1);
+    plantilla.id = (new Date()).getTime()+'';
+    $scope.metadata.ctx2.disenio.secciones.push(plantilla);
+  };
+
+  $scope.tipoBorrado = null;
+  $scope.objetoBorrar = null;
+  $scope.padreObjetoBorrar = null;
+  $scope.borrarEfectivo = function() {
+    if ($scope.tipoBorrado == 'seccion') {
+      var indice = $scope.metadata.ctx2.disenio.secciones.indexOf($scope.objetoBorrar);
+      if (indice >= 0) {
+        $scope.metadata.ctx2.disenio.secciones.splice(indice, 1);
+      }
+    } else if ($scope.tipoBorrado == 'capa') {
+      var indice = $scope.padreObjetoBorrar.capas.indexOf($scope.objetoBorrar);
+      if (indice >= 0) {
+        $scope.padreObjetoBorrar.capas.splice(indice, 1);
+      }
+    }
+    $scope.tipoBorrado = null;
+    $scope.objetoBorrar = null;
+    $scope.padreObjetoBorrar = null;
+  };
+
+  $scope.borrarSeccion = function(miseccion) {
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.objetoBorrar = miseccion;
+    $scope.tipoBorrado = 'seccion';
+  };
+
+  var moverElemento = function(arreglo, from, to) {
+    // remove `from` item and store it
+    var f = arreglo.splice(from, 1)[0];
+    // insert stored item into position `to`
+    arreglo.splice(to, 0, f);
+  }
+
+  $scope.subirSeccion = function(miseccion) {
+    var arreglo = $scope.metadata.ctx2.disenio.secciones;
+    var indice = arreglo.indexOf(miseccion);
+    if (indice == 0) {
+      return;
+    }
+    moverElemento(arreglo, indice, indice-1);
+  };
+
+  $scope.bajarSeccion = function(miseccion) {
+    var arreglo = $scope.metadata.ctx2.disenio.secciones;
+    var indice = arreglo.indexOf(miseccion);
+    if (indice == (arreglo.length - 1)) {
+      return;
+    }
+    moverElemento(arreglo, indice, indice+1);
+  };
+
+  $scope.agregarCapa = function(seccion) {
+    var plantilla = {
+      'nom': null,
+      'open': true,
+      'ver': true,
+      'vert': '',
+      'verv': 0,
+      'hort': '',
+      'horv': 0,
+      'tam': 100,//100%
+      'vel': 0,
+      'tipo': 'img',
+    };
+    if (!(seccion.capas instanceof Array)) {
+      seccion.capas = [];
+    }
+    plantilla.nom = 'Capa '+(seccion.capas.length+1);
+    plantilla.id = (new Date()).getTime()+'';
+    seccion.capas.push(plantilla);
+  };
+
+  $scope.borrarCapa = function(miseccion, micapa) {
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.padreObjetoBorrar = miseccion;
+    $scope.objetoBorrar = micapa;
+    $scope.tipoBorrado = 'capa';
+  };
+
+  $scope.subirCapa = function(miseccion, micapa) {
+    var arreglo = miseccion.capas;
+    var indice = arreglo.indexOf(micapa);
+    if (indice == 0) {
+      return;
+    }
+    moverElemento(arreglo, indice, indice-1);
+  };
+
+  $scope.bajarCapa = function(miseccion, micapa) {
+    var arreglo = miseccion.capas;
+    var indice = arreglo.indexOf(micapa);
+    if (indice == (arreglo.length - 1)) {
+      return;
+    }
+    moverElemento(arreglo, indice, indice+1);
+  };
+
+  $scope.darUrlDeIdImagen = function(id) {
+    if (typeof id == 'string' && id.length > 0) {
+      return moduloArchivos.generarUrlDadoId(id);
+    } else {
+      return '/assets/angularjs/mobile/pb/img/noimage.png';
+    }
+  };
+
+  $scope.borrarImagenGenerica = function(micapa) {
+    var diferido = moduloActividad.on();
+    moduloArchivos.borrar(micapa.img).always(function() {
+      micapa.img = null;
+      $scope.$digest();
+      diferido.resolve();
+    });
+    return diferido;
+  };
+
+  $scope.asignarImagenGenerica = function(micapa, prefijo) {
+    var diferido = moduloActividad.on();
+    var subirArchivo = function() {
+
+      var funcionCargue = null;
+      if (moduloApp.esProduccion()) {
+        funcionCargue = moduloArchivos.subirArchivoMioDePagina;
+      } else {
+        funcionCargue = moduloArchivos.subirArchivoMio;
+      }
+
+      funcionCargue({
+        auto: 'false', 
+        tipos:'image/*', 
+        opcionesNegras: [],
+        dataFolder:'/'+prefijo+'/'+micapa.id,
+      }).then(function(metadata) {
+        micapa.img = metadata.id;
+        $scope.$digest();
+        diferido.resolve();
+      }, function() {
+        diferido.resolve();
+      });
+    };
+    if (typeof micapa.img == 'string') {
+      var diferidoBorrar = moduloArchivos.borrar(micapa.img);
+      diferidoBorrar.then(subirArchivo, function() {
+        diferido.resolve();
+      });
+    } else {
+      subirArchivo();
+    }
+  };
+
+  $scope.asignarImagenDeCapa = function(micapa) {
+    return $scope.asignarImagenGenerica(micapa, 'capa');
+  };
+
+  $scope.asignarImagenDeSeccion = function(miseccion) {
+    return $scope.asignarImagenGenerica(miseccion, 'sec');
+  };
 });
 </script>
