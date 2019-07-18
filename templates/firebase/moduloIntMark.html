@@ -8,6 +8,7 @@
 	});
 	
 	moduloIntMarkInst.afterMaster().then(function(datos) {
+		console.log(datos);
 		var db = datos['db'];
 		var firebaseUrl = datos['firebaseUrl'];
 		var procesarEventos = function(usuario, lista) {
@@ -45,6 +46,7 @@
 	});
 	
 	moduloIntMarkInst.afterSlave().then(function(datos) {
+		console.log(datos);
 		var divSlave = $('#imslave'); 
 		
 		var mc = new Hammer(divSlave[0]);

@@ -4,7 +4,7 @@
 
 <div class="scrollable">
   <div class="scrollable-content">
-    <div class="section section-break">
+    <div class="section">
       <a href=""
           ui-turn-on="modal1"
           class="btn btn-default">Show Modal</a>
@@ -14,9 +14,8 @@
     </div>
 
     <div class="section section-break">
-      <p>
-        {{lorem}}
-      </p>
+      <pre>{{ metadata.ctx | json }}</pre>
+      <pre>{{ metadata.ctx2 | json }}</pre>
     </div>
   </div>
 </div>

@@ -706,7 +706,6 @@ var moduloDatos = (function() {
 		//Se muestra el id para los que se deseen conectar:
 		diferidoId.then(function(datos) {
 			console.log('diferidoId ok');
-			console.log(datos);
 			var divSlave = $('#imslave');
 			var divMaster = $('#immaster');
 			if (datos.tipo == 'master') {
@@ -741,10 +740,19 @@ var moduloDatos = (function() {
 			});
 			return ans;
 		};
+
+		var afterAny = function() {
+			var ans = $.Deferred();
+			diferidoId.then(function(datos) {
+				ans.resolve(datos);
+			});
+			return ans;
+		};
 		
 		return {
 			'afterSlave': afterSlave,
 			'afterMaster': afterMaster,
+			'afterAny': afterAny,
 		};
 	});
 </script>
