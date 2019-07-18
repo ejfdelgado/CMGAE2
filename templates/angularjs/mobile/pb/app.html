@@ -12,10 +12,8 @@
     'mobile-angular-ui',
     'mobile-angular-ui.gestures',
   ]).config(function($routeProvider) {
-      $routeProvider.when('/', {templateUrl: "/angularjs/mobile/signIn.html"});
-      $routeProvider.when('/tabs', {templateUrl: '/angularjs/mobile/tabs.html', reloadOnSearch: false});
-      $routeProvider.when('/acordion', {templateUrl: '/assets/angularjs/mobile/acordion.html', reloadOnSearch: false});
-      $routeProvider.when('/overlay', {templateUrl: '/assets/angularjs/mobile/overlay.html', reloadOnSearch: false});
+      $routeProvider.when('/', {templateUrl: "/assets/angularjs/mobile/pb/vista.html"});
+      $routeProvider.when('/debug', {templateUrl: '/assets/angularjs/mobile/pb/debug.html', reloadOnSearch: false});
     });
 
   app.run(function($transform) {
