@@ -1,6 +1,11 @@
 {% extends "angularjs/mobile/base.html" %}
 
 {% block encabezado %}
+
+<link rel="stylesheet" href="/assets/angularjs/mobile/pb/css/jquery.minicolors.css" />
+<script type="text/javascript" src="/assets/angularjs/mobile/pb/js/jquery.minicolors.js"></script>
+<script type="text/javascript" src="/assets/angularjs/mobile/pb/js/angular-minicolors.js"></script>
+
 <style type="text/css">
 #qrcode {
 	padding: 20px;

@@ -11,9 +11,16 @@
     'ngRoute',
     'mobile-angular-ui',
     'mobile-angular-ui.gestures',
-  ]).config(function($routeProvider) {
+    'minicolors',
+  ]).config(function($routeProvider, minicolorsProvider) {
       $routeProvider.when('/', {templateUrl: "/assets/angularjs/mobile/pb/vista.html"});
       $routeProvider.when('/debug', {templateUrl: '/assets/angularjs/mobile/pb/debug.html', reloadOnSearch: false});
+
+      angular.extend(minicolorsProvider.defaults, {
+        control: 'hue',
+        theme: 'bootstrap',
+        position: 'top left'
+      });
     });
 
   app.run(function($transform) {
@@ -30,12 +37,13 @@ app.controller('MainController', function($rootScope, $scope) {
     },
   };
   moduloIntMarkInst.afterAny().then(function(datos) {
-    console.log(datos);
     $.extend(true, $scope.metadata, datos);
     $scope.$digest();
+    diferidoDatos.resolve();
   });
 
   var diferidoCargue = null;
+  var diferidoDatos = $.Deferred();
   // Needed for the loading screen
   $rootScope.$on('$routeChangeStart', function() {
     $rootScope.loading = true;
@@ -53,6 +61,7 @@ app.controller('MainController', function($rootScope, $scope) {
   }
 
   $scope.guardarTodo = function() {
+    $scope.renderizarParallax();
     var diferidoGuardado = moduloActividad.on();
     var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)));
     var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
@@ -232,5 +241,81 @@ app.controller('MainController', function($rootScope, $scope) {
   $scope.asignarImagenDeSeccion = function(miseccion) {
     return $scope.asignarImagenGenerica(miseccion, 'sec');
   };
+
+  var rellax = null;
+  $scope.renderizarParallax = function() {
+    diferidoDatos.then(function() {
+      if (rellax != null) {
+        rellax.destroy();
+      }
+      var todo = $('#render-mi-parallax');
+      if (todo.length == 0) {
+        return;
+      }
+      todo.empty();
+      var cont1 = $('<div class="parallax-col"></div>');
+      todo.append(cont1);
+      var secciones = $scope.metadata.ctx2.disenio.secciones;
+      for (var i=0; i<secciones.length; i++) {
+        var miseccion = secciones[i];
+        if (miseccion.ver) {
+          var capas = miseccion.capas;
+
+          var secelem = $('<div class="parallax-container"><div class="parallax-block"></div></div>');
+          var secelem2 = $(secelem.children().first());
+          if (miseccion.cuadrado) {
+            secelem2.addClass('parallax-block-cube');
+          }
+          var estiloSec = '';
+          var estiloSec2 = '';
+          
+          if (miseccion.conimg && typeof miseccion.img == 'string' && miseccion.img.length > 0) {
+            estiloSec2+='background-image: url(\''+$scope.darUrlDeIdImagen(miseccion.img)+'\');';
+          }
+
+          if (miseccion.concolor2) {
+            estiloSec+='background-image: linear-gradient('+miseccion.color1+', '+miseccion.color2+');';
+          } else if (miseccion.concolor1) {
+            estiloSec+='background-color: '+miseccion.color1+';';
+          }
+
+          estiloSec+='padding: '+miseccion.paddingh+'vw;';
+
+          secelem.attr('style', estiloSec);
+          secelem2.attr('style', estiloSec2);
+
+          for (var j=0; j<capas.length; j++) {
+            var micapa = capas[j];
+            if (micapa.ver) {
+              var estilos = '';
+              var capaelem = $('<img class="rellax parallax-micapa">');
+              capaelem.attr('src', $scope.darUrlDeIdImagen(micapa.img));
+              capaelem.attr('data-rellax-speed', micapa.vel);
+              estilos+='width: '+micapa.tam+'%;';
+              if (typeof micapa.hort == 'string' && micapa.hort.length > 0) {
+                estilos+=micapa.hort+': '+micapa.horv+'%;';
+              }
+              if (typeof micapa.vert == 'string' && micapa.vert.length > 0) {
+                estilos+=micapa.vert+': '+micapa.verv+'%;';
+              }
+              capaelem.attr('style', estilos);
+              secelem2.append(capaelem);
+            }
+          }
+          cont1.append(secelem);
+        }
+      }
+
+      rellax = new Rellax('.rellax', {
+        center: true,
+        wrapper: '#render-mi-parallax',
+      });
+    });
+  };
+
+  $scope.$watch('metadata.ctx2.disenio',function(){
+    //console.log('renderizar?');
+  });
+
 });
 </script>

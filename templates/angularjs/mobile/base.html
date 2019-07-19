@@ -40,30 +40,32 @@
 
 	    <link rel="stylesheet" href="/assets/css/bootstrap4/bootstrap.min.css"/>
 	
-		<script src="/assets/node_modules/crypto-js/crypto-js.js"></script>
-		<script src="/assets/node_modules/firebase/firebase.js"></script>
-		<script src="/assets/node_modules/firebase/firebaseui.js"></script>
-		<script src="/assets/node_modules/jquery/dist/jquery.min.js"></script>
+		<script type="text/javascript" src="/assets/node_modules/crypto-js/crypto-js.js"></script>
+		<script type="text/javascript" src="/assets/node_modules/firebase/firebase.js"></script>
+		<script type="text/javascript" src="/assets/node_modules/firebase/firebaseui.js"></script>
+		<script type="text/javascript" src="/assets/node_modules/jquery/dist/jquery.min.js"></script>
 		
 		__USER__
 
-		<script src="/assets/dist/modulos.min.js"></script>
+		<script type="text/javascript" src="/assets/dist/modulos.min.js"></script>
 		{% if admin %}
-		<script src="/assets/dist/admin/admin.js"></script>
+		<script type="text/javascript" src="/assets/dist/admin/admin.js"></script>
 		{% else %}
-		<script src="/assets/dist/publico/publico.js"></script>
+		<script type="text/javascript" src="/assets/dist/publico/publico.js"></script>
 		{% endif %}
 
 		<script type="text/javascript" src="/assets/node_modules/instascan/jquery.qrcode.min.js"></script>
 		{% include "firebase/cliente.html" %}
 
-	    <script src="/assets/node_modules/angular/angular.min.js"></script>
-	    <script src="/assets/node_modules/angular-route/angular-route.min.js"></script>
-	    <script src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.min.js"></script>
-	    <script src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.gestures.min.js"></script>
+
+
+	    <script type="text/javascript" src="/assets/node_modules/angular/angular.min.js"></script>
+	    <script type="text/javascript" src="/assets/node_modules/angular-route/angular-route.min.js"></script>
+	    <script type="text/javascript" src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.min.js"></script>
+	    <script type="text/javascript" src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.gestures.min.js"></script>
 
 		<!-- Angular Material Library -->
-  		<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
+  		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
 		
 		{% block encabezado %}{% endblock %}
 	</head>
@@ -73,6 +75,6 @@
 	{% csrf_token %}
 	{% block content %}{% endblock %}
 	
-	{% block scripts %}{% endblock %}	
+	{% block scripts %}{% endblock %}
 	</body>
 </html>

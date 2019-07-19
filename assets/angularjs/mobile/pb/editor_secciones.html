@@ -32,28 +32,60 @@
               <div class="panel panel-default">
                 <div class="panel-body">
 
+                  <div class="input-group mb-3">
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="checkbox" ng-model="miseccion.cuadrado">
+                      <label class="form-check-label">¿Cuadrado?</label>
+                    </div>
+                  </div>
+
                   <div class="form-group col-xs-12">
                     <label for="formControlRange">Margen</label>
-                    <input type="range" class="form-control-range" ng-model="miseccion.paddingh" min="0" max="50">
+                    <div class="input-group">
+                        <input type="text" class="form-control" ng-model="miseccion.paddingh">
+                        <input type="range" class="form-control" ng-model="miseccion.paddingh" min="0" max="50">
+                    </div>
                   </div>
 
                   <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                      <label class="input-group-text">Tipo de fondo</label>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="checkbox" ng-model="miseccion.conimg">
+                      <label class="form-check-label">¿Imagen?</label>
                     </div>
-                    <select class="custom-select" ng-model="miseccion.tipf">
-                      <option selected>Seleccionar...</option>
-                      <option value="col">Color</option>
-                      <option value="img">Imagen</option>
-                    </select>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="checkbox" ng-model="miseccion.concolor1">
+                      <label class="form-check-label">¿Color?</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="checkbox" ng-model="miseccion.concolor2">
+                      <label class="form-check-label">Degrade?</label>
+                    </div>
                   </div>
 
-                  <div class="col-xs-6" ng-show="miseccion.tipf == 'img'">
+                  <div class="col-xs-6" ng-show="miseccion.conimg">
                     <img ng-src="{{ darUrlDeIdImagen(miseccion.img) }}">
                   </div>
-                  <div class="col-xs-6 lrnopadding" ng-show="miseccion.tipf == 'img'">
+                  <div class="col-xs-6 lrnopadding" ng-show="miseccion.conimg">
                     <a href="" ng-click="asignarImagenDeSeccion(miseccion)" class="btn btn-default col-xs-12">Cargar Fondo</a>
                     <a href="" ng-click="borrarImagenGenerica(miseccion)" class="btn btn-default col-xs-12">Borrar Fondo</a>
+                  </div>
+
+                  <div class="col-xs-12 form-group" ng-show="miseccion.concolor1 || miseccion.concolor2">
+                    <label class="">Color #1:</label>
+                    <input
+                      minicolors
+                      class="form-control"
+                      type="text"
+                      ng-model="miseccion.color1">
+                  </div>
+
+                  <div class="col-xs-12 form-group" ng-show="miseccion.concolor2">
+                    <label class="">Color #2:</label>
+                    <input
+                      minicolors
+                      class="form-control"
+                      type="text"
+                      ng-model="miseccion.color2">
                   </div>
 
                 </div>
@@ -106,7 +138,17 @@
                     </div>
                     <div class="form-group col-xs-12">
                       <label for="formControlRange">Velocidad</label>
-                      <input type="range" class="form-control-range" ng-model="micapa.vel" min="-10" max="10">
+                      <div class="input-group">
+                          <input type="text" class="form-control" ng-model="micapa.vel">
+                          <input type="range" class="form-control" ng-model="micapa.vel" min="-10" max="10">
+                      </div>
+                    </div>
+                    <div class="form-group col-xs-12">
+                      <label for="formControlRange">Tamaño</label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" ng-model="micapa.tam">
+                        <input type="range" class="form-control" ng-model="micapa.tam" min="0" max="100">
+                      </div>
                     </div>
                     <!-- Alineación vertical -->
                     <div class="form-group col-xs-12">
@@ -125,7 +167,10 @@
                     </div>
                     <div class="form-group col-xs-12" ng-show="['top', 'bottom'].indexOf(micapa.vert) >= 0">
                       <label for="formControlRange">Porcentaje</label>
-                      <input type="range" class="form-control-range" ng-model="micapa.verv" min="0" max="100">
+                      <div class="input-group">
+                          <input type="text" class="form-control" ng-model="micapa.verv">
+                          <input type="range" class="form-control" ng-model="micapa.verv" min="0" max="100">
+                      </div>
                     </div>
                     <!-- Alineación horizontal -->
                     <div class="form-group col-xs-12">
@@ -144,7 +189,10 @@
                     </div>
                     <div class="form-group col-xs-12" ng-show="['left', 'right'].indexOf(micapa.hort) >= 0">
                       <label for="formControlRange">Porcentaje</label>
-                      <input type="range" class="form-control-range" ng-model="micapa.horv" min="0" max="100">
+                      <div class="input-group">
+                          <input type="text" class="form-control" ng-model="micapa.horv">
+                          <input type="range" class="form-control-range" ng-model="micapa.horv" min="0" max="100">
+                      </div>
                     </div>
                   </div>
                 </div>
