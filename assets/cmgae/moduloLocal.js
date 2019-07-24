@@ -23,7 +23,7 @@ if (!hayValor(moduloLocal)) {
 		
 		var traducir = function(llave) {
 			if (!esObjeto(datos)) {return llave;}
-			return leerObj(datos, llave, llave);
+			return utilidades.leerObj(datos, llave, llave);
 		};
 		
 		var procesarElemento = function(elem) {

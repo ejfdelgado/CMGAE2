@@ -56,7 +56,7 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
 	);
 	
 	var darNombresHijos = function(nodo) {
-		var hijos = copiarJSON(leerObj(nodo, 'children', []));
+		var hijos = copiarJSON(utilidades.leerObj(nodo, 'children', []));
 		for (let i=0; i<hijos.length; i++) {
 			hijos[i] = moduloArchivos.darNombreId(hijos[i]);
 		}

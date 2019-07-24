@@ -845,6 +845,15 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 
 }(jQuery));
 
+var copiarEnPortapapeles = function(texto) {
+  var aux = document.createElement("input");
+  aux.setAttribute("value", texto);
+  document.body.appendChild(aux);
+  aux.select();
+  document.execCommand("copy");
+  document.body.removeChild(aux);
+};
+
 var copyToClipboard = function(str) {
   var el = document.createElement('textarea');  // Create a <textarea> element
   el.value = str;                                 // Set its value to the string that you want copied

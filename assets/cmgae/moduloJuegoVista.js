@@ -85,7 +85,7 @@ if (!hayValor(moduloJuegoVista)) {
 					},
 					'funFinalizar':function() {
 						var elTimer = moduloTimer($('div.timer')); 
-						var segundos = leerObj(metadata, 'preguntaActual.segundos', 10);
+						var segundos = utilidades.leerObj(metadata, 'preguntaActual.segundos', 10);
 						var promesa = elTimer.iniciar(segundos);
 						metadata.moduloJuego.publicarJuego();
 						$.when(promesa).then(function() {

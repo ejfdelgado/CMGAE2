@@ -255,11 +255,12 @@ app.controller('MainController', function($rootScope, $scope) {
       todo.empty();
       var cont1 = $('<div class="parallax-col"></div>');
       todo.append(cont1);
-      var secciones = $scope.metadata.ctx2.disenio.secciones;
+
+      var secciones = utilidades.leerObj($scope.metadata.ctx2, 'disenio.secciones', []);
       for (var i=0; i<secciones.length; i++) {
         var miseccion = secciones[i];
         if (miseccion.ver) {
-          var capas = miseccion.capas;
+          var capas = utilidades.leerObj(miseccion, 'capas', []);
 
           var secelem = $('<div class="parallax-container"><div class="parallax-block"></div></div>');
           var secelem2 = $(secelem.children().first());
