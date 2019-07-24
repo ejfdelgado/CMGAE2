@@ -9,6 +9,8 @@ gulp.task('default', function() {
 	
   gulp.src([
 	'./assets/cmgae/utils.js',
+	'./assets/cmgae/moduloArreglos.js',
+	'./assets/cmgae/moduloTokenizar.js',
 	'./assets/cmgae/utilidades.js',
 	'./assets/cmgae/seguridad.js',
 	'./assets/cmgae/moduloTransformacion.js',
