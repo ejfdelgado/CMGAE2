@@ -1,0 +1,32 @@
+<div class="scrollable">
+  <div class="scrollable-content bootstrapiso">
+  		<div class="bootstrapiso scrollable-header">
+			<div class="input-group p-3 ">
+			  <input type="text" class="form-control" placeholder="Texto de búsqueda" aria-label="Texto de búsqueda" ng-model="temporal.q">
+			  <div class="input-group-append">
+			    <button class="btn btn-outline-secondary" type="button" ng-click="buscar()">Buscar</button>
+			  </div>
+			</div>
+		</div>
+
+		<div class="section">
+		    <div class="panel-group bootstrapiso">
+		    	<div class="panel panel-default">
+					<div class="section">
+						<div class="card" style="width: 18rem;" ng-repeat="ctx in temporal.rta">
+						  <img class="card-img-top p-3" ng-src="{{ darUrlDeIdImagen(ctx.img) }}">
+						  <div class="card-body">
+						    <h5 class="card-title">{{ ctx.tit }}</h5>
+						    <p class="card-text">{{ ctx.desc }}</p>
+						    <button class="btn btn-primary" type="button" ng-click="verDetalle(ctx)">
+                  				<i class="fa fa-search"></i>
+                			</button>
+						  </div>
+						</div>
+					</div>
+		    	</div>
+		    </div>
+		</div>
+  </div>
+</div>
+

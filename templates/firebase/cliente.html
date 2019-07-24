@@ -531,6 +531,17 @@ var moduloDatos = (function() {
 			});
 		};
 		
+		var buscar = function(like, next) {
+			
+			return moduloHttp.get('/api/xpage/q', false, {
+				'like': like, 
+				'path': location.pathname,
+				'mio': false,
+				'n': 50,
+				'next': next,
+				});
+		};
+		
 		return {
 			'leer': leer,
 			'leer2': leer2,
@@ -539,6 +550,7 @@ var moduloDatos = (function() {
 			'guardar2': guardar2,
 			'borrar': borrar,
 			'subirImagenSocial': subirImagenSocial,
+			'buscar': buscar,
 		};
 	})();
 	

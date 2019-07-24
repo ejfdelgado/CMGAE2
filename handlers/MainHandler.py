@@ -225,10 +225,22 @@ def MainHandler(request, data, usuario):
                 if (id_pagina is not None):
                     try:
                         detalle = buscarPagina(request, usuario, True)
-                        detalle['tit'] = simplejson.loads(detalle['tit'])
-                        detalle['desc'] = simplejson.loads(detalle['desc'])
-                        detalle['q'] = simplejson.loads(detalle['q'])
-                        detalle['img'] = simplejson.loads(detalle['img'])
+                        try:
+                            detalle['tit'] = simplejson.loads(detalle['tit'])
+                        except:
+                            detalle['tit'] = 'pais.tv'
+                        try:
+                            detalle['desc'] = simplejson.loads(detalle['desc'])
+                        except:
+                            detalle['desc'] = 'pais.tv'
+                        try:
+                            detalle['q'] = simplejson.loads(detalle['q'])
+                        except:
+                            detalle['q'] = ''
+                        try: 
+                            detalle['img'] = simplejson.loads(detalle['img'])
+                        except:
+                            detalle['img'] = 'pais.tv'
                     except:
                         detalle = {'tit': 'pais.tv','desc': 'pais.tv','img': 'pais.tv',}
                 else:

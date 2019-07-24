@@ -1,0 +1,16 @@
+<div class="section">
+    <div class="panel-group bootstrapiso">
+    	<div class="container panel panel-default">
+
+			<div class="form-group col-xs-10">
+				<label>Título</label>
+				<input type="text" class="form-control" placeholder="Título" ng-model="metadata.ctx.tit">
+				<label>Descripción</label>
+				<textarea class="form-control" rows="3" ng-model="metadata.ctx.desc"></textarea>
+			</div>
+			<div class="form-group col-xs-2 p-5">
+				<img class="manito" ng-src="{{ darUrlDeIdImagen(metadata.ctx.img) }}" ng-click="asignarImagenDePagina(metadata.ctx)">
+			</div>
+    	</div>
+    </div>
+</div>

@@ -8,13 +8,17 @@
   });
 
   var app = angular.module('myApp', [
-    'ngRoute',
+    //'ngRoute',
+    'ui.router',
     'mobile-angular-ui',
     'mobile-angular-ui.gestures',
     'minicolors',
-  ]).config(function($routeProvider, minicolorsProvider) {
-      $routeProvider.when('/', {templateUrl: "/assets/angularjs/mobile/pb/vista.html"});
-      $routeProvider.when('/debug', {templateUrl: '/assets/angularjs/mobile/pb/debug.html', reloadOnSearch: false});
+  ]).config(function(minicolorsProvider, $stateProvider, $urlRouterProvider) {
+      $urlRouterProvider.otherwise("/");
+      $stateProvider.state('/', {url:'/', templateUrl: "/assets/angularjs/mobile/pb/vista.html"});
+      $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/angularjs/mobile/pb/debug.html', reloadOnSearch: false});
+      $stateProvider.state('meta', {url: '/meta', templateUrl: '/assets/angularjs/mobile/pb/meta.html', reloadOnSearch: false});
+      $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/angularjs/mobile/pb/galeria.html', reloadOnSearch: false});
 
       angular.extend(minicolorsProvider.defaults, {
         control: 'hue',
@@ -27,8 +31,13 @@
     window.$transform = $transform;
   });
 
-app.controller('MainController', function($rootScope, $scope) {
+app.controller('MainController', function($rootScope, $scope, $state) {
 
+  $scope.temporal = {
+    'q': '',
+    'rta': [],
+    'next': null,
+  };
   $scope.metadata = {
     'ctx2': {
       'disenio': {
@@ -242,6 +251,10 @@ app.controller('MainController', function($rootScope, $scope) {
     return $scope.asignarImagenGenerica(miseccion, 'sec');
   };
 
+  $scope.asignarImagenDePagina = function(miseccion) {
+    return $scope.asignarImagenGenerica(miseccion, 'pg');
+  };
+
   var rellax = null;
   $scope.renderizarParallax = function() {
     diferidoDatos.then(function() {
@@ -314,9 +327,50 @@ app.controller('MainController', function($rootScope, $scope) {
     });
   };
 
+  $scope.buscar = function() {
+    $scope.temporal.rta = [];
+    $scope.temporal.next = null;
+    moduloPagina.buscar($scope.temporal.q).then(function(rta) {
+      for (var i=0; i<rta.valor.length; i++) {
+        $scope.temporal.rta.push(moduloTransformacion.modo('simple').from(rta.valor[i], true));
+      }
+      $scope.temporal.next = rta.next;
+      $scope.$digest();
+    }, function() {
+      
+    });
+  };
+
+  $scope.siguientePagina = function() {
+    if ($scope.temporal.next != null) {
+      moduloPagina.buscar($scope.temporal.q, $scope.temporal.next).then(function(rta) {
+        var temp = [];
+        for (var i=0; i<rta.valor.length; i++) {
+          temp.push(moduloTransformacion.modo('simple').from(rta.valor[i], true));
+        }
+        $scope.temporal.rta.concat(temp);
+        $scope.temporal.next = rta.next;
+        $scope.$digest();
+      }, function() {
+        
+      });
+    }
+  };
+
+  $scope.verDetalle = function(ctx) {
+    var id = ctx.id;
+    var nuevaUrl = location.pathname.replace(/\d*$/, '')+'?pg='+id+'#!/';
+    var win = window.open(nuevaUrl, '_blank');
+    win.focus();
+  };
+
   $scope.$watch('metadata.ctx2.disenio',function(){
     //console.log('renderizar?');
   });
+
+  $scope.redirigir = function(estado) {
+    $state.go(estado);
+  };
 
 });
 </script>
