@@ -1,7 +1,7 @@
 
 if (!hayValor(moduloArchivos)) {
 var moduloArchivos = (function() {
-	var MAX_FILE_SIZE = 550*1024;//en KB
+	var MAX_FILE_SIZE = 600*1024;//en KB
 	var PREFIJO_LOCAL = '/app_default_bucket';
 	var PREFIJO_RAIZ_PUBLICA = '/public';
 	
@@ -63,6 +63,7 @@ var moduloArchivos = (function() {
 	        	return;
 	        }
 	        var subirReal = function() {
+		        var diferidoAct = moduloActividad.on();
 		        var reader = new FileReader();
 		        reader.readAsDataURL(file);
 		        var form = new FormData();
@@ -76,16 +77,15 @@ var moduloArchivos = (function() {
 	        	}
 		        
 		        if (hayValor(atributos.url)) {
-		        	console.log(atributos.url)
+		        	//console.log(atributos.url)
 		        	let queryParams = darParametrosUrl(atributos.url);
-		        	console.log(queryParams)
+		        	//console.log(queryParams)
 		        	if ('no-borrar' in queryParams) {
 		        		form.append('no-borrar', 'true');
 		        	}
 		        }
 		        //Sobra porque el servidor ya lo está capturando
 		        //form.append('mime', file.type);
-		        var diferidoAct = moduloActividad.on();
 		        var peticion = {
 			            url: '/storage/',
 			            type: 'POST',
@@ -106,10 +106,14 @@ var moduloArchivos = (function() {
 			        	}
 			        }).fail(function() {
 			        	diferido.reject();
-			        }).always(function() {
-			        	diferidoAct.resolve();
 			        });
+		        }, function() {
+		        	diferido.reject();
 		        });
+
+			  	diferido.always(function() {
+			    	diferidoAct.resolve();
+			    });
 	        };
 	        
 	        if (estaEnLista(file.name, atributos.opcionesNegras)) {
@@ -121,8 +125,9 @@ var moduloArchivos = (function() {
 	        	subirReal();
 	        }
 	    });
-	  temp.click();
-	  return diferido.promise();
+	  	temp.click();
+
+	  	return diferido.promise();
 	}
 	
 	var escribirTextoPlano = function(id, contenido) {

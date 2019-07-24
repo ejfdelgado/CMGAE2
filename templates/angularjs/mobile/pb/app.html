@@ -201,7 +201,7 @@ app.controller('MainController', function($rootScope, $scope) {
   };
 
   $scope.asignarImagenGenerica = function(micapa, prefijo) {
-    var diferido = moduloActividad.on();
+    var diferido = $.Deferred();
     var subirArchivo = function() {
 
       var funcionCargue = null;
