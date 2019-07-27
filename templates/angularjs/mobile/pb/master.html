@@ -3,7 +3,7 @@
     <div class="scrollable">
       <h1 class="scrollable-header app-name">Editor Parallax</h1>
       <div class="scrollable-content">
-        <div class="list-group" ui-turn-off='uiSidebarLeft'>
+        <div class="list-group">
           <div class="section">
             <a href="" ng-click="crearNuevo()" class="btn btn-default col-xs-12"><i class="fa fa-plus"></i> Nuevo</a>
           </div>
@@ -11,6 +11,10 @@
           <a class="list-group-item" ng-click="redirigir('meta')">Propiedades<i class="fa fa-chevron-right pull-right"></i></a>
           <a class="list-group-item" ng-click="redirigir('galeria')">Galería<i class="fa fa-chevron-right pull-right"></i></a>
           <a class="list-group-item" ng-click="redirigir('debug')">Debug<i class="fa fa-chevron-right pull-right"></i></a>
+          <div ng-include="'/assets/angularjs/mobile/pb/editor_secciones.html'"></div>
+          <div class="section">
+            <a href="" ng-click="agregarSeccion()" class="btn btn-default col-xs-12"><i class="fa fa-plus"></i> Agregar Sección</a>
+          </div>
         </div>
       </div>
     </div>
@@ -19,10 +23,6 @@
   <div class="sidebar sidebar-right">
     <div class="scrollable">
       <div class="scrollable-content">
-        <div ng-include="'/assets/angularjs/mobile/pb/editor_secciones.html'"></div>
-        <div class="section">
-          <a href="" ng-click="agregarSeccion()" class="btn btn-default col-xs-12"><i class="fa fa-plus"></i> Agregar Sección</a>
-        </div>
       </div>
     </div>
   </div>

@@ -49,7 +49,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     }
   };
   moduloIntMarkInst.afterAny().then(function(datos) {
-    console.log(datos)
+    //console.log(datos);
     $.extend(true, $scope.metadata, datos);
     $scope.$digest();
     diferidoDatos.resolve();
