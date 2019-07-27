@@ -13,7 +13,7 @@
 		    <div class="panel-group bootstrapiso">
 		    	<div class="panel panel-default">
 					<div class="section">
-						<div class="col-xs-3" ng-repeat="ctx in temporal.rta">
+						<div class="col-md-3 col-sm-6 col-xs-12" ng-repeat="ctx in temporal.rta">
 							<div class="card">
 								<div class="card-header">
 									<h5 class="card-title">{{ ctx.tit }}</h5>
@@ -23,9 +23,11 @@
 							    
 							    <p class="card-text">{{ ctx.desc }}</p>
 
+							    <p class="card-text"><i>{{ ctx.aut }}</i></p>
+
 								<div class="btn-group pull-right" role="group" aria-label="Basic example">
-								    <button type="button" class="btn btn-primary" ng-click="verDetalle(ctx)"><i class="fa fa-search"></i>&nbsp;Ver</button>
-								    <button type="button" class="btn btn-danger" ng-click="borrarUno(ctx)" ng-if="ctx.usr == metadata.principal.uid"><i class="fa fa-times"></i>&nbsp;Borrar</button>
+								    <button type="button" class="btn btn-primary" ng-click="verDetalle(ctx)"><i class="fa fa-search"></i></button>
+								    <button type="button" class="btn btn-danger" ng-click="borrarUno(ctx)" ng-if="ctx.usr == metadata.principal.uid"><i class="fa fa-times"></i></button>
 								</div>
 
 							  </div>
