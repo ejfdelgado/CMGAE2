@@ -44,8 +44,12 @@ app.controller('MainController', function($rootScope, $scope, $state) {
         'secciones': [],
       },
     },
+    'principal': {
+      'uid': null,
+    }
   };
   moduloIntMarkInst.afterAny().then(function(datos) {
+    console.log(datos)
     $.extend(true, $scope.metadata, datos);
     $scope.$digest();
     diferidoDatos.resolve();
@@ -370,6 +374,14 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 
   $scope.redirigir = function(estado) {
     $state.go(estado);
+  };
+
+  $scope.crearNuevo = function() {
+
+  };
+
+  $scope.borrarUno = function(instancia) {
+
   };
 
 });

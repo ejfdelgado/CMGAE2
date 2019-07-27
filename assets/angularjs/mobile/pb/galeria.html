@@ -18,9 +18,12 @@
 						  <div class="card-body">
 						    <h5 class="card-title">{{ ctx.tit }}</h5>
 						    <p class="card-text">{{ ctx.desc }}</p>
-						    <button class="btn btn-primary" type="button" ng-click="verDetalle(ctx)">
-                  				<i class="fa fa-search"></i>
-                			</button>
+
+							<div class="btn-group" role="group" aria-label="Basic example">
+							    <button type="button" class="btn btn-primary" ng-click="verDetalle(ctx)"><i class="fa fa-search"></i>&nbsp;Ver</button>
+							    <button type="button" class="btn btn-danger" ng-click="borrarUno(ctx)" ng-if="ctx.usr == metadata.principal.uid"><i class="fa fa-times"></i>&nbsp;Borrar</button>
+							</div>
+
 						  </div>
 						</div>
 					</div>

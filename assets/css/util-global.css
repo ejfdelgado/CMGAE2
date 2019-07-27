@@ -28,3 +28,13 @@ body {
 #firebaseui-auth-container .firebaseui-container {
 	margin-top: 100px;
 }
+
+.bootstrapiso input, 
+.bootstrapiso button, 
+.bootstrapiso select, 
+.bootstrapiso optgroup, 
+.bootstrapiso textarea,
+.bootstrapiso label,
+.bootstrapiso a {
+	font-size: 150% !important;
+}
