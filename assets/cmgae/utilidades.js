@@ -779,11 +779,11 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 
 			if (actual['dif'] != null) {
 				actual['dif'].then(function() {
-					encolar(tipo, funFinal, periodo);
+					encolar(tipo, funFinal, periodo, opciones);
 				});
 			} else {
-				cancelarTimer();
 				if (diferencia < periodo) {
+					cancelarTimer();
 					//Se debe postergar el llamado...
 					actual['now'] = ahora;
 					actual['timer'] = setTimeout(funInterna, periodo);

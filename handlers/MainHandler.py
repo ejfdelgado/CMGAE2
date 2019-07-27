@@ -250,6 +250,7 @@ def MainHandler(request, data, usuario):
                     'admin':users.is_current_user_admin(),
                     'path':var_path,
                     'detalle': detalle,
+                    'qparams': request.GET,#Aca se propagan los query params para que esten disponibles en el template
                 }
                 
                 respuesta = direct_to_template(request, data, context, mime)

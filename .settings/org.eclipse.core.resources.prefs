@@ -40,6 +40,7 @@ encoding//handlers/StorageHandler.py=utf-8
 encoding//handlers/TuplaHandler.py=utf-8
 encoding//handlers/decoradores.py=utf-8
 encoding//handlers/seguridad.py=utf-8
+encoding//templates/angularjs/mobile/pb/a=UTF-8
 encoding/main.py=utf-8
 encoding/settings.py=utf-8
 encoding/urls.py=utf-8

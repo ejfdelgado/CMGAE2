@@ -1,5 +1,11 @@
 {% extends "angularjs/mobile/base.html" %}
 
+{% if qparams.test == '1' %}
+<script type="text/javascript">
+	alert('si');
+</script>
+{% endif %}
+
 {% block encabezado %}
 <script type="text/javascript">
   var app = angular.module('myApp', [
