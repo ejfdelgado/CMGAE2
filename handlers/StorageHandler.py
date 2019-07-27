@@ -215,6 +215,8 @@ def StorageHandler(request, ident, usuario=None):
     elif request.method == 'DELETE':
         if (ident == 'borrar'):
             nombre = request.GET.get('name', None)
+            if (not existe(nombre)):
+                raise NoExisteException()
             if (not usuario_es_dueno(usuario, nombre)):
                 raise NoAutorizadoException()
             delete_files(response, nombre)

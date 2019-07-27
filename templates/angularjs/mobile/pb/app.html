@@ -98,30 +98,31 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     $scope.metadata.ctx2.disenio.secciones.push(plantilla);
   };
 
-  $scope.tipoBorrado = null;
-  $scope.objetoBorrar = null;
-  $scope.padreObjetoBorrar = null;
+  $scope.diferidoBorrado = null;
   $scope.borrarEfectivo = function() {
-    if ($scope.tipoBorrado == 'seccion') {
-      var indice = $scope.metadata.ctx2.disenio.secciones.indexOf($scope.objetoBorrar);
+    $scope.diferidoBorrado.resolve();
+  };
+
+  $scope.borrarCapa = function(miseccion, micapa) {
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+      var indice = miseccion.capas.indexOf(micapa);
       if (indice >= 0) {
-        $scope.metadata.ctx2.disenio.secciones.splice(indice, 1);
+        miseccion.capas.splice(indice, 1);
       }
-    } else if ($scope.tipoBorrado == 'capa') {
-      var indice = $scope.padreObjetoBorrar.capas.indexOf($scope.objetoBorrar);
-      if (indice >= 0) {
-        $scope.padreObjetoBorrar.capas.splice(indice, 1);
-      }
-    }
-    $scope.tipoBorrado = null;
-    $scope.objetoBorrar = null;
-    $scope.padreObjetoBorrar = null;
+    });
   };
 
   $scope.borrarSeccion = function(miseccion) {
     $rootScope.Ui.turnOn('modalBorrar');
-    $scope.objetoBorrar = miseccion;
-    $scope.tipoBorrado = 'seccion';
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+      var indice = $scope.metadata.ctx2.disenio.secciones.indexOf(miseccion);
+      if (indice >= 0) {
+        $scope.metadata.ctx2.disenio.secciones.splice(indice, 1);
+      }
+    });
   };
 
   var moverElemento = function(arreglo, from, to) {
@@ -170,13 +171,6 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     seccion.capas.push(plantilla);
   };
 
-  $scope.borrarCapa = function(miseccion, micapa) {
-    $rootScope.Ui.turnOn('modalBorrar');
-    $scope.padreObjetoBorrar = miseccion;
-    $scope.objetoBorrar = micapa;
-    $scope.tipoBorrado = 'capa';
-  };
-
   $scope.subirCapa = function(miseccion, micapa) {
     var arreglo = miseccion.capas;
     var indice = arreglo.indexOf(micapa);
@@ -199,7 +193,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     if (typeof id == 'string' && id.length > 0) {
       return moduloArchivos.generarUrlDadoId(id);
     } else {
-      return '/assets/angularjs/mobile/pb/img/noimage.png';
+      return '/assets/angularjs/mobile/pb/img/def.svg';
     }
   };
 
@@ -377,11 +371,29 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   };
 
   $scope.crearNuevo = function() {
-
+    //Podría mostrar un modal con nombre, titulo antes de crear
+    moduloPagina.crear().then(function(rta) {
+      if (rta.error == 0) {
+        var url = location.origin + location.pathname+'?pg='+rta.valor.id+'#!/meta';
+        window.open(url,"_self");
+      }
+    });
   };
 
   $scope.borrarUno = function(instancia) {
 
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+      moduloPagina.borrar(instancia.id).then(function() {
+        //Lo debo sacar de la lista
+        var indice = $scope.temporal.rta.indexOf(instancia);
+        if (indice >= 0) {
+          $scope.temporal.rta.splice(indice, 1);
+          $scope.$digest();
+        }
+      });
+    });
   };
 
 });

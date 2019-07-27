@@ -35,6 +35,9 @@ class Pagina(ndb.Expando):
     desc = ndb.StringProperty()
     img = ndb.StringProperty()
     
+    kw = ndb.StringProperty()
+    aut = ndb.StringProperty()
+    
     def to_dict(self, puntos, ignorar=[]):
         return to_dict_(self, puntos, ignorar)
 

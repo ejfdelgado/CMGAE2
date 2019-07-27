@@ -64,7 +64,8 @@ def docToJson(doc):
 #Crea un documento nuevo
 def recrearDocumento(idPagina, usuario, elpath, buscables={}, lenguaje='es'):
     campos = []
-    buscables['usr'] = usuario
+    buscables['usr'] = usuario.uid
+    buscables['aut'] = usuario.miId
     buscables['path'] = elpath
     #logging.info(buscables)
     for key, value in buscables.iteritems():
@@ -79,7 +80,7 @@ def recrearDocumento(idPagina, usuario, elpath, buscables={}, lenguaje='es'):
     document = search.Document(
             doc_id=idPagina,
             fields=campos,
-            language='es')
+            language=lenguaje)
     
     return document
     
@@ -120,7 +121,7 @@ def autoCrearDoc(idPagina, usuario, elpath, buscables={}, lenguaje='es'):
             return document
         else:
             #Se debe crear
-            document = recrearDocumento(idPagina, usuario.uid, elpath, buscables, lenguaje)
+            document = recrearDocumento(idPagina, usuario, elpath, buscables, lenguaje)
             index.put(document)
             return document
     else:
@@ -162,7 +163,7 @@ def actualizar(idPagina, usuario, elpath, peticion):
                         cambio = True
                         break
                 if (cambio):
-                    nuevo = recrearDocumento(idPagina, usuario.uid, elpath, peticion)
+                    nuevo = recrearDocumento(idPagina, usuario, elpath, peticion)
                     index.put(nuevo)
                     return docToJson(nuevo)
                 else:

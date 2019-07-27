@@ -8,7 +8,8 @@ body {
 }
 
 .lrnopadding {
-	padding: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
 }
 
 .manito {
@@ -29,12 +30,6 @@ body {
 	margin-top: 100px;
 }
 
-.bootstrapiso input, 
-.bootstrapiso button, 
-.bootstrapiso select, 
-.bootstrapiso optgroup, 
-.bootstrapiso textarea,
-.bootstrapiso label,
-.bootstrapiso a {
-	font-size: 150% !important;
+html {
+	font-size: 13px !important;
 }

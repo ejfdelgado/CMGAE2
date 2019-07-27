@@ -182,6 +182,31 @@ var moduloDatos = (function() {
 			ans['md5'] = MD5(ans['txt']); 
 			return ans;
 		};
+
+		var crear = function(opciones) {
+			var diferidoCrear = $.Deferred();
+			opciones = $.extend(true, {}, {
+				'tit': 'Titulo',
+				'desc': 'Descripcion',
+				'img': null,
+				'kw': '',
+			}, opciones);
+			miseguridad.buscarUsuario(true, function() {
+				var queryParams = {
+					'tit': opciones['tit'],
+					'desc': opciones['desc'],
+					'img': opciones['img'],
+					'kw': opciones['kw'],
+					'add': '1',
+				};
+				moduloHttp.get('/api/xpage/', false, queryParams).then(function(rta) {
+					diferidoCrear.resolve(rta);
+				}, function() {
+					diferidoCrear.reject();
+				});
+			});
+			return diferidoCrear;
+		};
 		
 		var leer = function(opciones) {
 			if (diferidoLectura != null && ['resolved', 'pending'].indexOf(diferidoLectura.state()) >= 0) {
@@ -192,16 +217,19 @@ var moduloDatos = (function() {
 				'logged': false,
 				'tit': 'Titulo',
 				'desc': 'Descripcion',
-				'img': '/img/default.png',
+				'img': null,
+				'kw': '',
 			}, opciones);
 			miseguridad.buscarUsuario(opciones['logged'], function() {
 				var pg = $.urlParam('pg');
-				moduloHttp.get('/api/xpage/', false, {
+				var queryParams = {
 					'pg': pg, 
 					'tit': opciones['tit'],
 					'desc': opciones['desc'],
 					'img': opciones['img'],
-					}).then(function(rta) {
+					'kw': opciones['kw'],
+				};
+				moduloHttp.get('/api/xpage/', false, queryParams).then(function(rta) {
 					var valorActual = moduloTransformacion.modo('simple').from(rta.valor, true);
 					if (location.pathname != valorActual.path) {
 						//Url mal armada, redirigir
@@ -543,6 +571,7 @@ var moduloDatos = (function() {
 		};
 		
 		return {
+			'crear': crear,
 			'leer': leer,
 			'leer2': leer2,
 			'leerTodo': leerTodo,

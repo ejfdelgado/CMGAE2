@@ -17,7 +17,7 @@ from handlers.seguridad import inyectarUsuario, enRol, enRolFun
 from handlers.decoradores import autoRespuestas
 from handlers import comun, DocHandler
 
-LIGTH_WEIGHT_KEYS = ['tit', 'desc', 'img', 'q']
+LIGTH_WEIGHT_KEYS = ['tit', 'desc', 'img', 'q', 'kw']
 
 def leerRefererPath(request, usarPathLocal):
     if (usarPathLocal):
@@ -50,22 +50,25 @@ def filtrarParametros(request, filtro):
 
 def buscarPagina(request, usuario, usarPathLocal):
     idPagina = comun.leerNumero(request.GET.get('pg', None))
+    crear = request.GET.get('add', None)
     buscables=filtrarParametros(request, LIGTH_WEIGHT_KEYS)
     elpath = leerRefererPath(request, usarPathLocal)
     temp = None
     if (idPagina is None):
         if (usuario is not None):
             elUsuario = usuario.uid
-            
-            temporal = ndb.gql('SELECT * FROM Pagina WHERE usr = :1 and path = :2 ORDER BY date DESC', elUsuario, elpath)
-            datos, next_cursor, more = temporal.fetch_page(1)
-            unapagina = None
+            datos = []
+            if (crear is None):
+                temporal = ndb.gql('SELECT * FROM Pagina WHERE usr = :1 and path = :2 ORDER BY date DESC', elUsuario, elpath)
+                datos, next_cursor, more = temporal.fetch_page(1)
+                unapagina = None
+                
             if (len(datos) > 0):
                 #Ya existe y no lo debo crear
                 unapagina = datos[0]
             else:
                 #Se debe crear
-                unapagina = Pagina(usr=elUsuario, path=elpath, **buscables)
+                unapagina = Pagina(usr=elUsuario, aut=usuario.miId, path=elpath, **buscables)
                 unapagina.put()
             temp = comun.to_dict(unapagina, None, True)
             buscables=filtrarParametros(temp, LIGTH_WEIGHT_KEYS)
