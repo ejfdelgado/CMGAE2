@@ -4,6 +4,7 @@ Created on 10/06/2019
 
 @author: Edgar
 '''
+import time
 import logging
 from django.http import HttpResponse
 from google.appengine.api import memcache
@@ -78,8 +79,8 @@ def TuplaHandler(request, ident, usuario=None):
         response = HttpResponse("", content_type='application/json', status=200)
         ans = {}
         ans['error'] = 0
-        idPagina = request.GET.get('pg', None)
         if (ident == 'all'):
+            idPagina = request.GET.get('pg', None)
             if (idPagina is None):
                 raise ParametrosIncompletosException()
             paginaKey = ndb.Key(Pagina, idPagina)
@@ -94,6 +95,8 @@ def TuplaHandler(request, ident, usuario=None):
             ans['ans'] = comun.to_dict(datos, None, True, ['id', 'i'])
             if (more):
                 ans['next'] = next_cursor.urlsafe()
+        elif (ident == 'fecha'):
+            ans['unixtime'] = int(1000*time.time())
         response.write(simplejson.dumps(ans))
         return response
     elif request.method == 'POST':
