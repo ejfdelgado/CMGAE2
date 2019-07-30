@@ -1,0 +1,32 @@
+<div ui-content-for="title">
+  <span>Invitados</span>
+</div>
+
+<div class="scrollable">
+  <div class="scrollable-content">
+    <div class="section section-break bootstrapiso">
+    	<div class="panel panel-default">
+    		<div class="input-group">
+	    		<a href="" ng-click="agregarInvitado()" class="btn btn-default col-xs-12"><i class="fa fa-plus"></i> Agregar Invitado</a>
+	    	</div>
+    	</div>
+    	<div class="panel panel-default" ng-repeat="(idInvitado, invitado) in metadata.ctx2.invitados">
+
+            <div class="">
+              <div class="input-group">
+              	<div class="input-group-prepend">
+	                <button class="btn btn-info" type="button" ng-click="copiarUrlInvitado()">{{ $index + 1 }}</button>
+	            </div>
+                <input type="text" class="form-control" ng-model="invitado.nom">
+                <div class="input-group-append">
+                  <button class="btn btn-danger" type="button" ng-click="borrarInvitado(idInvitado)">
+                    <i class="fa fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+    	</div>
+    </div>
+  </div>
+</div>

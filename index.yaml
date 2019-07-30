@@ -22,3 +22,11 @@ indexes:
   - name: usr
   - name: date
     direction: desc
+
+- kind: Tupla
+  ancestor: yes
+  properties:
+  - name: d
+  - name: i
+  - name: sd
+    direction: desc

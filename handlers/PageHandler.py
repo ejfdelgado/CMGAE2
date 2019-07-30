@@ -155,7 +155,7 @@ def PageHandler(request, ident, usuario=None):
                 if (usuario is None or modelo.usr != usuario.uid):
                     raise NoAutorizadoException()
                 else:
-                    otro = comun.llenarYpersistir(Pagina, modelo, peticion, ['usr', 'path', 'date', 'id'], True)
+                    otro = comun.llenarYpersistir(Pagina, modelo, peticion, ['usr', 'path', 'date', 'id', 'act'], True)
                     elpath = leerRefererPath(request, False)
                     buscables=filtrarParametros(peticion, LIGTH_WEIGHT_KEYS)
                     #Optimizar, si no ha cambiado, no recrear

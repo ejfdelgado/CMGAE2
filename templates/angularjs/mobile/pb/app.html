@@ -19,6 +19,7 @@
       $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/angularjs/mobile/pb/debug.html', reloadOnSearch: false});
       $stateProvider.state('meta', {url: '/meta', templateUrl: '/assets/angularjs/mobile/pb/meta.html', reloadOnSearch: false});
       $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/angularjs/mobile/pb/galeria.html', reloadOnSearch: false});
+      $stateProvider.state('invitados', {url: '/invitados', templateUrl: '/assets/angularjs/mobile/pb/invitados.html', reloadOnSearch: false});
 
       angular.extend(minicolorsProvider.defaults, {
         control: 'hue',
@@ -33,6 +34,10 @@
 
 app.controller('MainController', function($rootScope, $scope, $state) {
 
+  var PATRONES_SUBDOMINIOS = [
+    '(invitados)\\.([^\\.]+)',
+  ];
+
   $scope.temporal = {
     'q': '',
     'rta': [],
@@ -43,6 +48,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       'disenio': {
         'secciones': [],
       },
+      'invitados': {},
     },
     'principal': {
       'uid': null,
@@ -76,7 +82,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   $scope.guardarTodo = function() {
     $scope.renderizarParallax();
     var diferidoGuardado = moduloActividad.on();
-    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)));
+    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)), PATRONES_SUBDOMINIOS);
     var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
     all([diferido1.promise, diferido2.promise]).always(function() {
       diferidoGuardado.resolve();
@@ -394,6 +400,35 @@ app.controller('MainController', function($rootScope, $scope, $state) {
         }
       });
     });
+  };
+
+  $scope.agregarInvitado = function() {
+    var plantilla = {
+      'nom': '',
+    };
+    if (typeof $scope.metadata.ctx2.invitados == 'undefined') {
+      $scope.metadata.ctx2.invitados = {};
+    }
+    modIdGen.nuevo().then(function(id) {
+      $scope.metadata.ctx2.invitados[id] = plantilla;
+      $scope.$digest();
+    });
+  };
+
+  $scope.borrarInvitado = function(id) {
+    if (typeof $scope.metadata.ctx2.invitados == 'undefined') {
+      return;
+    }
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+      delete $scope.metadata.ctx2.invitados[id];
+      $scope.$digest();
+    });
+  };
+
+  $scope.copiarUrlInvitado = function() {
+
   };
 
 });

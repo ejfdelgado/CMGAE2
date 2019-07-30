@@ -28,6 +28,7 @@ def to_dict_(entidad, puntos=False, ignorar=[]):
     
 class Pagina(ndb.Expando):
     date = ndb.DateTimeProperty(auto_now_add=True)
+    act = ndb.DateTimeProperty(auto_now=True)
     usr = ndb.StringProperty()
     path = ndb.StringProperty()
     
@@ -90,6 +91,10 @@ class Tupla(ndb.Model):
     k = ndb.StringProperty()
     #valor
     v = ndb.StringProperty()
+    #dominio
+    d = ndb.StringProperty()
+    #subdominio
+    sd = ndb.StringProperty()
     
     def to_dict(self, puntos, ignorar=[]):
         return to_dict_(self, puntos, ignorar)

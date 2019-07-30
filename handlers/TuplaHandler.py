@@ -4,6 +4,7 @@ Created on 10/06/2019
 
 @author: Edgar
 '''
+import re
 import time
 import logging
 from django.http import HttpResponse
@@ -32,6 +33,11 @@ def crearTuplas(idPagina, peticion):
     temporal = ndb.gql('SELECT * FROM Tupla WHERE i = :1 and k IN :2 and ANCESTOR IS :3', idPagina, llaves, paginaKey).order(Tupla._key)
     datos, next_cursor, more = temporal.fetch_page(len(llaves))
     
+    lpatr = []
+    if ('patr' in peticion and type(peticion['patr']) == list):
+        for unpatron in peticion['patr']:
+            lpatr.append(re.compile(unpatron))
+    
     amodificar = []
     
     #Modifico los que existen
@@ -53,6 +59,24 @@ def crearTuplas(idPagina, peticion):
         amodificar.append(unatupla)
             
     if (len(amodificar) > 0):
+        #Se asigna dominio y subdominio
+        if (len(lpatr) > 0):
+            for unatupla in amodificar:
+                dominio = ''
+                subdominio = None
+                for patron in lpatr:
+                    matches = patron.match(unatupla.k)
+                    if matches is not None:
+                        grupos = matches.groups()
+                        tamanio = len(grupos)
+                        if (tamanio>=1):
+                            dominio = grupos[0]
+                            if (tamanio>=2):
+                                subdominio = grupos[1]
+                        break
+                unatupla.d = dominio
+                unatupla.sd = subdominio
+                
         ndb.put_multi(amodificar)
     return len(amodificar)
 
@@ -81,11 +105,20 @@ def TuplaHandler(request, ident, usuario=None):
         ans['error'] = 0
         if (ident == 'all'):
             idPagina = request.GET.get('pg', None)
+            dom = request.GET.get('dom', None)
+            sdom = request.GET.get('sdom', None)
             if (idPagina is None):
                 raise ParametrosIncompletosException()
             paginaKey = ndb.Key(Pagina, idPagina)
             sqltext = 'SELECT * FROM Tupla WHERE i = :page and ANCESTOR IS :padre'
-            temporal = ndb.gql(sqltext, **{'page': idPagina, 'padre': paginaKey})
+            parametros = {'page': idPagina, 'padre': paginaKey}
+            if dom is not None:
+                sqltext = sqltext + ' and d = :dom'
+                parametros['dom'] = dom
+            if sdom is not None:
+                sqltext = sqltext + ' and sd = :sdom'
+                parametros['sdom'] = sdom
+            temporal = ndb.gql(sqltext, **parametros)
             siguiente = request.GET.get('next', None)
             n = comun.leerNumero(request.GET.get('n', 100))
             if (siguiente is not None):
@@ -97,6 +130,26 @@ def TuplaHandler(request, ident, usuario=None):
                 ans['next'] = next_cursor.urlsafe()
         elif (ident == 'fecha'):
             ans['unixtime'] = int(1000*time.time())
+        elif (ident == 'next'):
+            idPagina = request.GET.get('pg', None)
+            dom = request.GET.get('dom', None)
+            sdom = request.GET.get('sdom', None)
+            if (idPagina is None or dom is None):
+                raise ParametrosIncompletosException()
+            paginaKey = ndb.Key(Pagina, idPagina)
+            sqltext = 'SELECT * FROM Tupla WHERE i = :page and ANCESTOR IS :padre and d = :dom'
+            parametros = {'page': idPagina, 'padre': paginaKey, 'dom': dom}
+            if sdom is not None:
+                sqltext = sqltext + ' and sd < :sdom'
+                parametros['sdom'] = sdom
+            sqltext = sqltext + ' ORDER BY sd DESC'
+            temporal = ndb.gql(sqltext, **parametros)
+            datos, next_cursor, more = temporal.fetch_page(1)
+            ans['sql'] = sqltext
+            if (len(datos) > 0):
+                ans['ans'] = datos[0].sd
+            else:
+                ans['ans'] = None
         response.write(simplejson.dumps(ans))
         return response
     elif request.method == 'POST':

@@ -368,7 +368,7 @@ var moduloDatos = (function() {
 			return diferidoLectura2;
 		};
 		
-		var guardar2 = function(modelo) {
+		var guardar2 = function(modelo, lpatrones) {
 			var diferido = $.Deferred();
 			if (diferidoLectura !== null) {
 				diferidoLectura.then(function(valor) {
@@ -466,7 +466,11 @@ var moduloDatos = (function() {
 						} else {
 							//Hace invocacion a servicio
 							//console.log('invocando servicio + con', JSON.stringify(subgrupo));
-							moduloHttp.post('/api/tup/'+idPagina, {'dat': subgrupo, 'acc': '+'}).then(function(respuesta) {
+							var subdatos = {'dat': subgrupo, 'acc': '+'};
+							if (lpatrones instanceof Array) {
+								subdatos['patr'] = lpatrones;
+							}
+							moduloHttp.post('/api/tup/'+idPagina, subdatos).then(function(respuesta) {
 								funcionExitoLocal()
 							}, function() {
 								//Hubo error, que hacer?
