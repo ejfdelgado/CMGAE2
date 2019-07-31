@@ -2,7 +2,7 @@
   <span>Invitados</span>
 </div>
 
-<div class="scrollable">
+<div class="scrollable" ng-init="crearMapaPreguntas()">
   <div class="scrollable-content">
     <div class="section section-break bootstrapiso">
     	<div class="panel panel-default">
@@ -15,14 +15,19 @@
             <div class="">
               <div class="input-group">
               	<div class="input-group-prepend">
-	                <button class="btn btn-info" type="button" ng-click="copiarUrlInvitado()">{{ $index + 1 }}</button>
-	            </div>
+	                <button class="btn btn-info" type="button" ng-click="copiarUrlInvitado(idInvitado)">{{ $index + 1 }}</button>
+	              </div>
                 <input type="text" class="form-control" ng-model="invitado.nom">
                 <div class="input-group-append">
                   <button class="btn btn-danger" type="button" ng-click="borrarInvitado(idInvitado)">
                     <i class="fa fa-times"></i>
                   </button>
                 </div>
+                <ul class="col-xs-12 ml-2">
+                  <li class="mt-2 col-xs-6" ng-repeat="(idPreg, preg) in invitado.rtas">
+                    <b class="">{{ temporal.preguntas[idPreg].preg }}</b>:<span class="ml-2" ng-repeat="unapreg in preg">{{ temporal.preguntas[idPreg].rtas[unapreg].txt }}</span>
+                  </li>
+                </ul>
               </div>
             </div>
 

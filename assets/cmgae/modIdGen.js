@@ -52,7 +52,8 @@ var modIdGen = (function(){
 			if (diff > 0) {
 				temp = (new Array(diff).join('0'))+(temp);
 			}
-			return temp;
+			//Intencionalmente, se cambia el último aleatorio por una 'a'
+			return temp.slice(0, -1)+'a';
 		}
 		return null;
 	};

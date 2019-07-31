@@ -3,8 +3,8 @@
   var moduloIntMarkInst = moduloIntMark({
     'masterLoged': true,
     'masterIdUsr': true,
-    'slaveLoged': true,
-    'slaveIdUsr': true,
+    'slaveLoged': false,
+    'slaveIdUsr': false,
   });
 
   var app = angular.module('myApp', [
@@ -42,6 +42,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     'q': '',
     'rta': [],
     'next': null,
+    'preguntas': {},
   };
   $scope.metadata = {
     'ctx2': {
@@ -54,9 +55,12 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       'uid': null,
     }
   };
+  $scope.slaveUrl = null;
   moduloIntMarkInst.afterAny().then(function(datos) {
     //console.log(datos);
+    $scope.slaveUrl = datos.slaveUrl;
     $.extend(true, $scope.metadata, datos);
+    $scope.crearMapaPreguntas();
     $scope.$digest();
     diferidoDatos.resolve();
   });
@@ -79,12 +83,16 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     return myAccordion == i;
   }
 
+  var guardarBasico = function() {
+    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)), PATRONES_SUBDOMINIOS);
+    var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
+    return [diferido1.promise, diferido2.promise];
+  };
+
   $scope.guardarTodo = function() {
     $scope.renderizarParallax();
     var diferidoGuardado = moduloActividad.on();
-    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)), PATRONES_SUBDOMINIOS);
-    var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
-    all([diferido1.promise, diferido2.promise]).always(function() {
+    all(guardarBasico()).always(function() {
       diferidoGuardado.resolve();
     });
     return diferidoGuardado;
@@ -277,6 +285,50 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     }
   };
 
+  var leerRespuesta = function(contenedor) {
+    var quien = $.urlParam('quien');
+    if (typeof quien == 'string') {
+      if (quien in $scope.metadata.ctx2.invitados) {
+        var destino = $scope.metadata.ctx2.invitados[quien];
+
+        for (preg in destino.rtas) {
+          var lista = destino.rtas[preg];
+          for (var i=0; i<lista.length; i++) {
+            contenedor.find('[data-preg="'+preg+'"][data-rta="'+lista[i]+'"]').addClass('btn-dark');
+          }
+        }
+      }
+    }
+  };
+
+  var escribirRespuesta = function(contenedor) {
+    //Busco el quiery param quien
+    var quien = $.urlParam('quien');
+    if (typeof quien == 'string') {
+      if (quien in $scope.metadata.ctx2.invitados) {
+        var destino = $scope.metadata.ctx2.invitados[quien];
+        if (typeof destino.rtas == 'undefined') {
+          destino.rtas = {};
+        }
+
+        //Itero los elementos 
+        contenedor.find('[data-preg]').each(function(i, elem) {
+          var respuesta = $(elem);
+          var idPreg = respuesta.attr('data-preg');
+          var idResp = respuesta.attr('data-rta');
+          if (i == 0) {
+            destino.rtas[idPreg] = [];
+          }
+          if (respuesta.hasClass('btn-dark')) {
+            destino.rtas[idPreg].push(idResp);
+          }
+        });
+
+        guardarBasico();
+      }
+    }
+  };
+
   var rellax = null;
   $scope.renderizarParallax = function() {
     diferidoDatos.then(function() {
@@ -324,8 +376,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
           secelem.attr('style', estiloSec);
           secelem2.attr('style', estiloSec2);
 
-          for (var j=0; j<capas.length; j++) {
-            var micapa = capas[j];
+          $.each(capas, function(j, micapa) {
             if (micapa.ver) {
               var estilos = '';
 
@@ -343,8 +394,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
                 aplicarColorTexto(elemPregunta, micapa.txtColor, micapa.txtColor2);
                 
                 //itero las respuestas y las agrego
-                for (clave in micapa.rtas) {
-                  var rta = micapa.rtas[clave];
+                $.each(micapa.rtas, function(clave, rta) {
                   var nueva = $('<li><button type="button" class="btn btn btn-light col-xs-12 mb-4"></button></li>');
                   var boton = nueva.find('button');
                   boton.html(rta.txt);
@@ -353,11 +403,14 @@ app.controller('MainController', function($rootScope, $scope, $state) {
                   boton.attr('data-preg', micapa.id);
                   elemRtas.append(nueva);
 
+                  leerRespuesta(capaelem);
+
                   boton.on('click', function() {
                     var este = $(this);
+                    var contenedor = este.closest('ul');
                     if (micapa.esunica) {
                       //Le quito el on a todos los demás
-                      este.closest('ul').find('.btn-dark').removeClass('btn-dark').addClass('btn-light');
+                      contenedor.find('.btn-dark').removeClass('btn-dark').addClass('btn-light');
                       este.addClass('btn-dark');
                     } else {
                       if (este.hasClass('btn-dark')) {
@@ -368,8 +421,9 @@ app.controller('MainController', function($rootScope, $scope, $state) {
                         este.addClass('btn-dark');
                       }
                     }
+                    escribirRespuesta(contenedor);
                   });
-                }
+                });
               }
 
               capaelem.attr('data-rellax-speed', micapa.vel);
@@ -383,7 +437,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
               capaelem.attr('style', estilos);
               secelem2.append(capaelem);
             }
-          }
+          });
           cont1.append(secelem);
         }
       }
@@ -491,8 +545,14 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     });
   };
 
-  $scope.copiarUrlInvitado = function() {
-
+  $scope.copiarUrlInvitado = function(idInvitado) {
+    var params = {
+      'pg':$scope.metadata.ctx.id,
+      'sl':'si',
+      'quien':idInvitado,
+    };
+    var nueva = location.origin+location.pathname+'?'+$.param(params)+'#!/';
+    window.open(nueva, '_blank');
   };
 
   $scope.agregarRta = function(micapa) {
@@ -518,6 +578,20 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       delete micapa.rtas[id];
       $scope.$digest();
     });
+  };
+
+  $scope.crearMapaPreguntas = function() {
+    $scope.temporal.preguntas={};
+    var secciones = $scope.metadata.ctx2.disenio.secciones;
+    for (var i=0; i<secciones.length; i++) {
+      var capas = secciones[i].capas;
+      for (var j=0; j<capas.length; j++) {
+        var capa = capas[j];
+        if (['preg'].indexOf(capa.tipo) >= 0) {
+          $scope.temporal.preguntas[capa.id] = capa;
+        }
+      }
+    }
   };
 
 });
