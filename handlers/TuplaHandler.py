@@ -58,24 +58,22 @@ def crearTuplas(idPagina, peticion):
             unatupla = Tupla(i=idPagina, k=llave, v=comun.siempreUtf8(datosPayload[llave]), parent=paginaKey)
         amodificar.append(unatupla)
             
-    if (len(amodificar) > 0):
-        #Se asigna dominio y subdominio
-        if (len(lpatr) > 0):
-            for unatupla in amodificar:
-                dominio = ''
-                subdominio = None
-                for patron in lpatr:
-                    matches = patron.match(unatupla.k)
-                    if matches is not None:
-                        grupos = matches.groups()
-                        tamanio = len(grupos)
-                        if (tamanio>=1):
-                            dominio = grupos[0]
-                            if (tamanio>=2):
-                                subdominio = grupos[1]
-                        break
-                unatupla.d = dominio
-                unatupla.sd = subdominio
+    #Se asigna dominio y subdominio
+    for unatupla in amodificar:
+        dominio = ''
+        subdominio = None
+        for patron in lpatr:
+            matches = patron.match(unatupla.k)
+            if matches is not None:
+                grupos = matches.groups()
+                tamanio = len(grupos)
+                if (tamanio>=1):
+                    dominio = grupos[0]
+                    if (tamanio>=2):
+                        subdominio = grupos[1]
+                break
+        unatupla.d = dominio
+        unatupla.sd = subdominio
                 
         ndb.put_multi(amodificar)
     return len(amodificar)

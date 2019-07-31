@@ -100,8 +100,12 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       'tipf': 'img',
     };
     plantilla.nom = 'Sección '+($scope.metadata.ctx2.disenio.secciones.length+1);
-    plantilla.id = (new Date()).getTime()+'';
-    $scope.metadata.ctx2.disenio.secciones.push(plantilla);
+
+    modIdGen.nuevo().then(function(id) {
+      plantilla.id = id;
+      $scope.metadata.ctx2.disenio.secciones.push(plantilla);
+      $scope.$digest();
+    });
   };
 
   $scope.diferidoBorrado = null;
@@ -173,8 +177,12 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       seccion.capas = [];
     }
     plantilla.nom = 'Capa '+(seccion.capas.length+1);
-    plantilla.id = (new Date()).getTime()+'';
-    seccion.capas.push(plantilla);
+
+    modIdGen.nuevo().then(function(id) {
+      plantilla.id = id;
+      seccion.capas.push(plantilla);
+      $scope.$digest();
+    });
   };
 
   $scope.subirCapa = function(miseccion, micapa) {
@@ -259,11 +267,25 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     return $scope.asignarImagenGenerica(miseccion, 'pg');
   };
 
+  var aplicarColorTexto = function(elemento, color, borde) {
+    if (typeof color == 'string' && color.length > 0) {
+      elemento.css({'color': color});
+    }
+    if (typeof borde == 'string' && borde.length > 0) {
+      var col = borde;
+      elemento.css({'text-shadow': '-1px -1px 0 '+col+', 1px -1px 0 '+col+', -1px 1px 0 '+col+', 1px 1px 0 '+col});
+    }
+  };
+
   var rellax = null;
   $scope.renderizarParallax = function() {
     diferidoDatos.then(function() {
       if (rellax != null) {
-        rellax.destroy();
+        try {
+          rellax.destroy();
+        } catch(e) {
+
+        }
       }
       var todo = $('#render-mi-parallax');
       if (todo.length == 0) {
@@ -306,8 +328,50 @@ app.controller('MainController', function($rootScope, $scope, $state) {
             var micapa = capas[j];
             if (micapa.ver) {
               var estilos = '';
-              var capaelem = $('<img class="rellax parallax-micapa">');
-              capaelem.attr('src', $scope.darUrlDeIdImagen(micapa.img));
+
+              var capaelem;
+
+              if (micapa.tipo == 'img') {
+                capaelem = $('<img class="rellax parallax-micapa">');
+                capaelem.attr('src', $scope.darUrlDeIdImagen(micapa.img));
+              } else if (micapa.tipo == 'preg') {
+                capaelem = $('<div class="rellax parallax-micapa espregunta"><p class="mipregunta"></p><ul class="misrtas bootstrapiso"></ul></div>');
+                var elemPregunta = capaelem.find('.mipregunta');
+                var elemRtas = capaelem.find('.misrtas');
+
+                elemPregunta.html(micapa.preg);
+                aplicarColorTexto(elemPregunta, micapa.txtColor, micapa.txtColor2);
+                
+                //itero las respuestas y las agrego
+                for (clave in micapa.rtas) {
+                  var rta = micapa.rtas[clave];
+                  var nueva = $('<li><button type="button" class="btn btn btn-light col-xs-12 mb-4"></button></li>');
+                  var boton = nueva.find('button');
+                  boton.html(rta.txt);
+                  aplicarColorTexto(boton, micapa.txtColor, micapa.txtColor2);
+                  boton.attr('data-rta', clave);
+                  boton.attr('data-preg', micapa.id);
+                  elemRtas.append(nueva);
+
+                  boton.on('click', function() {
+                    var este = $(this);
+                    if (micapa.esunica) {
+                      //Le quito el on a todos los demás
+                      este.closest('ul').find('.btn-dark').removeClass('btn-dark').addClass('btn-light');
+                      este.addClass('btn-dark');
+                    } else {
+                      if (este.hasClass('btn-dark')) {
+                        este.removeClass('btn-dark');
+                        este.addClass('btn-light');
+                      } else if (este.hasClass('btn-light')) {
+                        este.removeClass('btn-light');
+                        este.addClass('btn-dark');
+                      }
+                    }
+                  });
+                }
+              }
+
               capaelem.attr('data-rellax-speed', micapa.vel);
               estilos+='width: '+micapa.tam+'%;';
               if (typeof micapa.hort == 'string' && micapa.hort.length > 0) {
@@ -429,6 +493,31 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 
   $scope.copiarUrlInvitado = function() {
 
+  };
+
+  $scope.agregarRta = function(micapa) {
+    if (typeof micapa.rtas == 'undefined') {
+      micapa.rtas = {};
+    }
+    var plantilla = {
+      'txt': '',
+    };
+    modIdGen.nuevo().then(function(id) {
+      micapa.rtas[id] = plantilla;
+      $scope.$digest();
+    });
+  };
+
+  $scope.borrarRta = function(micapa, id) {
+    if (typeof micapa.rtas == 'undefined') {
+      return;
+    }
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+      delete micapa.rtas[id];
+      $scope.$digest();
+    });
   };
 
 });
