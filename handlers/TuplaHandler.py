@@ -102,9 +102,13 @@ def TuplaHandler(request, ident, usuario=None):
         ans = {}
         ans['error'] = 0
         if (ident == 'all'):
+            
             idPagina = request.GET.get('pg', None)
             dom = request.GET.get('dom', None)
             sdom = request.GET.get('sdom', None)
+            siguiente = request.GET.get('next', None)
+            n = comun.leerNumero(request.GET.get('n', 100))
+            
             if (idPagina is None):
                 raise ParametrosIncompletosException()
             paginaKey = ndb.Key(Pagina, idPagina)
@@ -117,21 +121,21 @@ def TuplaHandler(request, ident, usuario=None):
                 sqltext = sqltext + ' and sd = :sdom'
                 parametros['sdom'] = sdom
             temporal = ndb.gql(sqltext, **parametros)
-            siguiente = request.GET.get('next', None)
-            n = comun.leerNumero(request.GET.get('n', 100))
             if (siguiente is not None):
                 datos, next_cursor, more = temporal.fetch_page(n, start_cursor=ndb.query.Cursor(urlsafe=siguiente))
             else:
                 datos, next_cursor, more = temporal.fetch_page(n)
-            ans['ans'] = comun.to_dict(datos, None, True, ['id', 'i'])
+            ans['ans'] = comun.to_dict(datos, None, True, ['id', 'i', 'd', 'sd'])
             if (more):
                 ans['next'] = next_cursor.urlsafe()
         elif (ident == 'fecha'):
             ans['unixtime'] = int(1000*time.time())
         elif (ident == 'next'):
+            
             idPagina = request.GET.get('pg', None)
             dom = request.GET.get('dom', None)
             sdom = request.GET.get('sdom', None)
+            
             if (idPagina is None or dom is None):
                 raise ParametrosIncompletosException()
             paginaKey = ndb.Key(Pagina, idPagina)
