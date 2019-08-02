@@ -1,14 +1,4 @@
 <script type="text/javascript">
-var moduloDatos = (function() {
-		
-		var leer = function() {
-				
-		};
-		
-		return {
-			
-		};
-	})();
 	
 	var moduloCont = (function() {
 		
@@ -592,7 +582,8 @@ var moduloDatos = (function() {
 			'masterLoged': false,
 			'slaveLoged': false,
 			'masterIdUsr': false,
-			'slaveIdUsr': false,
+			'slaveIdUsr': false,//Usar el user uid para crear la entrada en la base de datos firebase
+			'useFirebase': false,
 		}, opciones);
 		var RAIZ = '/pgs';
 		var diferidoDB = $.Deferred();
@@ -616,7 +607,10 @@ var moduloDatos = (function() {
 		miseguridad.thenApp().then(function(datos) {
 			console.log('miseguridad ok');
 			var funcionContinuar = function(principal, contextoPagina, lecturaLarga) {
-				var database = firebase.database();
+				var database = null;
+				if (opciones.useFirebase) {
+					database = firebase.database();
+				}
 				var principalEsDuenio = ((principal !== undefined && principal !== null) && contextoPagina['usr'] == principal['uid']);
 				var solicitudSlave = ($.urlParam('sl') == 'si');
 				//es slave si lo solicita o si no es el duenio de la pagina
@@ -669,22 +663,81 @@ var moduloDatos = (function() {
 				
 				//Se debe hacer un post para obtener la ruta corta
 				moduloHttp.post('/a/', {'theurl': slaveUrl}).then(function(respuesta) {
-					console.log('a ok');
+					console.log('a ok...');
 					//console.log('respuesta', respuesta);
-					var crearMasterCtx = function() {
+					if (opciones.useFirebase) {
+						var crearMasterCtx = function() {
+							var updates = {};
+							updates[firebaseUrl] = {
+									'base': {
+										'time': new Date().getTime(),
+									},
+							};
+							return db.ref().update(updates);
+						};
+						
+						var notificarMasterCtx = function() {
+							console.log('notificarMasterCtx ok');
+							diferidoId.resolve({ 
+								'slaveUrl': location.origin+'/a/'+respuesta['id'],
+								'tipo': tipoCliente,
+								'db': db,
+								'firebaseUrl': firebaseUrl,
+								'ctx': ctx,
+								'ctx2': ctx2,
+								'principal': principal,
+							});
+						};
+						
+						db.ref(firebaseUrl).once('value').then(function(snapshot) {
+							if (snapshot.val() == null) {
+								crearMasterCtx().then(notificarMasterCtx);
+							} else {
+								notificarMasterCtx();
+							}
+						});
+					} else {
+						diferidoId.resolve({ 
+							'slaveUrl': location.origin+'/a/'+respuesta['id'],
+							'tipo': tipoCliente,
+							'db': db,
+							'firebaseUrl': null,
+							'ctx': ctx,
+							'ctx2': ctx2,
+							'principal': principal,
+						});
+					}
+				});
+			} else {
+				console.log('slave...');
+				if (opciones.useFirebase) {
+					var nuevaLlave;
+					
+					var urlParamCtx = RAIZ + '/' + ctx['usr'] + location.pathname + '/' + ctx['id']
+					
+					if (opciones.slaveIdUsr) {
+						nuevaLlave = principal.uid;
+					} else {
+						nuevaLlave = darIdAnonimo();
+						if (nuevaLlave == null) {
+							nuevaLlave = db.ref().child(urlParamCtx+'/usr').push().key;
+							asignarIdAnonimo(nuevaLlave);	
+						}
+					}
+					
+					var firebaseUrl = urlParamCtx+'/usr/'+nuevaLlave;
+					
+					var crearSlaveCtx = function() {
 						var updates = {};
 						updates[firebaseUrl] = {
-								'base': {
-									'time': new Date().getTime(),
-								},
+								'time': new Date().getTime(),
 						};
 						return db.ref().update(updates);
 					};
 					
-					var notificarMasterCtx = function() {
-						console.log('notificarMasterCtx ok');
-						diferidoId.resolve({ 
-							'slaveUrl': location.origin+'/a/'+respuesta['id'],
+					var notificarSlaveCtx = function() {
+						diferidoId.resolve({
+							'id': nuevaLlave, 
 							'tipo': tipoCliente,
 							'db': db,
 							'firebaseUrl': firebaseUrl,
@@ -696,57 +749,22 @@ var moduloDatos = (function() {
 					
 					db.ref(firebaseUrl).once('value').then(function(snapshot) {
 						if (snapshot.val() == null) {
-							crearMasterCtx().then(notificarMasterCtx);
+							crearSlaveCtx().then(notificarSlaveCtx);
 						} else {
-							notificarMasterCtx();
+							notificarSlaveCtx();
 						}
 					});
-				});
-			} else {
-				console.log('slave...');
-				var nuevaLlave;
-				
-				var urlParamCtx = RAIZ + '/' + ctx['usr'] + location.pathname + '/' + ctx['id']
-				
-				if (opciones['slaveIdUsr']) {
-					nuevaLlave = principal.uid;
 				} else {
-					nuevaLlave = darIdAnonimo();
-					if (nuevaLlave == null) {
-						nuevaLlave = db.ref().child(urlParamCtx+'/usr').push().key;
-						asignarIdAnonimo(nuevaLlave);	
-					}
-				}
-				
-				var firebaseUrl = urlParamCtx+'/usr/'+nuevaLlave;
-				
-				var crearSlaveCtx = function() {
-					var updates = {};
-					updates[firebaseUrl] = {
-							'time': new Date().getTime(),
-					};
-					return db.ref().update(updates);
-				};
-				
-				var notificarSlaveCtx = function() {
 					diferidoId.resolve({
-						'id': nuevaLlave, 
+						'id': null, 
 						'tipo': tipoCliente,
 						'db': db,
-						'firebaseUrl': firebaseUrl,
+						'firebaseUrl': null,
 						'ctx': ctx,
 						'ctx2': ctx2,
 						'principal': principal,
 					});
-				};
-				
-				db.ref(firebaseUrl).once('value').then(function(snapshot) {
-					if (snapshot.val() == null) {
-						crearSlaveCtx().then(notificarSlaveCtx);
-					} else {
-						notificarSlaveCtx();
-					}
-				});
+				}
 			}
 		});
 		
