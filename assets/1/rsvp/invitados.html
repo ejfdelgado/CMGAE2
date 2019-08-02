@@ -23,7 +23,7 @@
                     <i class="fa fa-times"></i>
                   </button>
                 </div>
-                <ul class="col-xs-12 ml-2" ng-show="invitado.rtas.length > 0">
+                <ul class="col-xs-12 ml-2" ng-show="hayContenido(invitado.rtas)">
                   <li class="mt-2 col-xs-6" ng-repeat="(idPreg, preg) in invitado.rtas">
                     <b class="">{{ temporal.preguntas[idPreg].preg }}</b>:<span class="ml-2" ng-repeat="unapreg in preg">{{ temporal.preguntas[idPreg].rtas[unapreg].txt }}</span>
                   </li>
