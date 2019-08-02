@@ -1,0 +1,36 @@
+{% extends "1/rsvp/base.html" %}
+
+{% block encabezado %}
+
+<link rel="stylesheet" href="/assets/1/rsvp/css/jquery.minicolors.css" />
+<script type="text/javascript" src="/assets/1/rsvp/js/jquery.minicolors.js"></script>
+<script type="text/javascript" src="/assets/1/rsvp/js/angular-minicolors.js"></script>
+
+<style type="text/css">
+#qrcode {
+	padding: 20px;
+	text-align: center;
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}
+
+#qrcode canvas {
+	width: 200px;
+	height: 200px;
+}
+</style>
+{% include "1/rsvp/app.html" %}
+{% endblock %}
+
+{% block content %}
+{% include "1/rsvp/master.html" %}
+<div id="immaster" class="invisible">
+</div>
+<div id="imslave" class="invisible">
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}	

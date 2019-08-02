@@ -15,11 +15,11 @@
     'minicolors',
   ]).config(function(minicolorsProvider, $stateProvider, $urlRouterProvider) {
       $urlRouterProvider.otherwise("/");
-      $stateProvider.state('/', {url:'/', templateUrl: "/assets/angularjs/mobile/pb/vista.html"});
-      $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/angularjs/mobile/pb/debug.html', reloadOnSearch: false});
-      $stateProvider.state('meta', {url: '/meta', templateUrl: '/assets/angularjs/mobile/pb/meta.html', reloadOnSearch: false});
-      $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/angularjs/mobile/pb/galeria.html', reloadOnSearch: false});
-      $stateProvider.state('invitados', {url: '/invitados', templateUrl: '/assets/angularjs/mobile/pb/invitados.html', reloadOnSearch: false});
+      $stateProvider.state('/', {url:'/', templateUrl: "/assets/1/rsvp/vista.html"});
+      $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/1/rsvp/debug.html', reloadOnSearch: false});
+      $stateProvider.state('meta', {url: '/meta', templateUrl: '/assets/1/rsvp/meta.html', reloadOnSearch: false});
+      $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/1/rsvp/galeria.html', reloadOnSearch: false});
+      $stateProvider.state('invitados', {url: '/invitados', templateUrl: '/assets/1/rsvp/invitados.html', reloadOnSearch: false});
 
       angular.extend(minicolorsProvider.defaults, {
         control: 'hue',
@@ -215,7 +215,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     if (typeof id == 'string' && id.length > 0) {
       return moduloArchivos.generarUrlDadoId(id);
     } else {
-      return '/assets/angularjs/mobile/pb/img/def.svg';
+      return '/assets/1/rsvp/img/def.svg';
     }
   };
 
