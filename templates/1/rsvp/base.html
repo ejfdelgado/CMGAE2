@@ -5,6 +5,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<base href="/" target="_blank">
 		
+		{% autoescape on %}
 		<title>{{ detalle.tit }}</title>
 		<meta name="og:title" content="{{ detalle.tit }}" />
 		<meta name="twitter:title" content="{{ detalle.tit }}" />
@@ -16,6 +17,7 @@
 		
 		<meta name="og:image" content="{{ detalle.img }}" />
 		<meta name="twitter:image" content="{{ detalle.img }}" />
+		{% endautoescape %}
 		
 		<meta name="og:site_name" content="PaisTv" />
 		<meta name="og:url" content="https://www.pais.tv" />
@@ -27,7 +29,7 @@
 		<link rel="stylesheet" href="/assets/node_modules/firebase/firebaseui.css"/>
 		
 		<!-- Angular Material style sheet -->
-		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.css">
+		<link rel="stylesheet" href="/assets/node_modules/angular-material/angular-material.min.css">
 
 	    <!-- Only required for desktop -->
 	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-hover.min.css" />
@@ -65,7 +67,7 @@
 	    <script type="text/javascript" src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.gestures.min.js"></script>
 
 		<!-- Angular Material Library -->
-  		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.12/angular-material.min.js"></script>
+  		<script type="text/javascript" src="/assets/node_modules/angular-material/angular-material.min.js"></script>
 		
 		{% block encabezado %}{% endblock %}
 	</head>
