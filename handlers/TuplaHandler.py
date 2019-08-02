@@ -93,6 +93,21 @@ def borrarTuplas(idPagina, llaves):
         ndb.delete_multi(llavesBorrar)
     return len(llavesBorrar)
 
+@ndb.transactional
+def borrarTuplasTodas(idPagina, n):
+    #Armo la llave padre
+    paginaKey = ndb.Key(Pagina, idPagina)
+    temporal = ndb.gql('SELECT * FROM Tupla WHERE i = :1 and ANCESTOR IS :2', idPagina, paginaKey).order(Tupla._key)
+    datos, next_cursor, more = temporal.fetch_page(n)
+    
+    llavesBorrar = []
+    #tomo las llaves
+    for dato in datos:
+        llavesBorrar.append(dato.key)
+    if (len(llavesBorrar) > 0):
+        ndb.delete_multi(llavesBorrar)
+    return len(llavesBorrar)
+
 @inyectarUsuario
 @autoRespuestas
 def TuplaHandler(request, ident, usuario=None):
@@ -170,5 +185,17 @@ def TuplaHandler(request, ident, usuario=None):
             llaves = peticion['dat']
             ans['n'] = borrarTuplas(ident, llaves)
         
+        response.write(simplejson.dumps(ans))
+        return response
+    elif request.method == 'DELETE':
+        response = HttpResponse("", content_type='application/json', status=200)
+        ans = {}
+        ans['error'] = 0
+        idPagina = comun.leerNumero(ident)
+        n = comun.leerNumero(request.GET.get('n', 100))
+        if (idPagina is not None):
+            ans['n'] = borrarTuplasTodas(ident, n)
+        else:
+            raise ParametrosIncompletosException()
         response.write(simplejson.dumps(ans))
         return response

@@ -79,7 +79,7 @@ def read_file(filename):
     except NotFoundError:
         raise NoExisteException()
 
-def list_bucket(ruta, tamanio, ultimo):
+def list_bucket(ruta, tamanio, ultimo, delimiter="/"):
     raiz = darRaizStorage()
     rutaCompleta = raiz + ruta
     ans = []
@@ -89,7 +89,7 @@ def list_bucket(ruta, tamanio, ultimo):
         tamanio = int(tamanio)
     if (ultimo is not None):
         ultimo = raiz + ultimo
-    stats = gcs.listbucket(rutaCompleta, max_keys=tamanio, delimiter="/", marker=ultimo)
+    stats = gcs.listbucket(rutaCompleta, max_keys=tamanio, delimiter=delimiter, marker=ultimo)
     for stat in stats:
         ans.append(transformarRegistroDeArchivo(stat, raiz))
     return ans;

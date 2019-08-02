@@ -263,13 +263,69 @@
 			});
 			return diferido;
 		};
+
+		var borrarTodo = function(id) {
+			var diferido = $.Deferred();
+			//Borro las tuplas
+			borrarTuplas(id).then(function() {
+				//Borro la página en sí
+				borrar(id, '/api/xpage/').then(function() {
+					//Borro el documento buscable
+					borrar(id, '/api/xdoc/').then(function() {
+						diferido.resolve();
+					}, function() {
+						diferido.reject();
+					});
+				}, function() {
+					diferido.reject();
+				});
+			}, function() {
+				diferido.reject();
+			});
+			return diferido;
+		};
+
+		var borrarTuplas = function(otroId) {
+			var diferido = $.Deferred();
+
+			var borrarRecursivo = function(idLocal) {
+				moduloHttp.borrar('/api/tup/'+idLocal).then(function(rta) {
+					if (rta.n == 0) {
+						diferido.resolve(null);
+					} else {
+						setTimeout(function() {
+							borrarRecursivo(idLocal);
+						}, 500);
+					}
+				});
+			};
+
+			if (diferidoLectura !== null) {
+				diferidoLectura.then(function(valor) {
+					var idBorrar = valor.id;
+					if ((typeof otroId == 'string' && otroId.trim().length > 0) || typeof otroId == 'number') {
+						idBorrar = otroId;
+					}
+					borrarRecursivo(idBorrar);
+				}, function() {
+					diferido.reject();
+				});
+			} else {
+				diferido.reject();
+			}
+
+			diferido.then(function() {
+				tomarImagen(null, '1');	
+			});
+			return diferido;
+		};
 		
 		var borrar = function(otroId, servicio) {
 			if (!(typeof servicio == 'string' && servicio.trim().length > 0)) {
 				servicio = '/api/xpage/';
 			}
+			var diferido = $.Deferred();
 			if (diferidoLectura !== null) {
-				var diferido = $.Deferred();
 				diferidoLectura.then(function(valor) {
 					var idBorrar = valor.id;
 					if ((typeof otroId == 'string' && otroId.trim().length > 0) || typeof otroId == 'number') {
@@ -572,6 +628,8 @@
 			'guardar': guardar,
 			'guardar2': guardar2,
 			'borrar': borrar,
+			'borrarTodo': borrarTodo,
+			'borrarTuplas': borrarTuplas,
 			'subirImagenSocial': subirImagenSocial,
 			'buscar': buscar,
 		};

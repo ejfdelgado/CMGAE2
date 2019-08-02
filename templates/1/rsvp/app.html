@@ -517,7 +517,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     $rootScope.Ui.turnOn('modalBorrar');
     $scope.diferidoBorrado = $.Deferred();
     $scope.diferidoBorrado.then(function() {
-      moduloPagina.borrar(instancia.id).then(function() {
+      moduloPagina.borrarTodo(instancia.id).then(function() {
         //Lo debo sacar de la lista
         var indice = $scope.temporal.rta.indexOf(instancia);
         if (indice >= 0) {
