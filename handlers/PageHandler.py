@@ -18,6 +18,7 @@ from handlers.decoradores import autoRespuestas
 from handlers import comun, DocHandler
 
 LIGTH_WEIGHT_KEYS = ['tit', 'desc', 'img', 'q', 'kw']
+LIGTH_WEIGHT_KEYS_ALL= ['tit', 'desc', 'img', 'q', 'kw', 'date', 'act']
 
 def leerRefererPath(request, usarPathLocal):
     if (usarPathLocal):
@@ -39,7 +40,7 @@ def leerRefererPath(request, usarPathLocal):
 
 def filtrarParametros(request, filtro):
     buscables={}
-    if isinstance(request,dict):
+    if isinstance(request, dict):
         for key in filtro:
             if (key in request):
                 buscables[key] = request[key]
@@ -71,7 +72,7 @@ def buscarPagina(request, usuario, usarPathLocal):
                 unapagina = Pagina(usr=elUsuario, aut=usuario.miId, path=elpath, **buscables)
                 unapagina.put()
             temp = comun.to_dict(unapagina, None, True)
-            buscables=filtrarParametros(temp, LIGTH_WEIGHT_KEYS)
+            buscables=filtrarParametros(temp, LIGTH_WEIGHT_KEYS_ALL)
             DocHandler.autoCrearDoc(str(unapagina.key.id()), usuario, elpath, buscables)
             return temp
         else:
@@ -157,7 +158,7 @@ def PageHandler(request, ident, usuario=None):
                 else:
                     otro = comun.llenarYpersistir(Pagina, modelo, peticion, ['usr', 'path', 'date', 'id', 'act'], True)
                     elpath = leerRefererPath(request, False)
-                    buscables=filtrarParametros(peticion, LIGTH_WEIGHT_KEYS)
+                    buscables=filtrarParametros(otro, LIGTH_WEIGHT_KEYS_ALL)
                     #Optimizar, si no ha cambiado, no recrear
                     DocHandler.actualizar(str(idPagina), usuario, elpath, buscables)
                     
@@ -177,7 +178,7 @@ def PageHandler(request, ident, usuario=None):
             llave = ndb.Key('Pagina', idPagina)
             modelo = llave.get()
             if (modelo is not None):
-                if (usuario is None or modelo.usr != usuario.uid):
+                if (modelo.usr is not None and (usuario is None or modelo.usr != usuario.uid)):
                     raise NoAutorizadoException()
                 else:
                     modelo.key.delete()

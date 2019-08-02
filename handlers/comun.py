@@ -6,6 +6,7 @@ Created on 5/03/2016
 import datetime
 import os
 import re
+import logging
 
 from google.appengine.ext import ndb
 
@@ -105,6 +106,8 @@ def to_dict(model, propio=None, puntos=False, ignorar=[]):
     return output
 
 def siempreUtf8(a):
+    if (a is None):
+        return None
     return darUnicode(a).encode('utf-8')
 def darUnicode(a):
     if isinstance(a, unicode):

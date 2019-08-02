@@ -585,13 +585,22 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     var secciones = $scope.metadata.ctx2.disenio.secciones;
     for (var i=0; i<secciones.length; i++) {
       var capas = secciones[i].capas;
-      for (var j=0; j<capas.length; j++) {
-        var capa = capas[j];
-        if (['preg'].indexOf(capa.tipo) >= 0) {
-          $scope.temporal.preguntas[capa.id] = capa;
+      if (typeof capas == 'object') {
+        for (var j=0; j<capas.length; j++) {
+          var capa = capas[j];
+          if (['preg'].indexOf(capa.tipo) >= 0) {
+            $scope.temporal.preguntas[capa.id] = capa;
+          }
         }
       }
     }
+  };
+
+  $scope.mostrarAlgoEnGaleria = function() {
+    if ($scope.temporal.rta.length > 0) {
+      return;
+    }
+    $scope.buscar();
   };
 
 });

@@ -70,12 +70,13 @@ def recrearDocumento(idPagina, usuario, elpath, buscables={}, lenguaje='es'):
     #logging.info(buscables)
     for key, value in buscables.iteritems():
         if (not key in IGNORAR):
-            if (key in NO_BUSCABLES):
-                campos.append(search.AtomField(name=key, value=value, language=lenguaje))
-            else:
-                campos.append(search.TextField(name=key, value=value, language=lenguaje))
-            
-    campos.append(search.DateField(name='date', value=datetime.now()))
+            if (isinstance(value, (float, int))):
+                campos.append(search.NumberField(name=key, value=value))
+            elif (isinstance(value, (unicode, str))):
+                if (key in NO_BUSCABLES):
+                    campos.append(search.AtomField(name=key, value=value, language=lenguaje))
+                else:
+                    campos.append(search.TextField(name=key, value=value, language=lenguaje))
     
     document = search.Document(
             doc_id=idPagina,
