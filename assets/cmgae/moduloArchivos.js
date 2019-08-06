@@ -238,7 +238,7 @@ var moduloArchivos = (function() {
 		var valor;
 		if (local!= true && moduloApp.esProduccion()) {
 			unId = normalizarId(unId, true);
-			valor = 'http://storage.googleapis.com'+unId+'?' + new Date().getTime();
+			valor = 'https://storage.googleapis.com'+unId+'?' + new Date().getTime();
 		} else {
 			unId = normalizarId(unId);
 			valor = '/storage/read?name='+encodeURIComponent(unId)

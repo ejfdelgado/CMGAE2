@@ -219,16 +219,16 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     moverElemento(arreglo, indice, indice+1);
   };
 
-  $scope.darUrlDeArchivo = function(id, predef) {
+  $scope.darUrlDeArchivo = function(id, predef, local) {
     if (typeof id == 'string' && id.length > 0) {
-      return moduloArchivos.generarUrlDadoId(id);
+      return moduloArchivos.generarUrlDadoId(id, local);
     } else {
       return predef;
     }
   };
 
   $scope.darUrlDeIdImagen = function(id) {
-    return $scope.darUrlDeArchivo(id, '/assets/1/rsvp/img/def.svg');
+    return $scope.darUrlDeArchivo(id, '/assets/1/rsvp/img/def.svg', false);
   };
 
   $scope.borrarImagenGenerica = function(micapa) {
@@ -393,7 +393,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       todo.append(cont1);
       if ($scope.hayTexto($scope.metadata.ctx2.disenio.fuente)) {
         //Agrego la fuente si es necesario
-        var nuevoEstilo = $("<style type='text/css'>@font-face {font-family: 'RSVP_LOCAL';font-style: normal;font-weight: 400;font-display: swap;src: url('"+$scope.darUrlDeArchivo($scope.metadata.ctx2.disenio.fuente)+"')}</style>");
+        var nuevoEstilo = $("<style type='text/css'>@font-face {font-family: 'RSVP_LOCAL';font-style: normal;font-weight: 400;font-display: swap;src: url('"+$scope.darUrlDeArchivo($scope.metadata.ctx2.disenio.fuente, '', false)+"')}</style>");
         todo.append(nuevoEstilo);
       }
 
