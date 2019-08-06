@@ -94,13 +94,13 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   var guardarBasico = function() {
     var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)), PATRONES_SUBDOMINIOS);
     var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
-    return [diferido1.promise, diferido2.promise];
+    return all([diferido1.promise, diferido2.promise]);
   };
 
   $scope.guardarTodo = function() {
     $scope.renderizarParallax();
     var diferidoGuardado = moduloActividad.on();
-    all(guardarBasico()).always(function() {
+    guardarBasico().always(function() {
       diferidoGuardado.resolve();
     });
     return diferidoGuardado;
@@ -219,12 +219,16 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     moverElemento(arreglo, indice, indice+1);
   };
 
-  $scope.darUrlDeIdImagen = function(id) {
+  $scope.darUrlDeArchivo = function(id, predef) {
     if (typeof id == 'string' && id.length > 0) {
       return moduloArchivos.generarUrlDadoId(id);
     } else {
-      return '/assets/1/rsvp/img/def.svg';
+      return predef;
     }
+  };
+
+  $scope.darUrlDeIdImagen = function(id) {
+    return $scope.darUrlDeArchivo(id, '/assets/1/rsvp/img/def.svg');
   };
 
   $scope.borrarImagenGenerica = function(micapa) {
@@ -237,38 +241,63 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     return diferido;
   };
 
-  $scope.asignarImagenGenerica = function(micapa, prefijo) {
-    var diferido = $.Deferred();
-    var subirArchivo = function() {
-
+  var darFuncionCargue = function() {
       var funcionCargue = null;
       if (moduloApp.esProduccion()) {
         funcionCargue = moduloArchivos.subirArchivoMioDePagina;
       } else {
         funcionCargue = moduloArchivos.subirArchivoMio;
       }
+      return funcionCargue;
+  };
 
+  $scope.asignarImagenGenerica = function(micapa, prefijo) {
+    return $scope.asignarArchivoGenerico(micapa, 'img', prefijo+'/'+micapa.id, 'image/*');
+  };
+
+  $scope.asignarArchivoGenerico = function(micapa, llave, prefijo, tipo) {
+    var diferido = $.Deferred();
+    var subirArchivo = function() {
+      var funcionCargue = darFuncionCargue();
       funcionCargue({
         auto: 'false', 
-        tipos:'image/*', 
+        tipos:tipo, 
         opcionesNegras: [],
-        dataFolder:'/'+prefijo+'/'+micapa.id,
+        dataFolder:'/'+prefijo,
       }).then(function(metadata) {
-        micapa.img = metadata.id;
-        $scope.$digest();
+        micapa[llave] = metadata.id;
         diferido.resolve();
       }, function() {
         diferido.resolve();
       });
     };
-    if (typeof micapa.img == 'string') {
-      var diferidoBorrar = moduloArchivos.borrar(micapa.img);
-      diferidoBorrar.then(subirArchivo, function() {
-        diferido.resolve();
-      });
+    if (typeof micapa[llave] == 'string' && micapa[llave].trim().length > 0) {
+      var diferidoBorrar = moduloArchivos.borrar(micapa[llave]);
+      diferidoBorrar.always(subirArchivo);
     } else {
       subirArchivo();
     }
+    diferido.then(function() {
+      guardarBasico().then(function() {
+        $scope.$digest();
+      });
+    });
+    return diferido;
+  };
+
+  $scope.borrarFuente = function() {
+    var diferidoBorrar = moduloArchivos.borrar($scope.metadata.ctx2.disenio.fuente);
+    diferidoBorrar.then(function() {
+      $scope.metadata.ctx2.disenio.fuente=null;
+      guardarBasico().then(function() {
+        $scope.$digest();
+      });
+    });
+    return diferidoBorrar;
+  };
+
+  $scope.cargarFuente = function() {
+    $scope.asignarArchivoGenerico($scope.metadata.ctx2.disenio, 'fuente', 'fuentes', '*/*');
   };
 
   $scope.asignarImagenDeCapa = function(micapa) {
@@ -309,32 +338,39 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     }
   };
 
-  var escribirRespuesta = function(contenedor) {
-    //Busco el quiery param quien
+  var darInvitadoActual = function() {
     var quien = $.urlParam('quien');
     if (typeof quien == 'string') {
       if (quien in $scope.metadata.ctx2.invitados) {
         var destino = $scope.metadata.ctx2.invitados[quien];
-        if (typeof destino.rtas == 'undefined') {
-          destino.rtas = {};
-        }
-
-        //Itero los elementos 
-        contenedor.find('[data-preg]').each(function(i, elem) {
-          var respuesta = $(elem);
-          var idPreg = respuesta.attr('data-preg');
-          var idResp = respuesta.attr('data-rta');
-          if (i == 0) {
-            destino.rtas[idPreg] = [];
-          }
-          if (respuesta.hasClass('btn-dark')) {
-            destino.rtas[idPreg].push(idResp);
-          }
-        });
-
-        guardarBasico();
+        return destino;
       }
     }
+    return null;
+  };
+
+  var escribirRespuesta = function(contenedor) {
+    //Busco el quiery param quien
+    var destino = darInvitadoActual();
+    if (destino == null){return;}
+    if (typeof destino.rtas == 'undefined') {
+      destino.rtas = {};
+    }
+
+    //Itero los elementos 
+    contenedor.find('[data-preg]').each(function(i, elem) {
+      var respuesta = $(elem);
+      var idPreg = respuesta.attr('data-preg');
+      var idResp = respuesta.attr('data-rta');
+      if (i == 0) {
+        destino.rtas[idPreg] = [];
+      }
+      if (respuesta.hasClass('btn-dark')) {
+        destino.rtas[idPreg].push(idResp);
+      }
+    });
+
+    guardarBasico();
   };
 
   var rellax = null;
@@ -347,6 +383,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 
         }
       }
+
       var todo = $('#render-mi-parallax');
       if (todo.length == 0) {
         return;
@@ -354,6 +391,28 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       todo.empty();
       var cont1 = $('<div class="parallax-col"></div>');
       todo.append(cont1);
+      if ($scope.hayTexto($scope.metadata.ctx2.disenio.fuente)) {
+        //Agrego la fuente si es necesario
+        var nuevoEstilo = $("<style type='text/css'>@font-face {font-family: 'RSVP_LOCAL';font-style: normal;font-weight: 400;font-display: swap;src: url('"+$scope.darUrlDeArchivo($scope.metadata.ctx2.disenio.fuente)+"')}</style>");
+        todo.append(nuevoEstilo);
+      }
+
+      var invitado = darInvitadoActual();
+
+      var MAPA_TEXTOS = [
+        {'patron': /\$nombre/ig, 'llave': 'nom'},
+      ];
+
+      var remplazarTextos = function(entrada) {
+        if (typeof entrada != 'string') {return entrada;}
+        if (invitado != null) {
+          for (var i=0; i<MAPA_TEXTOS.length; i++) {
+            var remplazo = MAPA_TEXTOS[i];
+            entrada = entrada.replace(remplazo.patron, invitado[remplazo.llave]);
+          }
+        }
+        return entrada;
+      };
 
       var secciones = utilidades.leerObj($scope.metadata.ctx2, 'disenio.secciones', []);
       for (var i=0; i<secciones.length; i++) {
@@ -398,14 +457,14 @@ app.controller('MainController', function($rootScope, $scope, $state) {
                 var elemPregunta = capaelem.find('.mipregunta');
                 var elemRtas = capaelem.find('.misrtas');
 
-                elemPregunta.html(micapa.preg);
+                elemPregunta.text(remplazarTextos(micapa.preg));
                 aplicarColorTexto(elemPregunta, micapa.txtColor, micapa.txtColor2);
                 
                 //itero las respuestas y las agrego
                 $.each(micapa.rtas, function(clave, rta) {
                   var nueva = $('<li><button type="button" class="btn btn btn-light col-xs-12 mb-4"></button></li>');
                   var boton = nueva.find('button');
-                  boton.html(rta.txt);
+                  boton.text(remplazarTextos(rta.txt));
                   aplicarColorTexto(boton, micapa.txtColor, micapa.txtColor2);
                   boton.attr('data-rta', clave);
                   boton.attr('data-preg', micapa.id);
@@ -609,6 +668,10 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       return;
     }
     $scope.buscar();
+  };
+
+  $scope.hayTexto = function(texto) {
+    return (typeof texto == 'string' && texto.trim().length > 0);
   };
 
 });

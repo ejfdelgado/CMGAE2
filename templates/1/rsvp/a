@@ -19,6 +19,16 @@
 	width: 200px;
 	height: 200px;
 }
+#render-mi-parallax {
+	font-family: 'RSVP_LOCAL', sans-serif;
+}
+
+#render-mi-parallax button {
+	font-family: 'RSVP_LOCAL', sans-serif;
+	border: 4px solid;
+    padding-bottom: 19px;
+}
+
 </style>
 {% include "1/rsvp/app.html" %}
 {% endblock %}

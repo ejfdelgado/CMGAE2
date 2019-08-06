@@ -1,3 +1,4 @@
+
 /* Absolute Center Spinner */
 .loading_micodigo_core_lib {
     position: fixed;
@@ -29,7 +30,7 @@
     width: 100px;
     height: 100px;
     position: relative;
-    left: -50px;
+    left: -40px;
     top: -50px;
 	  opacity: 1;
   }
