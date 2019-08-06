@@ -458,12 +458,18 @@ app.controller('MainController', function($rootScope, $scope, $state) {
                 var elemRtas = capaelem.find('.misrtas');
 
                 elemPregunta.text(remplazarTextos(micapa.preg));
+                if (micapa.tamPreg !== null && micapa.tamPreg !== undefined) {
+                  elemPregunta.css({'font-size': micapa.tamPreg+'%'});
+                }
                 aplicarColorTexto(elemPregunta, micapa.txtColor, micapa.txtColor2);
                 
                 //itero las respuestas y las agrego
                 $.each(micapa.rtas, function(clave, rta) {
                   var nueva = $('<li><button type="button" class="btn btn btn-light col-xs-12 mb-4"></button></li>');
                   var boton = nueva.find('button');
+                  if (micapa.tamRes !== null && micapa.tamRes !== undefined) {
+                    boton.css({'font-size': micapa.tamRes+'%'});
+                  }
                   boton.text(remplazarTextos(rta.txt));
                   aplicarColorTexto(boton, micapa.txtColor, micapa.txtColor2);
                   boton.attr('data-rta', clave);
@@ -493,7 +499,12 @@ app.controller('MainController', function($rootScope, $scope, $state) {
                 });
               }
 
-              capaelem.attr('data-rellax-speed', micapa.vel);
+              capaelem.attr('data-rellax-speed', micapa.vel/10);
+              if (micapa.lim == 'up') {
+                capaelem.attr('data-rellax-max', '0');
+              } else if (micapa.lim == 'down') {
+                capaelem.attr('data-rellax-min', '0');
+              }
               estilos+='width: '+micapa.tam+'%;';
               if (typeof micapa.hort == 'string' && micapa.hort.length > 0) {
                 estilos+=micapa.hort+': '+micapa.horv+'%;';
