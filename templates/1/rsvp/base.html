@@ -25,24 +25,19 @@
 		
 		<link rel="stylesheet" href="/assets/css/util-global.css"/>
 		<link rel="stylesheet" href="/assets/css/actividad.css"/>
-
 		<link rel="stylesheet" href="/assets/node_modules/firebase/firebaseui.css"/>
 		
-		<!-- Angular Material style sheet -->
-		<link rel="stylesheet" href="/assets/node_modules/angular-material/angular-material.min.css">
-
-	    <!-- Only required for desktop -->
-	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-hover.min.css" />
-	
-	    <!-- Always required -->
-	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-base.min.css" />
-	
-	    <!-- Only required for desktop -->
-	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-desktop.min.css" />
-
 	    <link rel="stylesheet" href="/assets/css/bootstrap4/bootstrap.min.css"/>
-	
+		{% if qparams.sl != 'si' %}
+		<link rel="stylesheet" href="/assets/node_modules/angular-material/angular-material.min.css">
+	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-hover.min.css" />
+	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-base.min.css" />
+	    <link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-desktop.min.css" />
 		<script type="text/javascript" src="/assets/node_modules/crypto-js/crypto-js.js"></script>
+		{% else %}
+		<link rel="stylesheet" href="/assets/node_modules/mobile-angular-ui/dist/css/mobile-angular-ui-base.min.css" />
+		{% endif %}
+
 		<script type="text/javascript" src="/assets/node_modules/firebase/firebase.js"></script>
 		<script type="text/javascript" src="/assets/node_modules/firebase/firebaseui.js"></script>
 		<script type="text/javascript" src="/assets/node_modules/jquery/dist/jquery.min.js"></script>
@@ -56,18 +51,15 @@
 		<script type="text/javascript" src="/assets/dist/publico/publico.js"></script>
 		{% endif %}
 
-		<script type="text/javascript" src="/assets/node_modules/instascan/jquery.qrcode.min.js"></script>
 		{% include "firebase/cliente.html" %}
 
-
-
+		{% if qparams.sl != 'si' %}
 	    <script type="text/javascript" src="/assets/node_modules/angular/angular.min.js"></script>
 	    <script type="text/javascript" src="/assets/node_modules/angular-ui-router/angular-ui-router.min.js"></script>
 	    <script type="text/javascript" src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.min.js"></script>
 	    <script type="text/javascript" src="/assets/node_modules/mobile-angular-ui/dist/js/mobile-angular-ui.gestures.min.js"></script>
-
-		<!-- Angular Material Library -->
   		<script type="text/javascript" src="/assets/node_modules/angular-material/angular-material.min.js"></script>
+  		{% endif %}
 		
 		{% block encabezado %}{% endblock %}
 	</head>

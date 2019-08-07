@@ -2,39 +2,131 @@
 
 {% block encabezado %}
 
+{% if qparams.sl != 'si' %}
 <link rel="stylesheet" href="/assets/1/rsvp/css/jquery.minicolors.css" />
 <script type="text/javascript" src="/assets/1/rsvp/js/jquery.minicolors.js"></script>
 <script type="text/javascript" src="/assets/1/rsvp/js/angular-minicolors.js"></script>
+{% endif %}
 
+<script src="/assets/1/rsvp/js/rellax.min.js" type="text/javascript"></script>
 <style type="text/css">
-#qrcode {
-	padding: 20px;
-	text-align: center;
-    position: fixed;
-    right: 0;
-    bottom: 0;
-}
 
-#qrcode canvas {
-	width: 200px;
-	height: 200px;
-}
-#render-mi-parallax {
-	font-family: 'RSVP_LOCAL', sans-serif;
-}
+	#qrcode {
+		padding: 20px;
+		text-align: center;
+	    position: fixed;
+	    right: 0;
+	    bottom: 0;
+	}
 
-#render-mi-parallax button {
-	font-family: 'RSVP_LOCAL', sans-serif;
-	border: 4px solid;
-    padding-bottom: 19px;
-}
+	#qrcode canvas {
+		width: 200px;
+		height: 200px;
+	}
+	#render-mi-parallax {
+		font-family: 'RSVP_LOCAL', sans-serif;
+	}
+
+	#render-mi-parallax button {
+		font-family: 'RSVP_LOCAL', sans-serif;
+		border: 4px solid;
+	    padding-bottom: 19px;
+	}
+
+	#render-mi-parallax {
+		background-color: white !important;
+	}
+
+	.parallax-col {
+		text-align: center;
+		width: 100%;
+		float: left;
+		box-sizing: border-box;
+	}
+
+	.parallax-container {
+		display: flex;
+		align-items: center;
+		font-size: 42pt;
+		height: 150vh;
+	}
+	
+	.parallax-block {
+		margin: 0 auto;
+		height: 100vh;
+		width: 100vw;
+		position: relative;
+		background-repeat: no-repeat;
+		background-position: center; 
+	}
+	
+	/* Portrait */
+	@media screen and (orientation:portrait) {
+		.parallax-block-cube{
+			height: 100vw;
+			width: 100vw;
+		}
+	}
+	/* Landscape */
+	@media screen and (orientation:landscape) {
+		.parallax-block-cube{
+			height: 100vh;
+			width: 100vh;
+		}
+	}
+	
+	.parallax-micapa {
+		display: block;
+		position: absolute;
+		box-sizing: border-box;
+		transition: transform 10s cubic-bezier(0,1,.5,1);
+	}
+
+	.parallax-micapa.espregunta {
+		padding: 10%;
+	}
+
+	.parallax-micapa ul.misrtas {
+		background-color: unset;
+		padding: 0;
+	}
+
+	.parallax-micapa .misrtas li {
+		cursor: pointer;
+		list-style-type: none;
+	}
+
+	.parallax-micapa .misrtas li button.btn,
+	.parallax-micapa .misrtas li a.btn {
+		font-size: 30pt;
+		white-space: normal;
+	}
 
 </style>
-{% include "1/rsvp/app.html" %}
+
+<script type="text/javascript" src="/assets/1/rsvp/js/modRellax.js"></script>
+
+{% if qparams.sl != 'si' %}
+	{% include "1/rsvp/app.html" %}
+{% else %}
+	{% include "1/rsvp/appcliente.html" %}
+{% endif %}
+
 {% endblock %}
 
 {% block content %}
-{% include "1/rsvp/master.html" %}
+
+{% if qparams.sl != 'si' %}
+	{% include "1/rsvp/master.html" %}
+{% else %}
+<div class="scrollable">
+  <div class="scrollable-content" id="render-mi-parallax" ng-init="renderizarParallax()">
+
+  </div>
+</div>
+  
+{% endif %}
+
 <div id="immaster" class="invisible">
 </div>
 <div id="imslave" class="invisible">
@@ -43,4 +135,5 @@
 
 {% block scripts %}
 
-{% endblock %}	
+{% endblock %}
+
