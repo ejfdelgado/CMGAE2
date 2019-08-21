@@ -1,0 +1,41 @@
+{% extends "1/opinion/base.html" %}
+
+{% block encabezado %}
+
+{% if qparams.sl != 'si' %}
+<link rel="stylesheet" href="/assets/minicolors/jquery.minicolors.css" />
+<script type="text/javascript" src="/assets/minicolors/jquery.minicolors.js"></script>
+<script type="text/javascript" src="/assets/minicolors/angular-minicolors.js"></script>
+{% endif %}
+
+{% if qparams.sl != 'si' %}
+	{% include "1/opinion/app.html" %}
+{% else %}
+	{% include "1/opinion/appcliente.html" %}
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+
+{% if qparams.sl != 'si' %}
+	{% include "1/opinion/master.html" %}
+{% else %}
+<div class="scrollable">
+  <div class="scrollable-content" id="contenido-central" ng-init="inicializar()">
+
+  </div>
+</div>
+  
+{% endif %}
+
+<div id="immaster" class="invisible">
+</div>
+<div id="imslave" class="invisible">
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}
+

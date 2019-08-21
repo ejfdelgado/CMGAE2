@@ -1,0 +1,43 @@
+<div class="scrollable" ng-init="mostrarAlgoEnGaleria()">
+  <div class="scrollable-content bootstrapiso">
+  		<div class="bootstrapiso scrollable-header">
+			<div class="input-group p-3 ">
+			  <input type="text" class="form-control" placeholder="Texto de búsqueda" aria-label="Texto de búsqueda" ng-model="temporal.q">
+			  <div class="input-group-append">
+			    <button class="btn btn-outline-secondary" type="button" ng-click="buscar()">Buscar</button>
+			  </div>
+			</div>
+		</div>
+
+		<div class="section">
+		    <div class="panel-group bootstrapiso">
+		    	<div class="panel panel-default">
+					<div class="section lrnopadding">
+						<div class="col-md-3 col-sm-6 col-xs-12" ng-repeat="ctx in temporal.rta">
+							<div class="card">
+								<div class="card-header">
+									<h5 class="card-title">{{ ctx.tit }}</h5>
+								</div>
+							  	<div class="card-body">
+							  	<img class="card-img-top p-3" ng-src="{{ darUrlDeIdImagen(ctx.img) }}">
+							    
+							    <p class="card-text">{{ ctx.desc }}</p>
+
+							    <p class="card-text rompertexto"><i class="fa fa-user"></i>&nbsp;{{ ctx.aut }}</p>
+							    <p class="card-text"><i class="fa fa-calendar"></i>&nbsp;{{ ctx.act*1000 | date:"dd/MM/yyyy" }}</p>
+
+								<div class="btn-group pull-right" role="group" aria-label="Basic example">
+								    <button type="button" class="btn btn-primary" ng-click="verDetalle(ctx)"><i class="fa fa-search"></i></button>
+								    <button type="button" class="btn btn-danger" ng-click="borrarUno(ctx)" ng-if="ctx.usr == metadata.principal.uid"><i class="fa fa-times"></i></button>
+								</div>
+
+							  </div>
+							</div>
+						</div>
+					</div>
+		    	</div>
+		    </div>
+		</div>
+  </div>
+</div>
+
