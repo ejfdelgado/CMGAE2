@@ -17,8 +17,8 @@
   ]).config(function(minicolorsProvider, $stateProvider, $urlRouterProvider) {
       $urlRouterProvider.otherwise("/");
       $stateProvider.state('/', {url:'/', templateUrl: "/assets/1/pug/vista.html"});
-      $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/1/rsvp/debug.html', reloadOnSearch: false});
-      $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/1/rsvp/galeria.html', reloadOnSearch: false});
+      $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/1/pug/debug.html', reloadOnSearch: false});
+      $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/1/pug/galeria.html', reloadOnSearch: false});
 
       angular.extend(minicolorsProvider.defaults, {
         control: 'hue',
