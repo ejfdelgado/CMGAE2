@@ -83,11 +83,24 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   };
   
   $scope.mostrarAlgoEnGaleria = function() {
-	  console.log('mostrarAlgoEnGaleria');
+    if ($scope.temporal.rta.length > 0) {
+      return;
+    }
+    $scope.buscar();
   };
   
   $scope.buscar = function() {
-	  console.log('buscar');
+    $scope.temporal.rta = [];
+    $scope.temporal.next = null;
+    moduloPagina.buscar($scope.temporal.q).then(function(rta) {
+      for (var i=0; i<rta.valor.length; i++) {
+        $scope.temporal.rta.push(moduloTransformacion.modo('simple').from(rta.valor[i], true));
+      }
+      $scope.temporal.next = rta.next;
+      $scope.$digest();
+    }, function() {
+      
+    });
   };
   
   var darUrlDeArchivo = function(id, predef, local) {
@@ -102,12 +115,36 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     return darUrlDeArchivo(id, '/assets/1/pug/img/def.svg', false);
   };
   
-  $scope.verDetalle = function() {
-	  
+  $scope.verDetalle = function(ctx) {
+    var id = ctx.id;
+    var nuevaUrl = location.pathname.replace(/\d*$/, '')+'?pg='+id+'#!/';
+    var win = window.open(nuevaUrl, '_blank');
+    win.focus();
+  };
+
+  $scope.redirigir = function(estado) {
+    $state.go(estado);
   };
   
-  $scope.borrarUno = function() {
-	  
+  $scope.diferidoBorrado = null;
+  $scope.borrarEfectivo = function() {
+    $scope.diferidoBorrado.resolve();
+  };
+  
+  $scope.borrarUno = function(instancia) {
+
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+      moduloPagina.borrarTodo(instancia.id).then(function() {
+        //Lo debo sacar de la lista
+        var indice = $scope.temporal.rta.indexOf(instancia);
+        if (indice >= 0) {
+          $scope.temporal.rta.splice(indice, 1);
+          $scope.$digest();
+        }
+      });
+    });
   };
 
 });
