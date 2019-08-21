@@ -1,4 +1,7 @@
 eclipse.preferences.version=1
+encoding//assets/1=UTF-8
+encoding//assets/1/pug/galeria.html=UTF-8
+encoding//assets/1/pug/modalBorrar.html=UTF-8
 encoding//assets/cmgae/ejemplos=UTF-8
 encoding//assets/cmgae/ejemplos/index.html=UTF-8
 encoding//assets/cmgae/juego=UTF-8
@@ -40,6 +43,8 @@ encoding//handlers/StorageHandler.py=utf-8
 encoding//handlers/TuplaHandler.py=utf-8
 encoding//handlers/decoradores.py=utf-8
 encoding//handlers/seguridad.py=utf-8
+encoding//templates/1/pug/app.html=UTF-8
+encoding//templates/1/pug/master.html=UTF-8
 encoding/main.py=utf-8
 encoding/settings.py=utf-8
 encoding/urls.py=utf-8

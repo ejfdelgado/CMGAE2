@@ -3,9 +3,9 @@
 {% block encabezado %}
 
 {% if qparams.sl != 'si' %}
-<link rel="stylesheet" href="/assets/1/rsvp/css/jquery.minicolors.css" />
-<script type="text/javascript" src="/assets/1/rsvp/js/jquery.minicolors.js"></script>
-<script type="text/javascript" src="/assets/1/rsvp/js/angular-minicolors.js"></script>
+<link rel="stylesheet" href="/assets/minicolors/jquery.minicolors.css" />
+<script type="text/javascript" src="/assets/minicolors/jquery.minicolors.js"></script>
+<script type="text/javascript" src="/assets/minicolors/angular-minicolors.js"></script>
 {% endif %}
 
 <script src="/assets/1/rsvp/js/rellax.min.js" type="text/javascript"></script>
@@ -104,7 +104,7 @@
 
 </style>
 
-<script type="text/javascript" src="/assets/1/rsvp/js/modRellax.js"></script>
+<script type="text/javascript" src="/assets/1/rsvp/js/modRellax.js?1"></script>
 
 {% if qparams.sl != 'si' %}
 	{% include "1/rsvp/app.html" %}

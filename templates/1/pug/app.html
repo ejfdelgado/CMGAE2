@@ -1,0 +1,114 @@
+<script type="text/javascript">
+
+  var moduloIntMarkInst = moduloIntMark({
+    'masterLoged': true,
+    'masterIdUsr': true,
+    'slaveLoged': false,
+    'slaveIdUsr': false,
+    'useFirebase': false,
+  });
+
+  var app = angular.module('myApp', [
+    //'ngRoute',
+    'ui.router',
+    'mobile-angular-ui',
+    'mobile-angular-ui.gestures',
+    'minicolors',
+  ]).config(function(minicolorsProvider, $stateProvider, $urlRouterProvider) {
+      $urlRouterProvider.otherwise("/");
+      $stateProvider.state('/', {url:'/', templateUrl: "/assets/1/pug/vista.html"});
+      $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/1/rsvp/debug.html', reloadOnSearch: false});
+      $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/1/rsvp/galeria.html', reloadOnSearch: false});
+
+      angular.extend(minicolorsProvider.defaults, {
+        control: 'hue',
+        theme: 'bootstrap',
+        position: 'top left'
+      });
+    });
+
+  app.run(function($transform) {
+    window.$transform = $transform;
+  });
+
+app.controller('MainController', function($rootScope, $scope, $state) {
+	
+  $scope.temporal = {
+	'q': '', 
+	'rta': [],
+    'next': null,
+  };
+  $scope.metadata = {
+    'ctx2': {
+    	
+    },
+    'principal': {
+      'uid': null,
+    }
+  };
+  $scope.slaveUrl = null;
+  moduloIntMarkInst.afterAny().then(function(datos) {
+    //console.log(datos);
+    $scope.slaveUrl = datos.slaveUrl;
+    $.extend(true, $scope.metadata, datos);
+    $scope.$digest();
+    diferidoDatos.resolve();
+  });
+
+  var diferidoCargue = null;
+  var diferidoDatos = $.Deferred();
+  // Needed for the loading screen
+  $rootScope.$on('$routeChangeStart', function() {
+    $rootScope.loading = true;
+    diferidoCargue = moduloActividad.on();
+  });
+
+  $rootScope.$on('$routeChangeSuccess', function() {
+    $rootScope.loading = false;
+    diferidoCargue.resolve();
+  });
+  
+  $scope.redirigir = function(estado) {
+    $state.go(estado);
+  };
+  
+  $scope.inicializar = function() {
+	  diferidoDatos.then(function() {
+		  
+	  });
+  };
+  
+  $scope.guardarTodo = function() {
+	  console.log('guardarTodo');
+  };
+  
+  $scope.mostrarAlgoEnGaleria = function() {
+	  console.log('mostrarAlgoEnGaleria');
+  };
+  
+  $scope.buscar = function() {
+	  console.log('buscar');
+  };
+  
+  var darUrlDeArchivo = function(id, predef, local) {
+    if (typeof id == 'string' && id.length > 0) {
+      return moduloArchivos.generarUrlDadoId(id, local);
+    } else {
+      return predef;
+    }
+  };
+  
+  $scope.darUrlDeIdImagen = function(id) {
+    return darUrlDeArchivo(id, '/assets/1/pug/img/def.svg', false);
+  };
+  
+  $scope.verDetalle = function() {
+	  
+  };
+  
+  $scope.borrarUno = function() {
+	  
+  };
+
+});
+</script>

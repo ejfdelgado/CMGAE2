@@ -1,0 +1,18 @@
+<script type="text/javascript">
+  var moduloIntMarkInst = moduloIntMark({
+    'masterLoged': true,
+    'masterIdUsr': true,
+    'slaveLoged': false,
+    'slaveIdUsr': false,
+    'useFirebase': false,
+  });
+
+  moduloIntMarkInst.afterAny().then(function(datos) {
+    //console.log(datos);
+    var $scope = {
+    	'metadata': {},
+    };
+    $scope.slaveUrl = datos.slaveUrl;
+    $.extend(true, $scope.metadata, datos);
+  });
+</script>

@@ -139,9 +139,11 @@ var modRellax = (function() {
               $.each(micapa.rtas, function(clave, rta) {
                 var nueva = $('<li><button type="button" class="btn btn btn-light col-xs-12 mb-4"></button></li>');
                 var boton = nueva.find('button');
+                /*
                 if (micapa.tamRes !== null && micapa.tamRes !== undefined) {
                   boton.css({'font-size': micapa.tamRes+'%'});
                 }
+                */
                 boton.text(remplazarTextos(rta.txt));
                 aplicarColorTexto(boton, micapa.txtColor, micapa.txtColor2);
                 boton.attr('data-rta', clave);
