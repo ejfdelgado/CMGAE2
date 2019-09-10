@@ -2,10 +2,7 @@
   <div class="scrollable-content bootstrapiso">
   		<div class="bootstrapiso scrollable-header">
 			<div class="input-group p-3 ">
-			  <input type="text" class="form-control" placeholder="Texto de búsqueda" aria-label="Texto de búsqueda" ng-model="temporal.q">
-			  <div class="input-group-append">
-			    <button class="btn btn-outline-secondary" type="button" ng-click="buscar()">Buscar</button>
-			  </div>
+			  <div class="input-group-append">&nbsp;<br/>&nbsp;<br/></div>
 			</div>
 		</div>
 
@@ -13,7 +10,7 @@
 		    <div class="panel-group bootstrapiso">
 		    	<div class="panel panel-default">
 					<div class="section lrnopadding">
-						<div class="col-md-3 col-sm-6 col-xs-12" ng-repeat="ctx in temporal.rta">
+						<div class="col-md-3 col-sm-6 col-xs-12 mb-4" ng-repeat="ctx in temporal.rta">
 							<div class="card">
 								<div class="card-header">
 									<h5 class="card-title">{{ ctx.tit }}</h5>
@@ -40,4 +37,12 @@
 		</div>
   </div>
 </div>
+  		<div class="bootstrapiso scrollable-header">
+			<div class="input-group p-3 ">
+			  <input type="text" class="form-control" placeholder="Texto de búsqueda" aria-label="Texto de búsqueda" ng-model="temporal.q">
+			  <div class="input-group-append">
+			    <button class="btn btn-outline-secondary" type="button" ng-click="buscar()">Buscar</button>
+			  </div>
+			</div>
+		</div>
 
