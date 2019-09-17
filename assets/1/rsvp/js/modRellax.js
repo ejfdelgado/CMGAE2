@@ -124,6 +124,24 @@ var modRellax = (function() {
             if (micapa.tipo == 'img') {
               capaelem = $('<img class="rellax parallax-micapa">');
               capaelem.attr('src', darUrlDeIdImagen(micapa.img));
+              var opcionesImagen = [micapa.img];
+              if (typeof micapa.img2 == 'string' && micapa.img2.length > 0) {
+            	  opcionesImagen.push(micapa.img2);
+              }
+              capaelem.on('tap click', function() {
+            	 if (opcionesImagen.length > 0) {
+            		 var temp = opcionesImagen.splice(0, 1);
+            		 opcionesImagen.push(temp[0]);
+            		 capaelem.attr('src', darUrlDeIdImagen(opcionesImagen[0]));
+            	 }
+            	 //Hago scroll lentamente hasta la siguiente seción
+            	 checkearCargue(capaelem.attr('src'), function() {
+            		 setTimeout(function() {
+            			 var siguiente = capaelem.closest('.parallax-container').next();
+                    	 scrollToElement(siguiente, capaelem.closest('.scrollable-content'));
+            		 }, 500);
+            	 });
+              });
             } else if (micapa.tipo == 'preg') {
               capaelem = $('<div class="rellax parallax-micapa espregunta"><p class="mipregunta"></p><ul class="misrtas bootstrapiso"></ul></div>');
               var elemPregunta = capaelem.find('.mipregunta');
@@ -252,6 +270,28 @@ var modRellax = (function() {
 
     guardarBasico($scope);
   };
+  
+	var scrollToElement = function (destino, padre, milis, offset) {
+		if (typeof offset != 'number') {
+			offset = 0;
+		}
+		if (typeof milis != 'number') {
+			milis = 1000;
+		}
+		var scrollTop = padre.scrollTop();
+		var scrollFinal = scrollTop + destino.offset().top;
+		padre.animate({scrollTop: scrollFinal}, milis);
+	};
+	
+	var checkearCargue = function(url, callback) {
+		var image = new Image();
+		image.onload = function () {
+			callback();
+		}
+		image.onerror = function () {
+		}
+		image.src = url;
+	}
 
   return {
     'render': render,
@@ -261,5 +301,6 @@ var modRellax = (function() {
     'hayTexto': hayTexto,
     'darUrlDeArchivo': darUrlDeArchivo,
     'darUrlDeIdImagen': darUrlDeIdImagen,
+    'scrollToElement': scrollToElement,
   };
 })();

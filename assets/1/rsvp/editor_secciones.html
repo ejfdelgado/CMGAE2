@@ -140,12 +140,23 @@
                     </div>
 
                     <!--Imagen-->
-                    <div class="col-xs-6" ng-show="micapa.tipo == 'img'">
-                      <img ng-src="{{ darUrlDeIdImagen(micapa.img) }}">
+                    <div class="col-xs-12 lrnopadding">
+	                    <div class="col-xs-6" ng-show="micapa.tipo == 'img'">
+	                      <img ng-src="{{ darUrlDeIdImagen(micapa.img) }}">
+	                    </div>
+	                    <div class="col-xs-6 lrnopadding" ng-show="micapa.tipo == 'img'">
+	                      <a href="" ng-click="asignarImagenDeCapa(micapa, 'img')" class="btn btn-default col-xs-12">Cargar Imagen</a>
+	                      <a href="" ng-click="borrarImagenGenerica(micapa, 'img')" class="btn btn-default col-xs-12">Borrar Imagen</a>
+	                    </div>
                     </div>
-                    <div class="col-xs-6 lrnopadding" ng-show="micapa.tipo == 'img'">
-                      <a href="" ng-click="asignarImagenDeCapa(micapa)" class="btn btn-default col-xs-12">Cargar Imagen</a>
-                      <a href="" ng-click="borrarImagenGenerica(micapa)" class="btn btn-default col-xs-12">Borrar Imagen</a>
+                    <div class="col-xs-12 lrnopadding">
+	                    <div class="col-xs-6" ng-show="micapa.tipo == 'img'">
+	                      <img ng-src="{{ darUrlDeIdImagen(micapa.img2) }}">
+	                    </div>
+	                    <div class="col-xs-6 lrnopadding" ng-show="micapa.tipo == 'img'">
+	                      <a href="" ng-click="asignarImagenDeCapa(micapa, 'img2')" class="btn btn-default col-xs-12">Cargar Imagen</a>
+	                      <a href="" ng-click="borrarImagenGenerica(micapa, 'img2')" class="btn btn-default col-xs-12">Borrar Imagen</a>
+	                    </div>
                     </div>
                     <!--Pregunta-->
                     <div class="form-group col-xs-12" ng-show="micapa.tipo == 'preg'">

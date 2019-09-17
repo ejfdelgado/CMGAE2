@@ -1,13 +1,13 @@
 {
   "name": "micodigo.co",
   "version": "1.0.0",
-  "description": "Indexaci�n de c�digos QR",
+  "description": "Indexación de códigos QR",
   "main": "index.js",
   "scripts": {
     "gulp": "gulp"
   },
   "keywords": [
-    "c�digo",
+    "código",
     "qr"
   ],
   "author": "edgar.jose.fernando.delgado@gmail.com",

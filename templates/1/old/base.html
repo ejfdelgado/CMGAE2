@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="fragment" content="!">
+  <base href="/assets/1/old/" target="_blank">
+
+  <style type="text/css">
+      /**
+       * Hide when Angular is not yet loaded and initialized
+       */
+       [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+        display: none !important;
+      }
+  </style>
+  <!--Hojas de estilos de terceros-->
+  <link href="/assets/node_modules/angular-material/angular-material.min.css" rel="stylesheet" />
+  <link href="/assets/node_modules/cropperjs/dist/cropper.min.css" rel="stylesheet">
+  <link href="/assets/node_modules/firebase/firebaseui.css" rel="stylesheet">
+  <!--Hojas de estilos propietarias-->
+  <link href="/assets/1/old/css/micodigo.css" rel="stylesheet">
+
+
+  </head>
+  <body layout="column" ng-cloak>
+
+    <div class="ldBar" data-value="50"></div>
+     <!-- Container #1 (see wireframe) -->
+    <md-fab-toolbar md-direction="left">
+      <md-fab-trigger class="align-with-text">
+        <md-button aria-label="menu" class="md-fab md-primary">
+          <md-icon md-svg-src="/assets/svg/menu.svg"></md-icon>
+        </md-button>
+      </md-fab-trigger>
+
+      <md-toolbar>
+        <md-fab-actions class="md-toolbar-tools">
+          <md-button aria-label="comment" class="md-icon-button">
+            <md-icon md-svg-src="/assets/svg/ic_comment_24px.svg"></md-icon>
+          </md-button>
+          <md-button aria-label="label" class="md-icon-button">
+            <md-icon md-svg-src="/assets/svg/ic_label_24px.svg"></md-icon>
+          </md-button>
+          <md-button aria-label="photo" class="md-icon-button">
+            <md-icon md-svg-src="/assets/svg/ic_photo_24px.svg"></md-icon>
+          </md-button>
+        </md-fab-actions>
+      </md-toolbar>
+    </md-fab-toolbar>
+
+  <!-- Container #2 -->
+  <div flex layout="row">
+
+    <!-- Container #3 -->
+    <md-sidenav md-is-locked-open="$mdMedia('gt-sm')" class="md-whiteframe-z2" md-component-id="left" ng-click="toggleSidebar()">
+      <md-list ng-controller="SideBarCtrl">
+
+       <!-- List item #1 -->
+       <md-list-item ng-repeat="item in modelo.items">
+        <md-button>
+          <md-icon md-svg-src="{{ item.img }}" class="avatar"></md-icon>
+          {{ item.txt }}
+        </md-button>
+      </md-list-item>
+
+    </md-list>
+  </md-sidenav>
+
+  <!-- Container #4 -->
+  <md-content flex id="content" ng-view>
+
+  </md-content>
+
+  
+    
+  <md-fab-speed-dial md-direction="up" ng-class="'md-scale'" class="md-fab md-fab-bottom-right">
+    <md-fab-trigger>
+      <md-button aria-label="menu" class="md-fab md-warn ">
+        <md-icon md-svg-src="/assets/svg/cake.svg"></md-icon>
+      </md-button>
+    </md-fab-trigger>
+
+    <md-fab-actions>
+      <md-button aria-label="Twitter" class="md-fab md-raised md-mini">
+        <md-icon md-svg-src="/assets/svg/twitter.svg" aria-label="Twitter"></md-icon>
+      </md-button>
+      <md-button aria-label="Facebook" class="md-fab md-raised md-mini">
+        <md-icon md-svg-src="/assets/svg/facebook.svg" aria-label="Facebook"></md-icon>
+      </md-button>
+      <md-button aria-label="Google Hangout" class="md-fab md-raised md-mini">
+        <md-icon md-svg-src="/assets/svg/hangout.svg" aria-label="Google Hangout"></md-icon>
+      </md-button>
+    </md-fab-actions>
+  </md-fab-speed-dial>
+
+
+</div>
+
+<!--Librerías de terceros-->
+
+<script src="/assets/node_modules/jspdf/dist/jspdf.min.js"></script>
+<script src="/assets/node_modules/crypto-js/crypto-js.js"></script>
+
+<script src="/assets/node_modules/jquery/dist/jquery.min.js"></script>
+<script src="/assets/node_modules/angular/angular.min.js"></script>
+<script src="/assets/node_modules/angular-route/angular-route.min.js"></script>
+<script src="/assets/node_modules/firebase/firebase.js"></script>
+<script src="/assets/node_modules/firebase/firebaseui.js"></script>
+
+<!--script src="/assets/node_modules/angularfire/dist/angularfire.min.js"></script-->
+<!--Angular Material-->
+<script src="/assets/node_modules/angular-animate/angular-animate.min.js"></script>
+<script src="/assets/node_modules/angular-aria/angular-aria.min.js"></script>
+<script src="/assets/node_modules/angular-material/angular-material.min.js"></script>
+
+<!--Maps-->
+<script src="/assets/node_modules/ngmap/build/scripts/ng-map.min.js"></script>
+<script src="http://maps.google.com/maps/api/js"></script>
+
+<!--Código propietario-->
+<script src="/assets/1/old/js/utils.js"></script>
+<script data-main="/assets/1/old/js/app.js" src="/assets/1/old/js/require.js"></script>
+
+</body>
+</html>

@@ -221,10 +221,10 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     return modRellax.darUrlDeIdImagen(id);
   };
 
-  $scope.borrarImagenGenerica = function(micapa) {
+  $scope.borrarImagenGenerica = function(micapa, llave) {
     var diferido = moduloActividad.on();
-    moduloArchivos.borrar(micapa.img).always(function() {
-      micapa.img = null;
+    moduloArchivos.borrar(micapa[llave]).always(function() {
+      micapa[llave] = null;
       $scope.$digest();
       diferido.resolve();
     });
@@ -241,8 +241,17 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       return funcionCargue;
   };
 
-  $scope.asignarImagenGenerica = function(micapa, prefijo) {
-    return $scope.asignarArchivoGenerico(micapa, 'img', prefijo+'/'+micapa.id, 'image/*');
+  $scope.asignarImagenGenerica = function(micapa, prefijo, llave) {
+	  var subruta;
+	  if (typeof llave != 'string') {
+		  llave = 'img';
+	  }
+	  if (llave == 'img') {
+		  subruta = prefijo+'/'+micapa.id;
+	  } else {
+		  subruta = prefijo+'/'+micapa.id+'/'+llave;
+	  }
+      return $scope.asignarArchivoGenerico(micapa, llave, prefijo+'/'+micapa.id, 'image/*');
   };
 
   $scope.asignarArchivoGenerico = function(micapa, llave, prefijo, tipo) {
@@ -290,8 +299,8 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     $scope.asignarArchivoGenerico($scope.metadata.ctx2.disenio, 'fuente', 'fuentes', '*/*');
   };
 
-  $scope.asignarImagenDeCapa = function(micapa) {
-    return $scope.asignarImagenGenerica(micapa, 'capa');
+  $scope.asignarImagenDeCapa = function(micapa, llave) {
+    return $scope.asignarImagenGenerica(micapa, 'capa', llave);
   };
 
   $scope.asignarImagenDeSeccion = function(miseccion) {

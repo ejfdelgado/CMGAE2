@@ -1,0 +1,15 @@
+<div app-actividad></div>
+<md-icon md-svg-src="assets/svg/avatar-1.svg" class="avatar" ng-click="redirigir()"></md-icon>
+<h2 ng-model="modelo.nombre" editar-texto></h2>
+<p ng-model="modelo.direccion" editar-texto></p>
+
+<md-switch ng-model="modelo.editable" aria-label="Switch 1">Editable?: {{ modelo.editable }}</md-switch>
+
+<!--div codigo-qr></div-->
+
+<!--div class="mui-panel"><div modelo3d width="400" height="400" fillcontainer="true" scale="1.0" material-type="'phong'"></div></div-->
+
+  <div class="bottom-sheet-demo inset" layout="row" layout-sm="column" layout-align="center" >
+    <md-button flex="50" class="md-primary md-raised" ng-click="showListBottomSheet()">Show as List</md-button>
+    <md-button flex="50" class="md-primary md-raised" ng-click="showGridBottomSheet()">Show as Grid</md-button>
+  </div>
