@@ -1,37 +1,132 @@
 <div ui-content-for="title">
   <span>Invitados</span>
 </div>
+<style type="text/css">
 
-<div class="scrollable" ng-init="crearMapaPreguntas()">
-  <div class="scrollable-content">
-    <div class="section section-break bootstrapiso">
-    	<div class="panel panel-default">
-    		<div class="input-group">
-	    		<a href="" ng-click="agregarInvitado()" class="btn btn-default col-xs-12"><i class="fa fa-plus"></i> Agregar Invitado</a>
-	    	</div>
-    	</div>
-    	<div class="panel panel-default" ng-repeat="(idInvitado, invitado) in metadata.ctx2.invitados">
+body {
+	font-family: Arial;
+}
 
-            <div class="">
-              <div class="input-group">
-              	<div class="input-group-prepend">
-	                <button class="btn btn-info" type="button" ng-click="copiarUrlInvitado(idInvitado)">{{ $index + 1 }}</button>
-	              </div>
-                <input type="text" class="form-control" ng-model="invitado.nom">
-                <div class="input-group-append">
-                  <button class="btn btn-danger" type="button" ng-click="borrarInvitado(idInvitado)">
-                    <i class="fa fa-times"></i>
-                  </button>
-                </div>
-                <ul class="col-xs-12 ml-2" ng-show="hayContenido(invitado.rtas)">
-                  <li class="mt-2 col-xs-6" ng-repeat="(idPreg, preg) in invitado.rtas">
-                    <b class="">{{ temporal.preguntas[idPreg].preg }}</b>:<span class="ml-2" ng-repeat="unapreg in preg">{{ temporal.preguntas[idPreg].rtas[unapreg].txt }}</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
+.micontenedorscroll {
+	overflow: scroll;
+	position: relative;
+}
 
-    	</div>
-    </div>
-  </div>
+.micontenedorscroll table {
+	position: relative;
+	border-collapse: collapse; 
+}
+
+.micontenedorscroll table tbody tr td:first-child {
+	background-color: white;
+	z-index: 999;
+	font-weight: bold;
+	position: -webkit-sticky; /* for Safari */
+	position: sticky;
+	left: 0;
+}
+
+.micontenedorscroll table thead th {
+	background-color: white;
+	z-index: 1000;
+	position: -webkit-sticky; /* for Safari */
+	position: sticky;
+	top: 0;
+	-webkit-backface-visibility: hidden;
+	padding: 0 0 0 5px;
+}
+
+.micontenedorscroll table thead th p {
+	margin: 0;
+}
+
+.micontenedorscroll thead th:first-child {
+  left: 0;
+  z-index: 1001;
+}
+
+.micontenedorscroll table tbody tr:nth-child(even) td:first-child,
+.micontenedorscroll tr:nth-child(even) {
+	background-color: #f3f3f3;
+}
+
+.micontenedorscroll table thead th::before {
+  content: '';
+  display: block;
+  height: 5px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  box-shadow: 0px 5px 5px rgba(0,0,0,0.1);
+}
+.micontenedorscroll table tbody tr td:first-child::before {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+	content: '';
+	box-shadow: 5px 0px 5px rgba(0,0,0,0.1);
+}
+
+
+
+
+
+
+.contenedor_tabla {
+	width: 100%;
+	height: 100%;
+	background: white;
+}
+
+.contenedor_tabla tr td {
+	min-width: 100px;
+	padding: 8px;
+}
+
+.contenedor_tabla table tr td:first-child {
+    white-space: normal;
+    max-width: 100px;
+}
+
+.edit-in-place span {
+  cursor: pointer;
+}
+
+.edit-in-place input {
+  display: none;
+}
+
+.edit-in-place.active span {
+  display: none;
+}
+
+.edit-in-place.active input {
+  display: inline-block;
+}
+
+.mirespuestica {
+	padding: 3px;
+}
+</style>
+<div class="contenedor_tabla micontenedorscroll" ng-init="crearMapaPreguntas()">
+<table>
+	<thead class="">
+	  <tr class="">
+		<th class=""><a href="" ng-click="agregarInvitado()" class="btn btn-default col-xs-12"><i class="fa fa-plus"></i> Agregar Invitado</a></th>
+		<th class="" ng-repeat="(idInvitado, invitado) in metadata.ctx2.invitados">
+		<button class="btn btn-info" type="button" ng-click="copiarUrlInvitado(idInvitado)">{{ $index + 1 }}</button>
+		<i class="fa fa-times manito" ng-click="borrarInvitado(idInvitado)"></i>&nbsp;<edit-in-place value="invitado.nom"></edit-in-place>
+		</th>
+	  </tr>
+	</thead>
+	<tbody class="">
+	  <tr ng-repeat="(idPreg, preg) in temporal.preguntas">
+		<td>{{ preg.preg }}</td>
+		<td ng-repeat="(idInvitado, invitado) in metadata.ctx2.invitados"><span ng-repeat="unaresp in invitado.rtas[idPreg]" class="mirespuestica">{{ temporal.preguntas[idPreg].rtas[unaresp].txt }}</span></td>
+	  </tr>
+  </tbody>
+</table>
 </div>

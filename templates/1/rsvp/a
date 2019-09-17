@@ -101,6 +101,10 @@
 		font-size: 30pt;
 		white-space: normal;
 	}
+	
+	.btn.btn-dark.focus, .btn.btn-dark:focus {
+		color: white;
+	}
 
 </style>
 
