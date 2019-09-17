@@ -47,6 +47,21 @@ var modRellax = (function() {
     }
   };
 
+  var hacerScroll = function() {
+	  var contenedores = $('.parallax-container');
+	  var siguiente = null;
+	  for (var k=0; k<contenedores.length; k++) {
+		  var uncontenedor = $(contenedores[k]);
+		  var hinicio = uncontenedor.offset().top;
+		  console.log('hinicio', hinicio);
+		  siguiente = uncontenedor;
+		  if (hinicio > 0) {
+			  break;
+		  }
+	  }
+	  scrollToElement(siguiente, $('#render-mi-parallax'));
+ };
+  
   var render = function($scope) {
     if (rellax != null) {
       try {
@@ -129,10 +144,7 @@ var modRellax = (function() {
             	  opcionesImagen.push(micapa.img2);
               }
               capaelem.on('tap click', function() {
-            	  var hacerScroll = function() {
-         			 var siguiente = capaelem.closest('.parallax-container').next();
-                	 scrollToElement(siguiente, capaelem.closest('.scrollable-content'));
-        		 };
+
             	 if (opcionesImagen.length > 1) {
             		 var temp = opcionesImagen.splice(0, 1);
             		 opcionesImagen.push(temp[0]);
