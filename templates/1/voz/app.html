@@ -1,0 +1,211 @@
+<script type="text/javascript">
+
+  var moduloIntMarkInst = moduloIntMark({
+    'masterLoged': true,
+    'masterIdUsr': true,
+    'slaveLoged': false,
+    'slaveIdUsr': false,
+    'useFirebase': false,
+  });
+
+  var app = angular.module('myApp', [
+    //'ngRoute',
+    'ui.router',
+    'mobile-angular-ui',
+    'mobile-angular-ui.gestures',
+    'minicolors',
+  ]).config(function(minicolorsProvider, $stateProvider, $urlRouterProvider) {
+      $urlRouterProvider.otherwise("/");
+      $stateProvider.state('/', {url:'/', templateUrl: "/assets/1/voz/vista.html"});
+      $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/1/voz/debug.html', reloadOnSearch: false});
+      $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/1/voz/galeria.html', reloadOnSearch: false});
+
+      angular.extend(minicolorsProvider.defaults, {
+        control: 'hue',
+        theme: 'bootstrap',
+        position: 'top left'
+      });
+    });
+
+  app.run(function($transform) {
+    window.$transform = $transform;
+  });
+
+app.controller('MainController', function($rootScope, $scope, $state) {
+	
+  $scope.temporal = {
+	'q': '', 
+	'rta': [],
+    'next': null,
+  };
+  $scope.metadata = {
+    'ctx2': {
+    	
+    },
+    'principal': {
+      'uid': null,
+    }
+  };
+  $scope.slaveUrl = null;
+  moduloIntMarkInst.afterAny().then(function(datos) {
+    //console.log(datos);
+    $scope.slaveUrl = datos.slaveUrl;
+    $.extend(true, $scope.metadata, datos);
+    $scope.$digest();
+    diferidoDatos.resolve();
+  });
+
+  var diferidoCargue = null;
+  var diferidoDatos = $.Deferred();
+  // Needed for the loading screen
+  $rootScope.$on('$routeChangeStart', function() {
+    $rootScope.loading = true;
+    diferidoCargue = moduloActividad.on();
+  });
+
+  $rootScope.$on('$routeChangeSuccess', function() {
+    $rootScope.loading = false;
+    diferidoCargue.resolve();
+  });
+  
+  $scope.redirigir = function(estado) {
+    $state.go(estado);
+  };
+  
+  $scope.inicializar = function() {
+	  diferidoDatos.then(function() {
+		var paramsActuales = moduloP5.getParams();
+		$.extend(true, paramsActuales, $scope.metadata.ctx2.params);
+		$scope.metadata.ctx2.params = paramsActuales;
+		//$scope.metadata.ctx2.archivos = [];
+		$scope.$digest();
+	  });
+  };
+  
+  $scope.asignarParams = function() {
+	  moduloP5.setParams($scope.metadata.ctx2.params);
+  };
+  
+  $scope.borrarAudio = function(miaudio) {
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+      	var indice = $scope.metadata.ctx2.archivos.indexOf(miaudio);
+        var diferidoBorrar = moduloArchivos.borrar(moduloArchivos.darIdDadoUrl(decodeURIComponent(miaudio.url)));
+        diferidoBorrar.then(function() {
+        	$scope.metadata.ctx2.archivos.splice(indice, 1);
+        	$scope.guardarTodo();
+            $scope.$digest();
+        });
+    });
+  };
+  
+  $scope.handlerNuevoSonido = function(soundBlob) {
+	  
+      moduloArchivos.darFuncionCargue()({
+        auto: 'false', 
+        fileName: (new Date().getTime())+'.wav',
+        dataFolder:'/sonidos',
+      }, soundBlob).then(function(metadata) {
+    	  console.log(metadata);
+        if (!($scope.metadata.ctx2.archivos instanceof Array)) {
+        	$scope.metadata.ctx2.archivos = [];
+        }
+        $scope.metadata.ctx2.archivos.push({'url': moduloArchivos.generarUrlDadoId(metadata.id)});
+        $scope.guardarTodo();
+        $scope.$digest();
+      }, function() {
+    	  
+      });
+	  
+  };
+  
+  $scope.capturar = function() {
+	diferidoDatos.then(function() {
+		moduloP5.init($('#canvasVoice'), $scope.handlerNuevoSonido);
+		moduloP5.activar();
+	});
+  };
+  
+  $scope.guardarTodo = function() {
+    var diferidoGuardado = moduloActividad.on();
+    if (typeof angular == 'undefined') {
+      angular = {
+        toJson: JSON.stringify,
+      };
+    }
+    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)));
+    var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
+    all([diferido1.promise, diferido2.promise]).then(function() {
+    	diferidoGuardado.resolve();
+    });
+    return diferidoGuardado;
+  };
+  
+  $scope.mostrarAlgoEnGaleria = function() {
+    if ($scope.temporal.rta.length > 0) {
+      return;
+    }
+    $scope.buscar();
+  };
+  
+  $scope.buscar = function() {
+    $scope.temporal.rta = [];
+    $scope.temporal.next = null;
+    moduloPagina.buscar($scope.temporal.q).then(function(rta) {
+      for (var i=0; i<rta.valor.length; i++) {
+        $scope.temporal.rta.push(moduloTransformacion.modo('simple').from(rta.valor[i], true));
+      }
+      $scope.temporal.next = rta.next;
+      $scope.$digest();
+    }, function() {
+      
+    });
+  };
+  
+  var darUrlDeArchivo = function(id, predef, local) {
+    if (typeof id == 'string' && id.length > 0) {
+      return moduloArchivos.generarUrlDadoId(id, local);
+    } else {
+      return predef;
+    }
+  };
+  
+  $scope.darUrlDeIdImagen = function(id) {
+    return darUrlDeArchivo(id, '/assets/1/voz/img/def.svg', false);
+  };
+  
+  $scope.verDetalle = function(ctx) {
+    var id = ctx.id;
+    var nuevaUrl = location.pathname.replace(/\d*$/, '')+'?pg='+id+'#!/';
+    var win = window.open(nuevaUrl, '_blank');
+    win.focus();
+  };
+
+  $scope.redirigir = function(estado) {
+    $state.go(estado);
+  };
+  
+  $scope.diferidoBorrado = null;
+  $scope.borrarEfectivo = function() {
+    $scope.diferidoBorrado.resolve();
+  };
+  
+  $scope.borrarUno = function(instancia) {
+
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+      moduloPagina.borrarTodo(instancia.id).then(function() {
+        //Lo debo sacar de la lista
+        var indice = $scope.temporal.rta.indexOf(instancia);
+        if (indice >= 0) {
+          $scope.temporal.rta.splice(indice, 1);
+          $scope.$digest();
+        }
+      });
+    });
+  };
+
+});
+</script>

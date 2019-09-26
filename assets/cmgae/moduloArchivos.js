@@ -20,12 +20,12 @@ var moduloArchivos = (function() {
 		return atributos;
 	};
 	
-	var subirArchivoMioDePagina = function(atributos) {
+	var subirArchivoMioDePagina = function(atributos, blob) {
 		var diferido = $.Deferred();
 		moduloPagina.leer().then(function(contexto) {
 			atributos['dataFolder']=contexto['path']+'/'+contexto['id']+atributos['dataFolder'];
 			//atributos['dataFolder']='/'+contexto['id']+atributos['dataFolder'];
-			subirArchivoMio(atributos).then(function(datos) {
+			subirArchivoMio(atributos, blob).then(function(datos) {
 				diferido.resolve(datos);
 			}, function() {
 				diferido.reject();
@@ -36,11 +36,11 @@ var moduloArchivos = (function() {
 		return diferido;
 	};
 	
-	var subirArchivoMio = function(atributos) {
+	var subirArchivoMio = function(atributos, blob) {
 		var diferido = $.Deferred();
 		miseguridad.then(function(metadatos) {
 			atributos['dataFolder'] = '/usr/'+metadatos['id']+atributos['dataFolder'];
-			subirArchivo(atributos).then(function(datos) {
+			subirArchivo(atributos, blob).then(function(datos) {
 				diferido.resolve(datos);
 			}, function() {
 				diferido.reject();
@@ -51,82 +51,89 @@ var moduloArchivos = (function() {
 		return diferido;
 	};
 	
-	var subirArchivo = function(atributos) {
+	var subirArchivo = function(atributos, blob) {
 		var diferido = $.Deferred();
 		atributos = completarPredeterminados(atributos);
-		var temp = $('<input type="file" class="invisible" accept="'+atributos.tipos+'">');
-	    temp.on("change", function (e) {
-	        var file = e.target.files[0];
-	        if (file.size > atributos.maximoTamanio) {
-	        	alert('Archivo muy grande! debe ser menor a '+(atributos.maximoTamanio/(1024))+' KB');
-	        	diferido.reject();
-	        	return;
+		
+        var subirReal = function(file) {
+	        var diferidoAct = moduloActividad.on();
+	        //var reader = new FileReader();
+	        //reader.readAsDataURL(file);
+	        var form = new FormData();
+	        form.append('file-0', file);
+	        form.append('folder', atributos.dataFolder);
+	        if (hayValor(atributos.id)) {
+	        	form.append('name', decodeURIComponent(atributos.id));
 	        }
-	        var subirReal = function() {
-		        var diferidoAct = moduloActividad.on();
-		        var reader = new FileReader();
-		        reader.readAsDataURL(file);
-		        var form = new FormData();
-		        form.append('file-0', file);
-		        form.append('folder', atributos.dataFolder);
-		        if (hayValor(atributos.id)) {
-		        	form.append('name', decodeURIComponent(atributos.id));
-		        }
-		        if (atributos.auto == 'false') {
-		        	form.append('auto', 'false');
+	        if (atributos.auto == 'false') {
+	        	form.append('auto', 'false');
+        	}
+	        
+	        if (hayValor(atributos.url)) {
+	        	//console.log(atributos.url)
+	        	let queryParams = darParametrosUrl(atributos.url);
+	        	//console.log(queryParams)
+	        	if ('no-borrar' in queryParams) {
+	        		form.append('no-borrar', 'true');
 	        	}
-		        
-		        if (hayValor(atributos.url)) {
-		        	//console.log(atributos.url)
-		        	let queryParams = darParametrosUrl(atributos.url);
-		        	//console.log(queryParams)
-		        	if ('no-borrar' in queryParams) {
-		        		form.append('no-borrar', 'true');
+	        }
+	        //Sobra porque el servidor ya lo está capturando
+	        //form.append('mime', file.type);
+	        var peticion = {
+		            url: '/storage/',
+		            type: 'POST',
+		            data: form,
+		            headers:moduloHttp.darHeader(),
+		            cache: false,
+		            contentType: false,
+		            processData: false,
+		        };
+	        miseguridad.insertarToken(peticion).then(function(peticion) {
+		        $.ajax(peticion).done(function(data) {
+		        	if (data.error != 0) {
+		        		diferido.reject();
+		        	} else {
+		        		data['local'] = generarUrlDadoId(data['id'], true);
+		        		data['remoto'] = generarUrlDadoId(data['id'], false);
+		        		diferido.resolve(data);
 		        	}
-		        }
-		        //Sobra porque el servidor ya lo está capturando
-		        //form.append('mime', file.type);
-		        var peticion = {
-			            url: '/storage/',
-			            type: 'POST',
-			            data: form,
-			            headers:moduloHttp.darHeader(),
-			            cache: false,
-			            contentType: false,
-			            processData: false,
-			        };
-		        miseguridad.insertarToken(peticion).then(function(peticion) {
-			        $.ajax(peticion).done(function(data) {
-			        	if (data.error != 0) {
-			        		diferido.reject();
-			        	} else {
-			        		data['local'] = generarUrlDadoId(data['id'], true);
-			        		data['remoto'] = generarUrlDadoId(data['id'], false);
-			        		diferido.resolve(data);
-			        	}
-			        }).fail(function() {
-			        	diferido.reject();
-			        });
-		        }, function() {
+		        }).fail(function() {
 		        	diferido.reject();
 		        });
+	        }, function() {
+	        	diferido.reject();
+	        });
 
-			  	diferido.always(function() {
-			    	diferidoAct.resolve();
-			    });
-	        };
-	        
-	        if (estaEnLista(file.name, atributos.opcionesNegras)) {
-	        	var promesaConf = moduloModales.confirmar();
-	        	promesaConf.then(function() {
-	        		subirReal();
-	        	});
-	        } else {
-	        	subirReal();
-	        }
-	    });
-	  	temp.click();
-
+		  	diferido.always(function() {
+		    	diferidoAct.resolve();
+		    });
+        };
+        
+        if (typeof blob != 'undefined') {
+        	var archivito = new File([blob], atributos.fileName);
+        	subirReal(archivito);
+        } else {
+    		var temp = $('<input type="file" class="invisible" accept="'+atributos.tipos+'">');
+    	    temp.on("change", function (e) {
+    	        var file = e.target.files[0];
+    	        if (file.size > atributos.maximoTamanio) {
+    	        	alert('Archivo muy grande! debe ser menor a '+(atributos.maximoTamanio/(1024))+' KB');
+    	        	diferido.reject();
+    	        	return;
+    	        }
+    	        
+    	        if (estaEnLista(file.name, atributos.opcionesNegras)) {
+    	        	var promesaConf = moduloModales.confirmar();
+    	        	promesaConf.then(function() {
+    	        		subirReal(file);
+    	        	});
+    	        } else {
+    	        	subirReal(file);
+    	        }
+    	    });
+    	  	temp.click();
+        }
+        
 	  	return diferido.promise();
 	}
 	
@@ -322,6 +329,17 @@ var moduloArchivos = (function() {
 		return PREFIJO_RAIZ_PUBLICA;
 	}
 	
+	//Se usa porque en local extrañamente no puede subir archivos con path muy largo...
+	  var darFuncionCargue = function() {
+	      var funcionCargue = null;
+	      if (moduloApp.esProduccion()) {
+	        funcionCargue = moduloArchivos.subirArchivoMioDePagina;
+	      } else {
+	        funcionCargue = moduloArchivos.subirArchivoMio;
+	      }
+	      return funcionCargue;
+	  };
+	
 	return {
 		'darNombreId': darNombreId,
 		'normalizarId': normalizarId,
@@ -339,6 +357,7 @@ var moduloArchivos = (function() {
 		'darRaizPublica': darRaizPublica,
 		'borrarCacheConId': borrarCacheConId,
 		'borrarCacheRutaAtual': borrarCacheRutaAtual,
+		'darFuncionCargue': darFuncionCargue,
 	};
 })();
 }

@@ -278,16 +278,6 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     return diferido;
   };
 
-  var darFuncionCargue = function() {
-      var funcionCargue = null;
-      if (moduloApp.esProduccion()) {
-        funcionCargue = moduloArchivos.subirArchivoMioDePagina;
-      } else {
-        funcionCargue = moduloArchivos.subirArchivoMio;
-      }
-      return funcionCargue;
-  };
-
   $scope.asignarImagenGenerica = function(micapa, prefijo, llave) {
 	  var subruta;
 	  if (typeof llave != 'string') {
@@ -304,7 +294,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   $scope.asignarArchivoGenerico = function(micapa, llave, prefijo, tipo) {
     var diferido = $.Deferred();
     var subirArchivo = function() {
-      var funcionCargue = darFuncionCargue();
+      var funcionCargue = moduloArchivos.darFuncionCargue();
       funcionCargue({
         auto: 'false', 
         tipos:tipo, 

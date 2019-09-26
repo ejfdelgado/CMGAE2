@@ -1,0 +1,19 @@
+<div class="modal" ui-if="modalBorrar" ui-shared-state="modalBorrar">
+  <div class="modal-backdrop in"></div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button class="close" 
+                ui-turn-off="modalBorrar">&times;</button>
+        <h4 class="modal-title">¿Está seguro?</h4>
+      </div>
+      <div class="modal-body">
+        <p>Esta acción no se podrá deshacer</p>
+      </div>
+      <div class="modal-footer">
+        <button ui-turn-off="modalBorrar" class="btn btn-danger" ng-click="borrarEfectivo()">Sí</button>
+        <button ui-turn-off="modalBorrar" class="btn btn-default">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

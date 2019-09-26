@@ -1,15 +1,157 @@
 "use strict";
 
+var moduloFiltro = (function($) {
+	
+	var actual = null;
+	var tant = null;
+	
+	var aleatorio = function(min, max) {
+		return min+(max-min)*Math.random();
+	};
+	
+	var prueba = function() {
+	
+		var mousePos = {x:0, y:0};
+
+		document.onmousemove = handleMouseMove;
+		setInterval(getMousePosition, 100); // setInterval repeats every X ms
+
+		function handleMouseMove(event) {
+			var dot, eventDoc, doc, body, pageX, pageY;
+
+			event = event || window.event; // IE-ism
+
+			// If pageX/Y aren't available and clientX/Y are,
+			// calculate pageX/Y - logic taken from jQuery.
+			// (This is to support old IE)
+			if (event.pageX == null && event.clientX != null) {
+				eventDoc = (event.target && event.target.ownerDocument) || document;
+				doc = eventDoc.documentElement;
+				body = eventDoc.body;
+
+				event.pageX = event.clientX +
+				  (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
+				  (doc && doc.clientLeft || body && body.clientLeft || 0);
+				event.pageY = event.clientY +
+				  (doc && doc.scrollTop  || body && body.scrollTop  || 0) -
+				  (doc && doc.clientTop  || body && body.clientTop  || 0 );
+			}
+
+			mousePos = {
+				x: event.pageX,
+				y: event.pageY
+			};
+		}
+		function getMousePosition() {
+			var pos = mousePos;
+			if (!pos) {
+				// We haven't seen any movement yet
+			}
+			else {
+				// Use pos.x and pos.y
+			}
+		}
+	
+		var recursivo = function() {
+			var ahora = new Date().getTime();
+			var espera = aleatorio(10, 50);
+			var senial = mousePos.x;
+			escribir([senial], [1]);
+			//console.log('ahora: '+ahora+', señal:'+senial+', espera:'+espera);
+			//console.log(parseInt(leer()[0]));
+			console.log(umbral(500)[0]);
+			setTimeout(recursivo, espera);
+		};
+		
+		recursivo();
+	};
+	
+	//tune: cuánto debe disminuir por cada milisegundo que pasa
+	var escribir = function(nuevo, tune) {
+		var ahora = new Date().getTime();
+		if (actual == null) {
+			actual = nuevo.slice(0);
+		} else {
+			var diff = (ahora - tant);
+			for (var i=0; i<nuevo.length; i++) {
+				var v0 = actual[i];
+				var v1 = nuevo[i];
+				if (v1 > v0) {
+					actual[i] = v1;
+				} else {
+					if (v0 > 0) {
+						var calc = v0-tune[i]*diff;
+						if (calc < 0) {
+							actual[i] = 0;
+						} else {
+							actual[i] = calc;
+						}
+						
+					}
+				}
+			}
+		}
+		tant = ahora;
+	};
+	
+	var leer = function() {
+		return actual;
+	};
+	
+	var umbral = function(th) {
+		var ans = [];
+		for (var i=0; i<actual.length; i++) {
+			ans[i] = actual[i] > th[i];
+		}
+		return ans;
+	};
+	
+	return {
+		'prueba': prueba,
+		'leer': leer,
+		'escribir': escribir,
+		'umbral': umbral,
+	};
+});
+
 var moduloP5 = (function() {
 	
+	var NYQUIST = 22050;
+	var MIP5 = null;
+	
+	var PARAMS = {
+		PBVOL : 0.2,
+		PBFREQ : 2,
+		
+		MINVOL : 0,
+		MAXVOL : 500,
+		
+		MINFREQ : 500,
+		MAXFREQ : 3000,
+		
+		THVOL : 40,
+		THFREQ : 1100,
+	};
+	
 	var mic, recorder, soundFile, analyzer, fft;
-	var state = 0;
+	var state = 0;//0 - parado, 1 - grabando
+	var filtro = moduloFiltro(jQuery);
+	var handlerNuevo = null;
+	
+	var setParams = function(nuevos) {
+		$.extend(true, PARAMS, nuevos);
+	};
+	
+	var getParams = function() {
+		return PARAMS;
+	};
 	
   var sketch = function(p) {
+	  MIP5 = p;
     p.setup = function(){
-      p.createCanvas(710, 400);
+      p.createCanvas(400, 400);
       //p.background(200);
-      p.noFill();
+      //p.noFill();
       // create an audio in
       mic = new p5.AudioIn();
       
@@ -28,97 +170,87 @@ var moduloP5 = (function() {
       fft = new p5.FFT();
       fft.setInput(mic);
 
-      // this sound file will be used to
-      // playback & save the recording
-      soundFile = new p5.SoundFile();
-
-      p.text('keyPress to record', 20, 20);
     }
     
     p.draw = function() {
-    	
-    	  p.background(200);
-    	  p.noFill();
-    	  var spectrum = fft.analyze();
+		var spectrum = fft.analyze();
+		var spectralCentroid = fft.getCentroid();
+		var mean_freq_index = spectralCentroid/(NYQUIST/spectrum.length);
+		var centroidplot = p.map(p.log(mean_freq_index), 0, p.log(spectrum.length), 0, p.width);
+		var rms = 1000*mic.getLevel();
 
-    	  p.beginShape();
-    	  for (var i = 0; i < spectrum.length; i++) {
-    	    p.vertex(i, p.map(spectrum[i], 0, 255, p.height, 0));
-    	  }
-    	  p.endShape();
-    	  
-    	  var nyquist = 22050;
-    	  var spectralCentroid = fft.getCentroid();
-    	  var mean_freq_index = spectralCentroid/(nyquist/spectrum.length);
-
-    	  var centroidplot = p.map(p.log(mean_freq_index), 0, p.log(spectrum.length), 0, p.width);
-    	  
-    	  p.stroke(255,0,0); // the line showing where the centroid is will be red
-
-    	  p.rect(centroidplot, 0, p.width / spectrum.length, p.height)
-    	  p.noStroke();
-    	  p.fill(255,255,255);  // text is white
-    	  p.text("centroid: ", 10, 20);
-    	  p.text(p.round(spectralCentroid)+" Hz", 10, 40);
-    	  
-    	  //var todo = Math.ceil(fft.getEnergy(20, 20000));
-    	  //var voz = Math.ceil(fft.getEnergy(300, 3400));
-    	  // Obtén la amplitud RMS (root mean square)
-    	  var rms = mic.getLevel();
-    	  //var rms = analyzer.getLevel();
-
-    	  p.text("rms: ", 10, 60);
-    	  p.text(100*rms, 10, 80);
-    	  /*
-    	  p.text("todo: ", 10, 60);
-    	  p.text(todo, 10, 80);
-    	  p.text("voz: ", 10, 100);
-    	  p.text(voz, 10, 120);
-    	  */
-      
-
-	  p.fill(127);
-	  p.stroke(0);
-	  // Dibuja una elipse con su tamaño proporcional al volumen
-	  var max = Math.max(p.width, p.height)*1;
-	  p.ellipse(p.width / 2, p.height / 2, 10 + rms * max, 10 + rms * max);
+		filtro.escribir([rms, spectralCentroid], [PARAMS.PBVOL, PARAMS.PBFREQ]);
+		var vectorDebug = filtro.leer();
+		var vector = filtro.umbral([PARAMS.THVOL, PARAMS.THFREQ]);
+		
+		if (state == 0 && vector[0] === true && vector[1] === true) {
+			//Se debe comenzar a grabar
+			console.log('Inicia grabación');
+			soundFile = new p5.SoundFile();
+			recorder.record(soundFile);
+			state = 1;
+		} else if (state == 1 && vector[0] === false && vector[1] === false) {
+			//Debe detener la grabación
+			console.log('Finaliza grabación');
+			recorder.stop();
+			var soundBlob = soundFile.getBlob();
+			if (typeof handlerNuevo == 'function') {
+				handlerNuevo(soundBlob);
+			}
+			state = 0;
+		}
+		
+		p.background(0);
+		p.fill(255,255,255);// text is white
+		
+		p.text("rms: ", 10, 20);
+		p.text(p.round(rms), 10, 40);
+		
+		p.text("centroid: ", 10, 60);
+		p.text(p.round(spectralCentroid)+" Hz", 10, 80);
+		
+		p.text("rms*: ", 10, 100);
+		p.text(p.round(vectorDebug[0]), 10, 120);
+		  
+		p.text("centroid*: ", 10, 140);
+		p.text(p.round(vectorDebug[1]), 10, 160);
+		
+		p.fill(127);
+		p.stroke(0);
+		var max = Math.max(p.width, p.height)*1;
+		
+		var cx = p.map(rms, PARAMS.MINVOL, PARAMS.MAXVOL, 0, p.height);
+		var cy = p.map(spectralCentroid, PARAMS.MINFREQ, PARAMS.MAXFREQ, 0, p.width);
+		
+		var cx2 = p.map(vectorDebug[0], PARAMS.MINVOL, PARAMS.MAXVOL, 0, p.height);
+		var cy2 = p.map(vectorDebug[1], PARAMS.MINFREQ, PARAMS.MAXFREQ, 0, p.width);
+		
+		p.fill(0,0,255);
+		p.ellipse(cx, cy, 10, 10);
+		p.fill(255,0,0);
+		p.ellipse(cx2, cy2, 10, 10);
+		p.fill(0,255,0);
+		p.ellipse(0, cy2, 10, 10);
+		p.ellipse(cx2, 0, 10, 10);
 	  
 	};
-    
-    //p.keyPressed = function() {
-	p.mousePressed = function() {
-    	p.getAudioContext().resume();
-    	
-    	/*
-	  // make sure user enabled the mic
-	  if (state === 0 && mic.enabled) {
-
-	    // record to our p5.SoundFile
-	    recorder.record(soundFile);
-
-	    p.background(255,0,0);
-	    p.text('Recording!', 20, 20);
-	    state++;
-	  } else if (state === 1) {
-	    p.background(0,255,0);
-
-	    // stop recorder and
-	    // send result to soundFile
-	    recorder.stop();
-
-	    p.text('Stopped', 20, 20);
-	    state++;
-	  } else if (state === 2) {
-	    soundFile.play(); // play the result!
-	    //p.saveSound(soundFile, 'mySound.wav');
-	    state++;
-	  }
-	  */
-	}
   };
-  var node = $('<div></div>');
-  new p5(sketch, node[0]);
-  $('body').append(node);
+  
+  //moduloP5.init($('body'));
+  var init = function(padre, handlerLocal) {
+	  handlerNuevo = handlerLocal;
+	  var node = $('<div></div>');
+	  new p5(sketch, node[0]);
+	  padre.append(node);
+	  setTimeout(function() {
+		  node.find('canvas').css({'visibility': 'visible'});
+	  });
+  };
+  
+//moduloP5.activar();
+  var activar = function() {
+	  MIP5.getAudioContext().resume();
+  };
   
   var play = function(blob) {
 	  var url = URL.createObjectURL(blob);
@@ -131,7 +263,11 @@ var moduloP5 = (function() {
   };
   
   return {
+	  'init':init, 
+	  'activar': activar,
 	  'play': play,
+	  'setParams': setParams,
+	  'getParams': getParams,
   };
 })(jQuery);
 
@@ -195,9 +331,15 @@ var moduloSonido = (function($) {
 		return diferido;
 	}
 
-	function createDownloadLink(blob) {
+	function createDownloadLink(blob, esURL) {
 		
-		var url = URL.createObjectURL(blob);
+		var url;
+		if (esURL === true) {
+			url = blob;
+		} else {
+			url = URL.createObjectURL(blob);
+		}
+		
 		var au = document.createElement('audio');
 		var li = document.createElement('li');
 		var link = document.createElement('a');
@@ -212,7 +354,7 @@ var moduloSonido = (function($) {
 		//save to disk link
 		link.href = url;
 		link.download = filename+".wav"; //download forces the browser to donwload the file using the  filename
-		link.innerHTML = "Save to disk";
+		link.innerHTML = "Download";
 
 		//add the new audio element to li
 		li.appendChild(au);
@@ -222,25 +364,6 @@ var moduloSonido = (function($) {
 
 		//add the save to disk link to li
 		li.appendChild(link);
-		
-		//upload link
-		var upload = document.createElement('a');
-		upload.href="#";
-		upload.innerHTML = "Upload";
-		upload.addEventListener("click", function(event){
-			  var xhr=new XMLHttpRequest();
-			  xhr.onload=function(e) {
-			      if(this.readyState === 4) {
-			          console.log("Server returned: ",e.target.responseText);
-			      }
-			  };
-			  var fd=new FormData();
-			  fd.append("audio_data",blob, filename);
-			  xhr.open("POST","upload.php",true);
-			  xhr.send(fd);
-		})
-		li.appendChild(document.createTextNode (" "))//add a space in between
-		li.appendChild(upload)//add the upload link to li
 
 		return li;
 	}
