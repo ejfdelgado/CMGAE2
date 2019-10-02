@@ -111,9 +111,17 @@ app.controller('MainController', function($rootScope, $scope, $state) {
         if (!($scope.metadata.ctx2.archivos instanceof Array)) {
         	$scope.metadata.ctx2.archivos = [];
         }
-        $scope.metadata.ctx2.archivos.push({'url': moduloArchivos.generarUrlDadoId(metadata.id)});
-        $scope.guardarTodo();
-        $scope.$digest();
+        var contenido = {'url': moduloArchivos.generarUrlDadoId(metadata.id)};
+        //Pide el texto!
+        
+		var url = '/storage/voice?';
+		url+='name='+encodeURIComponent(moduloArchivos.darIdDadoUrl(contenido.url).replace(/^\//, ''));
+		moduloHttp.get(url).then(function(voice) {
+			contenido.det = voice;
+	        $scope.metadata.ctx2.archivos.push(contenido);
+	        $scope.guardarTodo();
+	        $scope.$digest();
+		});
       }, function() {
     	  
       });

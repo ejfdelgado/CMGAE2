@@ -57,6 +57,7 @@ def existe(filename):
 
 def darRaizStorage():
     res = '/'+app_identity.get_default_gcs_bucket_name()
+    #res = '/proyeccion-colombia1.appspot.com'
     return res
 
 def read_file_interno(filename):
@@ -210,6 +211,33 @@ def StorageHandler(request, ident, usuario=None):
             renombrar_archivo(response, viejo, nuevo)
         elif (ident == 'guid'):
             response.write(simplejson.dumps({'error':0, 'uid':generarUID()}))
+        elif (ident == 'voice'):
+            from apiclient.discovery import build
+            from oauth2client.client import GoogleCredentials
+            
+            nombre = request.GET.get('name', None)
+            # Add credentials
+            credentials = GoogleCredentials.get_application_default()
+            service = build('speech', 'v1', credentials=credentials)
+    
+            # Methods available in: https://developers.google.com/resources/api-libraries/documentation/speech/v1/python/latest/index.html
+            collection = service.speech()
+    
+            # Build the data structure JSON-like
+            data = {}
+            data['audio'] = {}
+            data['audio']['uri'] = "gs://"+nombre
+            data['config'] = {}
+            #data['config']['encoding'] = '<ENCODING>'
+            data['config']['languageCode'] = 'es-mx'
+            data['config']['enableSeparateRecognitionPerChannel'] = True
+            data['config']['audioChannelCount'] = 2
+            #data['config']['sampleRateHertz'] = <SAMPLE_RATE>
+    
+            # Build the request and execute it
+            request = collection.recognize(body=data)
+            res = request.execute()
+            response.write(simplejson.dumps(res))
         else:
             response.write(simplejson.dumps({'error':0}))
     elif request.method == 'DELETE':

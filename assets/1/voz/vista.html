@@ -2,48 +2,49 @@
   <span>Vista</span>
 </div>
 
-<div class="scrollable">
+<div class="scrollable bootstrapiso">
   <div class="scrollable-content" id="contenido-central" ng-init="inicializar()">
-  	<div id="controlesVoice" class="col-xs-6">
+  	<div id="controlesVoice" class="col-xs-12 col-sm-6">
         <div class="list-group">
           <div class="section">
             <a href="" ng-click="capturar()" class="btn btn-default col-xs-12"><i class="fa fa-eye"></i> Activar</a>
-            <div class="form-group col-xs-6">
+            <div class="form-group col-xs-12 col-sm-6">
               <div class="input-group col-xs-12">
-              	<label>PBVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.PBVOL" min="0.01" max="1" step="0.01" ng-change="asignarParams()">
+              	<label>PBVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.PBVOL" min="0.01" max="1" step="0.01" value="0.2" ng-change="asignarParams()">
               </div>
               <div class="input-group col-xs-12">
-              	<label>PBFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.PBFREQ" min="0.1" max="10" step="0.1" ng-change="asignarParams()">
+              	<label>PBFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.PBFREQ" min="0.1" max="10" step="0.1" value="2" ng-change="asignarParams()">
               </div>
               <div class="input-group col-xs-12">
-              	<label>MINVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MINVOL" min="0" max="1000" step="10" ng-change="asignarParams()">
+              	<label>MINVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MINVOL" min="0" max="1000" step="10" value="0" ng-change="asignarParams()">
               </div>
               <div class="input-group col-xs-12">
-              	<label>MAXVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MAXVOL" min="0" max="1000" step="10" ng-change="asignarParams()">
+              	<label>MAXVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MAXVOL" min="0" max="1000" step="10" value="500" ng-change="asignarParams()">
               </div>
               <div class="input-group col-xs-12">
-              	<label>MINFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MINFREQ" min="100" max="4000" step="10" ng-change="asignarParams()">
+              	<label>MINFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MINFREQ" min="100" max="4000" step="10" value="500" ng-change="asignarParams()">
               </div>
               <div class="input-group col-xs-12">
-              	<label>MAXFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MAXFREQ" min="100" max="4000" step="10" ng-change="asignarParams()">
+              	<label>MAXFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MAXFREQ" min="100" max="4000" step="10" value="3000" ng-change="asignarParams()">
               </div>
               <div class="input-group col-xs-12">
-              	<label>THVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.THVOL" min="0" max="1000" step="10" ng-change="asignarParams()">
+              	<label>THVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.THVOL" min="0" max="1000" step="10" value="40" ng-change="asignarParams()">
               </div>
               <div class="input-group col-xs-12">
-              	<label>THFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.THFREQ" min="100" max="4000" step="10" ng-change="asignarParams()">
+              	<label>THFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.THFREQ" min="100" max="4000" step="10" value="1100" ng-change="asignarParams()">
               </div>
             </div>
-            <div class="form-group col-xs-6">
+            <div class="form-group col-xs-12 col-sm-6">
             	<pre>{{ metadata.ctx2.params | json }}</pre>
             </div>
           </div>
         </div>
   	</div>
-  	<div id="canvasVoice" class="col-xs-6"></div>
+  	<div id="canvasVoice" class="col-xs-12 col-sm-6"></div>
 	<ul class="col-xs-12">
 		<li ng-repeat="miaudio in metadata.ctx2.archivos">
 			<audio controls="" ng-src="{{ miaudio.url }}"></audio>
+			<p>{{ miaudio.det.results[0].alternatives[0].transcript }}</p>
 			<button class="btn btn-danger" type="button" ng-click="borrarAudio(miaudio)"><i class="fa fa-times"></i></button>
 		</li>
 	</ul>

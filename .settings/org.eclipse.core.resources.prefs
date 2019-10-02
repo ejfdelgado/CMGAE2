@@ -50,6 +50,7 @@ encoding//handlers/StorageHandler.py=utf-8
 encoding//handlers/TuplaHandler.py=utf-8
 encoding//handlers/decoradores.py=utf-8
 encoding//handlers/seguridad.py=utf-8
+encoding//lib/httplib2/__init__.py=utf-8
 encoding//templates/1/old/base.html=UTF-8
 encoding//templates/1/opinion=UTF-8
 encoding//templates/1/opinion/a=UTF-8
