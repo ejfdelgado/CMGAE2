@@ -17,8 +17,12 @@ from handlers.respuestas import NoExisteException,\
     NoHayUsuarioException, MalaPeticionException, InesperadoException
 from handlers.seguridad import inyectarUsuario
 from handlers.decoradores import autoRespuestas
+from _io import BytesIO
 
 MAX_TAMANIO_BYTES = 550*1024
+
+#https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/storage/api/crud_object.py
+#https://developers.google.com/resources/api-libraries/documentation/storage/v1/python/latest/storage_v1.objects.html#list_next
 
 def generarRutaSimple(hijo):
     hijo = hijo.replace('\\', '/').strip()
@@ -43,6 +47,7 @@ def existe(filename):
         return None
 
 def darBucketName():
+    #os.environ.get('BUCKET_NAME', app_identity.get_default_gcs_bucket_name())
     return app_identity.get_application_id()+'.appspot.com'
 
 def darRaizStorage():
@@ -102,16 +107,21 @@ def read_file_interno(filename):
     if (metadata is None):
         return None
     
-    req = storage_client.objects().get_media(bucket=darBucketName(), object=generarRutaSimple(filename))
     stream = io.BytesIO()
-    downloader = googleapiclient.http.MediaIoBaseDownload(stream, req)
-    done = False
-    try:
-        while done is False:
-            status, done = downloader.next_chunk()
-    except googleapiclient.errors.HttpError:
-        raise InesperadoException()
+    if (metadata['size'] == '0'):
+        pass
+    else:
+        req = storage_client.objects().get_media(bucket=darBucketName(), object=generarRutaSimple(filename))
+        downloader = googleapiclient.http.MediaIoBaseDownload(stream, req)
+        done = False
+        try:
+            while done is False:
+                status, done = downloader.next_chunk()
+        except googleapiclient.errors.HttpError:
+            raise InesperadoException()
+        
     temp = stream.getvalue()
+    
     return {'bin':temp, 'meta':metadata}
 
 def read_file(filename):
@@ -171,10 +181,11 @@ def generarUID():
     return str(uuid.uuid4())
 
 def general(response):
-    bucket_name = os.environ.get('BUCKET_NAME', app_identity.get_default_gcs_bucket_name())
+    bucket_name = darBucketName()
     response.write(simplejson.dumps({
                                      'error':0, 
                                      'content': 'Using bucket name: ' + bucket_name + '\n\n',
+                                     'os': os.environ.get('BUCKET_NAME', app_identity.get_default_gcs_bucket_name()),
                                      'other':'Demo GCS Application running from Version: {}\n'.format(os.environ['CURRENT_VERSION_ID'])
                                      }))
 
@@ -186,12 +197,34 @@ def darNombreNodo(ruta):
     return nombreNodo
 
 def renombrar_archivo(response, viejo, nuevo):
+    
+    import googleapiclient.http
+    from apiclient.discovery import build
+    from oauth2client.client import GoogleCredentials
+    
+    credentials = GoogleCredentials.get_application_default()
+    storage_client = build('storage', 'v1', credentials=credentials)
+    
+    body = {
+            
+    }
+    
+    req1 = storage_client.objects().copy(
+                                          sourceBucket=darBucketName(),
+                                          destinationBucket=darBucketName(), 
+                                          sourceObject=generarRutaSimple(viejo),
+                                          destinationObject=generarRutaSimple(nuevo),
+                                          body=body,
+                                          destinationPredefinedAcl='publicRead',
+                                          )
+    req2 = storage_client.objects().delete(bucket=darBucketName(), object=generarRutaSimple(viejo))
     try:
-        gcs.copy2(darRaizStorage()+viejo, darRaizStorage()+nuevo, {'x-goog-acl':'public-read'})
-        gcs.delete(darRaizStorage()+viejo)
+        req1.execute()
+        req2.execute()
         response.write(simplejson.dumps({'error':0}))
     except:
-        raise NoExisteException()#Aca puede ser otro error
+        #Aca puede ser otro error
+        raise NoExisteException()
 
 def nodosJsTree(lista, excepto=None):
     nueva = []
@@ -219,11 +252,24 @@ def nodosJsTree(lista, excepto=None):
     return nueva
 
 def delete_files(response, filename):
-    try:
-        gcs.delete(darRaizStorage()+filename)
-        response.write(simplejson.dumps({'error':0}))
-    except gcs.NotFoundError:
+    import googleapiclient.http
+    from apiclient.discovery import build
+    from oauth2client.client import GoogleCredentials
+    
+    credentials = GoogleCredentials.get_application_default()
+    storage_client = build('storage', 'v1', credentials=credentials)
+    
+    metadata = get_metadata_base(filename)
+    
+    if (metadata is None):
         raise NoExisteException()
+    
+    req = storage_client.objects().delete(bucket=darBucketName(), object=generarRutaSimple(filename))
+    try:
+        req.execute()
+    except googleapiclient.errors.HttpError:
+        raise InesperadoException()
+    response.write(simplejson.dumps({'error':0}))
 
 def usuario_es_dueno(usuario, ruta):
     if (usuario is None):
@@ -280,14 +326,6 @@ def StorageHandler(request, ident, usuario=None):
         elif (ident == 'meta'):
             nombre = request.GET.get('name', None)
             response = get_metadata(nombre)
-        elif (ident == 'mylist'):
-            ruta = request.GET.get('id', '/')
-            tamanio = int(request.GET.get('tamanio', None))
-            ultimo = request.GET.get('ultimo', None)
-            milista = list_bucket2(ruta, tamanio, ultimo)
-            response = HttpResponse("", content_type='application/json')
-            response.write(simplejson.dumps(milista))
-            return response
         elif (ident == 'miruta'):
             if (usuario is not None):
                 response.write(simplejson.dumps({'error':0, 'url': usuario.darURLStorage()}))
@@ -357,32 +395,50 @@ def StorageHandler(request, ident, usuario=None):
             raise MalaPeticionException()
         uploaded_file_type = archivo.content_type
         auto = request.POST.get('auto', 'true')
+        
+        import googleapiclient.http
+        from apiclient.discovery import build
+        from oauth2client.client import GoogleCredentials
+        
+        credentials = GoogleCredentials.get_application_default()
+        storage_client = build('storage', 'v1', credentials=credentials)
+        
         if (auto == 'true'):
             #Genera nombres automáticamente usando generarUID
             #Implica que cda versión tiene un nombre diferente
             #Puede que se borre siempre la versión anterior, depende de la bandera no-borrar
             if (not nombreAnterior is None and request.POST.get('no-borrar', None) is None):
                 try:
-                    nombreAnterior = darRaizStorage()+nombreAnterior
-                    gcs.delete(nombreAnterior)
+                    req2 = storage_client.objects().delete(bucket=darBucketName(), object=generarRutaSimple(nombreAnterior))
+                    req2.execute()
                 except:
                     pass
-            nombre = darRaizStorage()+carpeta+'/'+generarUID()+'-'+uploaded_file_filename
+            nombre = carpeta+'/'+generarUID()+'-'+uploaded_file_filename
         else:
             #Usa el nombre actual del archivo
             if (nombreAnterior is None):
                 nombreAnterior = carpeta+'/'+uploaded_file_filename
-            nombre = darRaizStorage()+nombreAnterior
-        write_retry_params = gcs.RetryParams(backoff_factor=1.1)
-        gcs_file = gcs.open(nombre,
-                          'w',
-                          content_type=uploaded_file_type,
-                          options={
-                                   'x-goog-meta-mime': uploaded_file_type,
-                                   'x-goog-acl':'public-read'
-                                   },
-                          retry_params=write_retry_params)
-        gcs_file.write(uploaded_file_content)
-        gcs_file.close()
+            nombre = nombreAnterior
+        
+        body = {
+            'name': generarRutaSimple(nombre),
+            'mimeType': uploaded_file_type,
+            'metadata': {
+                         'mime': uploaded_file_type,
+                         }
+        }
+        fd = BytesIO(uploaded_file_content)
+        
+        req = storage_client.objects().insert(
+                                              bucket=darBucketName(), 
+                                              body=body,
+                                              media_body=googleapiclient.http.MediaIoBaseUpload(fd, uploaded_file_type),
+                                              predefinedAcl='publicRead',
+                                              )
+        try:
+            req.execute()
+        except googleapiclient.errors.HttpError:
+            raise InesperadoException()
         response.write(simplejson.dumps({'error':0, 'id':nombre, 'tamanio': tamanio}))
+        
     return response
