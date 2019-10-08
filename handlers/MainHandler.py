@@ -71,7 +71,8 @@ def leerRuta(ruta):
     if (ubicacion == 0):
         return None
     elif (ubicacion == 1):
-        return StorageHandler.read_file_interno(StorageHandler.generarRuta('/public', ruta))
+        temporal = StorageHandler.read_file_interno(StorageHandler.generarRuta('/public', ruta))
+        return temporal['bin']
     elif (ubicacion == 2):
         completo = ''
         for words in open(os.path.join(TEMPLATE_DIRS[0], ruta), 'r').readlines():

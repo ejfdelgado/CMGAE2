@@ -385,12 +385,16 @@ var moduloArbolArchivos = (function(elem, elemEditor) {
     		for (var i=0; i<lista.length; i++) {
     			bufferHijos.push(lista[i]);
     		}
-    		if (lista.length == 0 || lista.length < MAX_TAM) {
+    		var ultimo = null;
+    		if (lista.length > 0) {
+    			ultimo = lista[lista.length-1].next;
+    		}
+    		
+    		if (lista.length == 0 || lista.length < MAX_TAM || [null, undefined, ''].indexOf(ultimo) >= 0) {
     			diferido.resolve(bufferHijos);
     		} else {
 	    		//Vuelve a iterar
 	    		setTimeout(function() {
-	    			var ultimo = lista[lista.length-1].id;
 	    			moduloHttp.get('/storage/jstreelist', false, {'id':id, 'tamanio': MAX_TAM, 'ultimo': ultimo}).then(funcionRecursiva);
 	    		}, 0);
 	    	}

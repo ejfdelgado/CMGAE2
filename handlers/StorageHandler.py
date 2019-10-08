@@ -2,6 +2,7 @@
 from __future__ import with_statement
 
 import os
+import io
 import re
 import uuid
 import logging
@@ -13,11 +14,17 @@ from cloudstorage.errors import NotFoundError
 from google.appengine.api import app_identity
 from handlers.respuestas import NoExisteException,\
     ParametrosIncompletosException, NoAutorizadoException, \
-    NoHayUsuarioException, MalaPeticionException
+    NoHayUsuarioException, MalaPeticionException, InesperadoException
 from handlers.seguridad import inyectarUsuario
 from handlers.decoradores import autoRespuestas
 
 MAX_TAMANIO_BYTES = 550*1024
+
+def generarRutaSimple(hijo):
+    hijo = hijo.replace('\\', '/').strip()
+    if (hijo.startswith('/')):
+        hijo = hijo[1:]
+    return hijo
 
 def generarRuta(papa, hijo):
     papa = papa.replace('\\', '/').strip()
@@ -29,71 +36,136 @@ def generarRuta(papa, hijo):
         hijo = '/'+hijo
     return papa+hijo
 
-def transformarRegistroDeArchivo(registro, raiz):
-    res = {}
-    if (raiz is None):
-        raiz = darRaizStorage()
-    res['filename'] = registro.filename[len(raiz):]
-    
-    if (registro.is_dir):
-        res['esDir'] = True
-        res['mime'] = None
-    else:
-        res['esDir'] = False
-        res['tamanio'] = registro.st_size
-        res['mime'] = registro.content_type
-        res['metadata'] = registro.metadata
-        res['fecha'] = registro.st_ctime
-    return res
-
 def existe(filename):
-    metadata = None
-    completo = generarRuta(darRaizStorage(), filename)
     try:
-        metadata = transformarRegistroDeArchivo(gcs.stat(completo), darRaizStorage())
-    except(NotFoundError):
-        metadata = None
-    return metadata
+        return get_metadata(filename)
+    except NoExisteException:
+        return None
+
+def darBucketName():
+    return app_identity.get_application_id()+'.appspot.com'
 
 def darRaizStorage():
     res = '/'+app_identity.get_default_gcs_bucket_name()
     #res = '/proyeccion-colombia1.appspot.com'
     return res
 
-def read_file_interno(filename):
-    completo = generarRuta(darRaizStorage(), filename)
-    if (not existe(filename)):
-        return None
-    with gcs.open(completo) as cloudstorage_file:
-        temp = cloudstorage_file.read()
-        return temp
-    
-def read_file(filename):
-    completo = generarRuta(darRaizStorage(), filename)
+def list_buckets():
     try:
-        metadata = gcs.stat(completo)
-        mime = (metadata.content_type if metadata.content_type is not None else (metadata.mime if metadata.mime is not None else 'text/plain'))
-        with gcs.open(completo) as cloudstorage_file:
-            temp = cloudstorage_file.read()
-            response = HttpResponse(temp, content_type=mime, status=200)
-            return response
+        from apiclient.discovery import build
+        from oauth2client.client import GoogleCredentials
+        credentials = GoogleCredentials.get_application_default()
+        storage_client = build('storage', 'v1', credentials=credentials)
+        buckets = storage_client.buckets().list(project=app_identity.get_application_id()).execute()
+        response = HttpResponse("", content_type='application/json')
+        response.write(simplejson.dumps({'error':0, 'buckets': buckets}))
+        return response
     except NotFoundError:
+        raise MalaPeticionException()
+
+def get_metadata_base(filename):
+    import googleapiclient.http
+    from apiclient.discovery import build
+    from oauth2client.client import GoogleCredentials
+    
+    credentials = GoogleCredentials.get_application_default()
+    storage_client = build('storage', 'v1', credentials=credentials)
+    
+    try:
+        respuesta = storage_client.objects().get(bucket=darBucketName(), object=generarRutaSimple(filename)).execute()
+    except googleapiclient.errors.HttpError as error:
+        if (error.resp.status == 404):
+            return None
+        else:
+            raise InesperadoException()
+    return respuesta
+
+def get_metadata(filename):
+    respuesta = get_metadata_base(filename)
+    if (respuesta is None):
+        raise NoExisteException()
+    response = HttpResponse("", content_type='application/json')
+    response.write(simplejson.dumps({'error':0, 'metadata': respuesta}))
+    return response
+        
+
+def read_file_interno(filename):
+    import googleapiclient.http
+    from apiclient.discovery import build
+    from oauth2client.client import GoogleCredentials
+    
+    credentials = GoogleCredentials.get_application_default()
+    storage_client = build('storage', 'v1', credentials=credentials)
+    
+    metadata = get_metadata_base(filename)
+    
+    if (metadata is None):
+        return None
+    
+    req = storage_client.objects().get_media(bucket=darBucketName(), object=generarRutaSimple(filename))
+    stream = io.BytesIO()
+    downloader = googleapiclient.http.MediaIoBaseDownload(stream, req)
+    done = False
+    try:
+        while done is False:
+            status, done = downloader.next_chunk()
+    except googleapiclient.errors.HttpError:
+        raise InesperadoException()
+    temp = stream.getvalue()
+    return {'bin':temp, 'meta':metadata}
+
+def read_file(filename):
+    temp = read_file_interno(filename)
+    if (temp is None):
         raise NoExisteException()
 
-def list_bucket(ruta, tamanio, ultimo, delimiter="/"):
-    raiz = darRaizStorage()
-    rutaCompleta = raiz + ruta
-    ans = []
+    response = HttpResponse(temp['bin'], content_type=temp['meta']['metadata']['mime'], status=200)
+    return response
+
+def list_bucket2(ruta, tamanio, ultimo, delimiter="/"):
+    import googleapiclient.http
+    from apiclient.discovery import build
+    from oauth2client.client import GoogleCredentials
+    
     if (tamanio is None):
         tamanio = 10
     else:
         tamanio = int(tamanio)
-    if (ultimo is not None):
-        ultimo = raiz + ultimo
-    stats = gcs.listbucket(rutaCompleta, max_keys=tamanio, delimiter=delimiter, marker=ultimo)
-    for stat in stats:
-        ans.append(transformarRegistroDeArchivo(stat, raiz))
-    return ans;
+    
+    credentials = GoogleCredentials.get_application_default()
+    storage_client = build('storage', 'v1', credentials=credentials)
+    respuesta = storage_client.objects().list(bucket=darBucketName(), delimiter=delimiter, maxResults=tamanio, pageToken=ultimo, prefix=generarRutaSimple(ruta)).execute()
+    
+    nueva = []
+    
+    #itero las carpetas
+    if ('prefixes' in respuesta):
+        for carpeta in respuesta['prefixes']:
+            nuevo = {
+                     'esDir':True,
+                     'mime':None,
+                     'filename':'/'+carpeta,
+                     }
+            nueva.append(nuevo)
+    #itero los archivos
+    if ('items' in respuesta):
+        for archivo in respuesta['items']:
+            nuevo = {
+                     'filename':'/'+archivo['name'],
+                     'esDir':False,
+                     'metadata':archivo['metadata'],
+                     'mime':archivo['metadata']['mime'],
+                     'tamanio':archivo['size'],
+                     'fecha':archivo['timeCreated'],
+                     }
+            nueva.append(nuevo)
+    
+    if (len(nueva) > 0):
+        if ('nextPageToken' in respuesta):
+            nueva[len(nueva)-1]['next'] = respuesta['nextPageToken']
+        else:
+            nueva[len(nueva)-1]['next'] = None
+    return nueva
 
 def generarUID():
     return str(uuid.uuid4())
@@ -123,6 +195,7 @@ def renombrar_archivo(response, viejo, nuevo):
 
 def nodosJsTree(lista, excepto=None):
     nueva = []
+    lastToken = None
     for nodo in lista:
         nuevo = {
                  'id':nodo['filename'],
@@ -131,12 +204,18 @@ def nodosJsTree(lista, excepto=None):
                  'mime':nodo['mime'],
                  'type':'folder' if nodo['esDir'] else 'file'
                  }
+        if ('next' in nodo):
+            lastToken = nodo['next']
         if (excepto is None):
             nueva.append(nuevo)
         else:
             if (not nuevo['id'] == excepto):
                 nueva.append(nuevo)
-            
+    
+    #Si esta lista da vacía no hay manera de responder con el token!
+    if (len(nueva) > 0):
+        nueva[len(nueva) - 1]['next'] = lastToken
+    
     return nueva
 
 def delete_files(response, filename):
@@ -172,14 +251,14 @@ def StorageHandler(request, ident, usuario=None):
             tamanio = int(request.GET.get('tamanio', None))
             ultimo = request.GET.get('ultimo', None)
             if (ruta == '#'):
-                ans = list_bucket('', tamanio, ultimo)
+                ans = list_bucket2('', tamanio, ultimo)
                 nombreNodo = darNombreNodo(ruta)
                 nodo = [{'text': nombreNodo, 'id': ruta, 'children': nodosJsTree(ans)}]
                 if (len(ans) > 0):
                     nodo[0]['type'] = 'folder'
                 response.write(simplejson.dumps(nodo))
             elif (usuario_es_dueno(usuario, ruta)):
-                ans = list_bucket(ruta, tamanio, ultimo)
+                ans = list_bucket2(ruta, tamanio, ultimo)
                 response.write(simplejson.dumps(nodosJsTree(ans, ruta)))
             elif (ruta == '/usr/'):
                 response.write(simplejson.dumps([{'text': usuario.proveedor, 'id': '/usr/'+usuario.proveedor+'/', 'children': True}]))
@@ -198,6 +277,17 @@ def StorageHandler(request, ident, usuario=None):
         elif (ident == 'read'):
             nombre = request.GET.get('name', None)
             response = read_file(nombre)
+        elif (ident == 'meta'):
+            nombre = request.GET.get('name', None)
+            response = get_metadata(nombre)
+        elif (ident == 'mylist'):
+            ruta = request.GET.get('id', '/')
+            tamanio = int(request.GET.get('tamanio', None))
+            ultimo = request.GET.get('ultimo', None)
+            milista = list_bucket2(ruta, tamanio, ultimo)
+            response = HttpResponse("", content_type='application/json')
+            response.write(simplejson.dumps(milista))
+            return response
         elif (ident == 'miruta'):
             if (usuario is not None):
                 response.write(simplejson.dumps({'error':0, 'url': usuario.darURLStorage()}))

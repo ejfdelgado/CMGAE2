@@ -22,6 +22,9 @@ class ParametrosIncompletosException(Exception):
 class NoExisteException(Exception):
     pass
 
+class InesperadoException(Exception):
+    pass
+
 class RespuestaNoHayUsuario(HttpResponse):
     def __init__(self):
         super(RespuestaNoHayUsuario, self).__init__(simplejson.dumps({'error':403, 'msg':'Se requiere usuario logeado'}),'application/json')
@@ -46,3 +49,8 @@ class RespuestaNoExiste(HttpResponse):
     def __init__(self):
         super(RespuestaNoExiste, self).__init__(simplejson.dumps({'error':204, 'msg':'No existe'}),'application/json')
         self.status_code = 204
+        
+class RespuestaInesperado(HttpResponse):
+    def __init__(self):
+        super(RespuestaInesperado, self).__init__(simplejson.dumps({'error':500, 'msg':'Error inesperado'}),'application/json')
+        self.status_code = 500        
