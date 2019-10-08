@@ -26,6 +26,11 @@ def generarRutaSimple(hijo):
     hijo = hijo.replace('\\', '/').strip()
     if (hijo.startswith('/')):
         hijo = hijo[1:]
+        
+    prefijo = darBucketName()+'/'
+    if (hijo.startswith(prefijo)):
+        hijo = hijo[len(prefijo):]
+    
     return hijo
 
 def generarRuta(papa, hijo):
@@ -49,9 +54,8 @@ def darBucketName():
     return app_identity.get_application_id()+'.appspot.com'
 
 def darRaizStorage():
-    res = '/'+app_identity.get_default_gcs_bucket_name()
-    #res = '/proyeccion-colombia1.appspot.com'
-    return res
+    #res = '/'+app_identity.get_default_gcs_bucket_name()
+    return '/'+darBucketName()
 
 def list_buckets():
     try:
@@ -341,7 +345,7 @@ def StorageHandler(request, ident, usuario=None):
             from apiclient.discovery import build
             from oauth2client.client import GoogleCredentials
             
-            nombre = request.GET.get('name', None)
+            nombre = generarRutaSimple(request.GET.get('name', None))
             # Add credentials
             credentials = GoogleCredentials.get_application_default()
             service = build('speech', 'v1', credentials=credentials)
@@ -352,7 +356,7 @@ def StorageHandler(request, ident, usuario=None):
             # Build the data structure JSON-like
             data = {}
             data['audio'] = {}
-            data['audio']['uri'] = "gs://"+nombre
+            data['audio']['uri'] = "gs://"+darBucketName()+'/'+nombre
             data['config'] = {}
             #data['config']['encoding'] = '<ENCODING>'
             data['config']['languageCode'] = 'es-mx'

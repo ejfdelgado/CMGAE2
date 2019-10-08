@@ -115,7 +115,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
         //Pide el texto!
         
 		var url = '/storage/voice?';
-		url+='name='+encodeURIComponent(moduloArchivos.darIdDadoUrl(contenido.url).replace(/^\//, ''));
+		url+=$.param({'name': metadata.id});
 		moduloHttp.get(url).then(function(voice) {
 			contenido.det = voice;
 	        $scope.metadata.ctx2.archivos.push(contenido);

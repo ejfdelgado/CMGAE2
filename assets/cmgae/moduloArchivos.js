@@ -224,11 +224,7 @@ var moduloArchivos = (function() {
 			poner = false;
 		}
 		var prefijo = null;
-		if (moduloApp.esProduccion()) {
-			prefijo = moduloApp.darRaizCloudStorage();
-		} else {
-			prefijo = PREFIJO_LOCAL;
-		}
+		prefijo = moduloApp.darRaizCloudStorage();
 		if (poner === true) {
 			if (!unId.startsWith(prefijo)) {
 				unId = prefijo+unId;
