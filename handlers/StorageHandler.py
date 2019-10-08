@@ -9,8 +9,6 @@ import logging
 
 from django.utils import simplejson
 from django.http import HttpResponse
-import cloudstorage as gcs
-from cloudstorage.errors import NotFoundError
 from google.appengine.api import app_identity
 from handlers.respuestas import NoExisteException,\
     ParametrosIncompletosException, NoAutorizadoException, \
