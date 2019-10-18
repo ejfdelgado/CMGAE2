@@ -1,5 +1,19 @@
 <script type="text/javascript">
 
+
+  /*
+  VAD:
+  https://pulakk.github.io/Live-Audio-MFCC/tutorial
+  https://meyda.js.org/audio-features.html
+
+  contenteditable:
+  https://codepen.io/meiriko/pen/zGoKoO
+  */
+
+var esTxtVacio = function(val) {
+  return ((typeof val == 'string' && val.trim().length == 0) || val == null);
+};
+
   var moduloIntMarkInst = moduloIntMark({
     'masterLoged': true,
     'masterIdUsr': true,
@@ -31,6 +45,132 @@
     window.$transform = $transform;
   });
 
+app.directive("contenteditable", function () {
+        return {
+            restrict: "A",
+            require: "ngModel",
+            link: function (scope, element, attrs, ngModel) {
+                // read is the main handler, invoked here by the blur event
+                function read() {
+                    // Keep the newline value for substitutin
+                    // when cleaning the <br>
+                    //var newLine = String.fromCharCode(10);
+                    // Firefox adds a <br> for each new line, we replace it back
+                    // to a regular '\n'
+                    //var formattedValue = element.html().replace(/<br>/ig,newLine).replace(/\r/ig,'');
+                    var formattedValue = element.text();
+                    // update the model
+                    ngModel.$setViewValue(formattedValue);
+                    // Set the formated (cleaned) value back into
+                    // the element's html.
+                    element.text(formattedValue);
+                }
+
+                ngModel.$render = function () {
+                    var datoFinal = ngModel.$viewValue || "";
+                    element.html(datoFinal);
+                };
+
+                element.bind("blur", function () {
+                    // update the model when
+                    // we loose focus
+                    scope.$apply(read);
+                });
+                element.bind("paste", function(e){
+                    // This is a tricky one
+                    // when copying values while
+                    // editing, the value might be
+                    // copied with formatting, for example
+                    // <span style="line-height: 20px">copied text</span>
+                    // to overcome this, we replace
+                    // the default behavior and
+                    // insert only the plain text
+                    // that's in the clipboard
+                    e.preventDefault();
+                    document.execCommand('inserttext', false, e.clipboardData.getData('text/plain'));
+                });
+            }
+        };
+    });
+
+app.directive("directvozmichart", function () {
+        return {
+            restrict: "C",
+            require: "ngModel",
+            link: function (scope, element, attrs, ngModel) {
+
+                ngModel.$render = function () {
+                    console.log('directvozmichart', JSON.stringify(ngModel.$viewValue), element);
+                    var miModelo = ngModel.$viewValue;
+
+                    var opciones = miModelo.opciones;
+                    var llavesOpciones = Object.keys(opciones);
+                    var COLORES = [];
+                    var LABELS = [];
+                    for (var i=0; i<llavesOpciones.length; i++) {
+                      var llaveOpcion = llavesOpciones[i];
+                      var unaOpcion = opciones[llaveOpcion];
+                      COLORES.push(unaOpcion.rgb);
+                      LABELS.push('');
+                    }
+
+                    var horizontalBarChartData = {
+                        labels: LABELS,
+                        datasets: [{
+                          label: '',
+                          backgroundColor: COLORES,
+                          borderColor: COLORES,
+                          borderWidth: 1,
+                          data: miModelo.resultado.data,
+                        }]
+                      };
+                    var config = {
+                      indexLabelFontSize: 20,
+                      type: 'bar',
+                      data: horizontalBarChartData,
+                      options: {
+                        // Elements options apply to all of the options unless overridden in a dataset
+                        // In this case, we are setting the border of each horizontal bar to be 2px wide
+                        elements: {
+                          rectangle: {
+                            borderWidth: 2,
+                          }
+                        },
+                        responsive: true,
+                        title: {
+                          display: false,
+                        },
+                        aspectRatio: 2,
+                        scales: {
+                          xAxes: [{
+                            display: true,
+                            ticks: {
+                              beginAtZero: true,
+                              max: 100,
+                              fontSize: 20,
+                            },
+                          }],
+                          yAxes: [{
+                            display: true,
+                            ticks: {
+                              beginAtZero: true,
+                              max: 100,
+                            },
+                          }]
+                        },
+                        legend: {
+                          display: false,
+                        },
+                      }
+                    };
+                    var ctx = element[0].getContext('2d');
+                    var miDona = new Chart(ctx, config);
+
+                };
+            }
+        };
+    });
+
 app.controller('MainController', function($rootScope, $scope, $state) {
 	
   $scope.temporal = {
@@ -38,9 +178,89 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 	'rta': [],
     'next': null,
   };
+  var tiempo = 1571283165065;
   $scope.metadata = {
     'ctx2': {
-    	
+    	'per': {
+        'dfd233': {
+          'img': 'https://secure.gravatar.com/avatar/9982dd706c21c5e1bf1af97b41d39e32?s=200&d=identicon',
+        },
+    	},
+    	'hist': [
+        {
+          'tit': '15 de febrero del 2019 08:16pm',
+          'res': [{'txt': 'Este es mi resumen', 'usr': 'admin','t': tiempo++}],
+          'odd': true,
+          'det': [
+    	      {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+          ],
+          'tipo': 'voz',
+          'modo': 'voz',
+        },
+        {
+          'final': true,
+          'det': [
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+          ],
+          'tipo': 'voz',
+          'modo': 'voz',
+        },
+        {
+          'tit': '15 de febrero del 2019 08:16pm',
+          'res': [{'txt': 'Este es mi resumen', 'usr': 'admin','t': tiempo++}],
+          'odd': false,
+          'det': [
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+          ],
+          'tipo': 'voz',
+          'modo': 'voz',
+          'final': true,
+        },
+        {
+          'tit': '15 de febrero del 2019 08:16pm',
+          'res': [{'txt': '', 'usr': 'admin','t': tiempo++}],
+          'odd': true,
+          'det': [
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
+          ],
+          'tipo': 'chart',
+          'modo': 'chart',
+          'chart': {
+            'pregunta': '¿Qué vamos a hacer con el ascensor?',
+            'opciones': {
+              'sfg3245d': {'txt':'Comprar nuevo ascensor', 'rgb': 'red'},
+              'afg3245e': {'txt':'Arreglar el actual ascensor', 'rgb': 'blue'},
+            },
+            'resultado': {
+              'data': [40, 60],
+            },
+          },
+        },
+    	],
     },
     'principal': {
       'uid': null,
@@ -130,7 +350,10 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   
   $scope.capturar = function() {
 	diferidoDatos.then(function() {
-		moduloP5.init($('#canvasVoice'), $scope.handlerNuevoSonido);
+    //$scope.handlerNuevoSonido
+		moduloP5.init($('#canvasVoice'), function() {
+      console.log('handlerLocal')
+    });
 		moduloP5.activar();
 	});
   };
@@ -213,6 +436,64 @@ app.controller('MainController', function($rootScope, $scope, $state) {
         }
       });
     });
+  };
+
+  $scope.esTxt = function(val) {
+    return (typeof val == 'string');
+  };
+
+  $scope.esTxtVacio = function(val) {
+    return ((typeof val == 'string' && val.trim().length == 0) || val == null);
+  }
+
+  $scope.clickResumen = function(event) {
+    var dx = event.originalEvent.offsetX;
+    var dy = event.originalEvent.offsetY;
+    if (dx > 11 && dx <24 && dy > 13 && dy < 26) {
+      $(event.currentTarget).toggleClass('cerrado');
+    }
+  };
+
+  $scope.clickVerso = function(dato, acc) {
+    console.log(acc, JSON.stringify(dato));
+  };
+
+  $scope.toggleModo = function(verso) {
+    var MODOS_TIPO = {
+      'voz': ['voz'],
+      'chart': ['chart', 'voz'],
+    };
+    var modos = MODOS_TIPO[verso.tipo];
+    if (modos instanceof Array) {
+      var indice = (modos.indexOf(verso.modo));
+      indice++;
+      if (indice >= modos.length) {
+        indice = 0;
+      }
+      verso.modo = modos[indice];
+      setTimeout(function() {
+        $scope.$digest();
+      });
+    }
+  };
+
+  $scope.agregarOpcion = function(verso) {
+    if (!(typeof verso.chart.opciones == 'object')) {
+      verso.chart.opciones = {};
+    }
+    
+    modIdGen.nuevo().then(function(id) {
+      verso.chart.opciones[id] = {
+        'rgb': 'red',
+        'txt': 'Opción',
+      };
+      //Acá se debe ajustar el color de todas las opciones
+      $scope.$digest();
+    });
+  };
+
+  $scope.borrarOpcion = function(llave, lista) {
+    lista[llave] = undefined;
   };
 
 });

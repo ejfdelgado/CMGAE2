@@ -7,6 +7,10 @@ import re
 import uuid
 import logging
 
+from apiclient.discovery import build
+from oauth2client.client import GoogleCredentials
+import googleapiclient.http
+        
 from django.utils import simplejson
 from django.http import HttpResponse
 from google.appengine.api import app_identity
@@ -57,12 +61,14 @@ def darRaizStorage():
     #res = '/'+app_identity.get_default_gcs_bucket_name()
     return '/'+darBucketName()
 
+def darCliente():
+    credentials = GoogleCredentials.get_application_default()
+    storage_client = build('storage', 'v1', credentials=credentials)
+    return storage_client
+
 def list_buckets():
     try:
-        from apiclient.discovery import build
-        from oauth2client.client import GoogleCredentials
-        credentials = GoogleCredentials.get_application_default()
-        storage_client = build('storage', 'v1', credentials=credentials)
+        storage_client = darCliente()
         buckets = storage_client.buckets().list(project=app_identity.get_application_id()).execute()
         response = HttpResponse("", content_type='application/json')
         response.write(simplejson.dumps({'error':0, 'buckets': buckets}))
@@ -71,12 +77,8 @@ def list_buckets():
         raise MalaPeticionException()
 
 def get_metadata_base(filename):
-    import googleapiclient.http
-    from apiclient.discovery import build
-    from oauth2client.client import GoogleCredentials
     
-    credentials = GoogleCredentials.get_application_default()
-    storage_client = build('storage', 'v1', credentials=credentials)
+    storage_client = darCliente()
     
     try:
         respuesta = storage_client.objects().get(bucket=darBucketName(), object=generarRutaSimple(filename)).execute()
@@ -97,12 +99,8 @@ def get_metadata(filename):
         
 
 def read_file_interno(filename):
-    import googleapiclient.http
-    from apiclient.discovery import build
-    from oauth2client.client import GoogleCredentials
     
-    credentials = GoogleCredentials.get_application_default()
-    storage_client = build('storage', 'v1', credentials=credentials)
+    storage_client = darCliente()
     
     metadata = get_metadata_base(filename)
     
@@ -135,17 +133,13 @@ def read_file(filename):
     return response
 
 def list_bucket2(ruta, tamanio, ultimo, delimiter="/"):
-    import googleapiclient.http
-    from apiclient.discovery import build
-    from oauth2client.client import GoogleCredentials
     
     if (tamanio is None):
         tamanio = 10
     else:
         tamanio = int(tamanio)
     
-    credentials = GoogleCredentials.get_application_default()
-    storage_client = build('storage', 'v1', credentials=credentials)
+    storage_client = darCliente()
     respuesta = storage_client.objects().list(bucket=darBucketName(), delimiter=delimiter, maxResults=tamanio, pageToken=ultimo, prefix=generarRutaSimple(ruta)).execute()
     
     nueva = []
@@ -200,12 +194,7 @@ def darNombreNodo(ruta):
 
 def renombrar_archivo(response, viejo, nuevo):
     
-    import googleapiclient.http
-    from apiclient.discovery import build
-    from oauth2client.client import GoogleCredentials
-    
-    credentials = GoogleCredentials.get_application_default()
-    storage_client = build('storage', 'v1', credentials=credentials)
+    storage_client = darCliente()
     
     body = {
             
@@ -254,12 +243,8 @@ def nodosJsTree(lista, excepto=None):
     return nueva
 
 def delete_files(response, filename):
-    import googleapiclient.http
-    from apiclient.discovery import build
-    from oauth2client.client import GoogleCredentials
     
-    credentials = GoogleCredentials.get_application_default()
-    storage_client = build('storage', 'v1', credentials=credentials)
+    storage_client = darCliente()
     
     metadata = get_metadata_base(filename)
     
@@ -342,8 +327,6 @@ def StorageHandler(request, ident, usuario=None):
         elif (ident == 'guid'):
             response.write(simplejson.dumps({'error':0, 'uid':generarUID()}))
         elif (ident == 'voice'):
-            from apiclient.discovery import build
-            from oauth2client.client import GoogleCredentials
             
             nombre = generarRutaSimple(request.GET.get('name', None))
             # Add credentials
@@ -366,6 +349,35 @@ def StorageHandler(request, ident, usuario=None):
     
             # Build the request and execute it
             request = collection.recognize(body=data)
+            res = request.execute()
+            response.write(simplejson.dumps(res))
+        elif (ident == 'text'):
+            
+            nombre = generarRutaSimple(request.GET.get('name', None))
+            # Add credentials
+            credentials = GoogleCredentials.get_application_default()
+            service = build('images', 'v1', credentials=credentials)
+    
+            # Methods available in: https://cloud.google.com/vision/docs/reference/rest/v1/images/annotate
+            collection = service.images()
+    
+            # Build the data structure JSON-like
+            data = {}
+            data['image'] = {}
+            data['image']['source'] = {}
+            data['image']['source']['imageUri'] = "gs://"+darBucketName()+'/'+nombre
+            
+            data['features'] = []
+            data['features'][0] = {}
+            data['features'][0]['maxResults'] = 50
+            data['features'][0]['type'] = 'DOCUMENT_TEXT_DETECTION'
+            
+            data['imageContext'] = {}
+            data['imageContext']['cropHintsParams'] = {}
+            data['imageContext']['cropHintsParams']['aspectRatios'] = [0.8,1,1.2]
+    
+            # Build the request and execute it
+            request = collection.annotate(body=data)
             res = request.execute()
             response.write(simplejson.dumps(res))
         else:
@@ -398,12 +410,7 @@ def StorageHandler(request, ident, usuario=None):
         uploaded_file_type = archivo.content_type
         auto = request.POST.get('auto', 'true')
         
-        import googleapiclient.http
-        from apiclient.discovery import build
-        from oauth2client.client import GoogleCredentials
-        
-        credentials = GoogleCredentials.get_application_default()
-        storage_client = build('storage', 'v1', credentials=credentials)
+        storage_client = darCliente()
         
         if (auto == 'true'):
             #Genera nombres automáticamente usando generarUID

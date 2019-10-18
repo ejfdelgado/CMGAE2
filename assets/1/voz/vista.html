@@ -4,7 +4,33 @@
 
 <div class="scrollable bootstrapiso">
   <div class="scrollable-content" id="contenido-central" ng-init="inicializar()">
-  	<div id="controlesVoice" class="col-xs-12 col-sm-6">
+
+
+    <div class="timeline">
+      <div class="contenedor" ng-repeat="miverso in metadata.ctx2.hist" ng-class="{'derecha': (miverso.odd === false), 'final': (miverso.final === true)}">
+        <i class="bolita" ng-click="toggleModo(miverso)"></i>
+        <h1 class="titulo" contenteditable ng-if="(miverso.odd === true || miverso.odd === false) && esTxt(miverso.tit)" ng-model="miverso.tit"></h1>
+        <span class="horita">{{ miverso.det[0].t | date:"hh:mm" }}</span>
+        <span class="quien" ng-if="miverso.modo == 'voz' && (miverso.odd === true || miverso.odd === false)"><img ng-src="{{ metadata.ctx2.per[miverso.det[0].txt[0].per].img }}"/></span>
+        <div class="anotaciones transicion_suave cerrado" contenteditable="" ng-if="miverso.modo == 'voz' && esTxt(miverso.res[0].txt)" ng-model="miverso.res[0].txt" ng-click="clickResumen($event)"></div>
+        <div ng-if="miverso.modo == 'voz'">
+          <span class="textico" ng-repeat="mitxt in miverso.det"><i class="fa fa-play-circle" ng-click="clickVerso(mitxt, 'play')"></i><span contenteditable ng-model="mitxt.txt[0].txt"></span><i class="fa fa-user" ng-click="clickVerso(mitxt, 'det')"></i></span>
+        </div>
+        <div>
+        <span class="descr_dona" ng-if="miverso.modo == 'chart'"><h1 class="titulillo" contenteditable ng-model="miverso.chart.pregunta"></h1></span>
+        <div class="dona" ng-if="miverso.modo == 'chart'">
+          <span class="chart"><canvas class="directvozmichart" ng-model="miverso.chart"></canvas></span>
+          <span class="unaopcion" ng-repeat="(idopcion, miopcion) in miverso.chart.opciones">
+            <i class="fa fa-circle" ng-style="{color: miopcion.rgb}"></i><span contenteditable ng-model="miopcion.txt"></span><i class="fa fa-times-circle manito" ng-click="borrarOpcion(idopcion, miverso.chart.opciones)"></i><br/>
+          </span>
+          <span class="manito accion_agregar_opc" ng-click="agregarOpcion(miverso)"><i class="fa fa-plus-circle"></i>Agregar opción</span>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="canvasVoice" class="col-xs-12 col-sm-6"></div>
+  	<!--div id="controlesVoice" class="col-xs-12 col-sm-6">
         <div class="list-group">
           <div class="section">
             <a href="" ng-click="capturar()" class="btn btn-default col-xs-12"><i class="fa fa-eye"></i> Activar</a>
@@ -41,12 +67,12 @@
         </div>
   	</div>
   	<div id="canvasVoice" class="col-xs-12 col-sm-6"></div>
-	<ul class="col-xs-12">
-		<li ng-repeat="miaudio in metadata.ctx2.archivos">
-			<audio controls="" ng-src="{{ miaudio.url }}"></audio>
-			<p>{{ miaudio.det.results[0].alternatives[0].transcript }}</p>
-			<button class="btn btn-danger" type="button" ng-click="borrarAudio(miaudio)"><i class="fa fa-times"></i></button>
-		</li>
-	</ul>
+  	<ul class="col-xs-12">
+  		<li ng-repeat="miaudio in metadata.ctx2.archivos">
+  			<audio controls="" ng-src="{{ miaudio.url }}"></audio>
+  			<p>{{ miaudio.det.results[0].alternatives[0].transcript }}</p>
+  			<button class="btn btn-danger" type="button" ng-click="borrarAudio(miaudio)"><i class="fa fa-times"></i></button>
+  		</li>
+  	</ul-->
   </div>
 </div>
