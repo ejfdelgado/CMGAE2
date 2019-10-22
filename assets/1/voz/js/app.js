@@ -114,6 +114,89 @@ var moduloFiltro = (function($) {
 	};
 });
 
+var moduloCapturaImagen = (function() {
+	
+	var capture;
+	var MIP5 = null;
+	var node = null;
+	var diferido = null;
+	var DIMS = {
+		W: 320,
+		H: 240,
+	};
+	
+	var sketch = function(p) {
+		MIP5 = p;
+	    p.setup = function() {
+			p.createCanvas(DIMS.H, DIMS.H);
+			capture = p.createCapture({
+			    audio: false,
+			    video: {
+			      facingMode: "environment",
+			    },
+			});
+			//capture = p.createCapture(p.VIDEO);
+			//capture.size(DIMS.W, DIMS.H);
+			capture.hide();
+	    };
+	    
+	    p.draw = function() {
+			p.background(255);
+			//p.image(capture, -(DIMS.W-DIMS.H)/2, 0, DIMS.W, DIMS.H);
+			
+			var ancho;
+			var alto;
+			var dx = 0;
+			var dy = 0;
+			
+			if (capture.height > capture.width) {
+				//Más alto que ancho
+				ancho = DIMS.H;
+				alto = ancho * capture.height / capture.width;
+				dy = -(alto - ancho)/2;
+			} else {
+				//Más ancho que alto
+				alto = DIMS.H;
+				ancho = alto * capture.width / capture.height;
+				dx = -(ancho - alto)/2;
+			}
+			
+			
+			p.image(capture, dx, dy, ancho, alto);
+		};
+	};
+	
+	var leer = function(padre) {
+		if (typeof padre == 'undefined') {
+			padre = $('body');
+		}
+		diferido = $.Deferred();
+		node = $('<div style="position: absolute; top: 0; z-index: 9; width: 100%; height: 100%; text-align: center; background: white; padding-top: 25px;"></div>');
+		new p5(sketch, node[0]);
+		padre.append(node);
+		setTimeout(function() {
+			node.find('canvas').css({'visibility': 'visible', 'border-radius': '50%'});
+		});
+		
+		node.on('click', cancelar);
+		
+		return diferido;
+	};
+	
+	var cancelar = function() {
+		if (MIP5 != null) {
+			MIP5.remove();
+			node.remove();
+			MIP5 = null;
+		}
+	}
+	
+	return {
+		'leer': leer,
+		'cancelar': cancelar,
+	};
+})();
+
 var moduloP5 = (function() {
 	
 	var NYQUIST = 22050;

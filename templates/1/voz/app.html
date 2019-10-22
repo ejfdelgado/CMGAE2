@@ -493,7 +493,15 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   };
 
   $scope.borrarOpcion = function(llave, lista) {
-    lista[llave] = undefined;
+    delete lista[llave];
+  };
+  
+  $scope.tomarFoto = function() {
+	  moduloCapturaImagen.leer().then(function() {
+		  //Sí la tomó
+	  }, function() {
+		  //Canceló
+	  });
   };
 
 });
