@@ -122,6 +122,7 @@ var moduloCapturaImagen = (function() {
 	var diferido = null;
 	var estado = 0;
 	var misopciones = null;
+	var stream;
 	var DIMS = {
 		W: 320,
 		H: 240,
@@ -137,6 +138,8 @@ var moduloCapturaImagen = (function() {
 			    video: {
 			      facingMode: "environment",
 			    },
+			}, function(streamRef) {
+				stream = streamRef;
 			});
 			//capture = p.createCapture(p.VIDEO);
 			//capture.size(DIMS.W, DIMS.H);
@@ -221,6 +224,9 @@ var moduloCapturaImagen = (function() {
 	
 	var cancelarBasico = function() {
 		if (MIP5 != null) {
+			stream.getTracks().forEach(function(track) {
+			  track.stop();
+			});
 			MIP5.remove();
 			node.remove();
 			MIP5 = null;
