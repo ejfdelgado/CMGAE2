@@ -12,7 +12,7 @@
         <h1 class="titulo" contenteditable ng-if="(miverso.odd === true || miverso.odd === false) && esTxt(miverso.tit)" ng-model="miverso.tit"></h1>
         <span class="horita">{{ miverso.det[0].t | date:"hh:mm" }}</span>
         <span class="quien" ng-if="miverso.modo == 'voz' && (miverso.odd === true || miverso.odd === false)">
-        	<img ng-src="{{ metadata.ctx2.per[miverso.det[0].txt[0].per].img }}" ng-click="tomarFoto()"/>
+        	<img ng-src="{{ interpretarImagen(metadata.ctx2.per[miverso.det[0].txt[0].per].img) }}" ng-click="tomarFoto(metadata.ctx2.per[miverso.det[0].txt[0].per])"/>
         </span>
         <div class="anotaciones transicion_suave cerrado" contenteditable="" ng-if="miverso.modo == 'voz' && esTxt(miverso.res[0].txt)" ng-model="miverso.res[0].txt" ng-click="clickResumen($event)"></div>
         <div ng-if="miverso.modo == 'voz'">

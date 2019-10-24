@@ -183,7 +183,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     'ctx2': {
     	'per': {
         'dfd233': {
-          'img': 'https://secure.gravatar.com/avatar/9982dd706c21c5e1bf1af97b41d39e32?s=200&d=identicon',
+          'img': null,
         },
     	},
     	'hist': [
@@ -496,9 +496,23 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     delete lista[llave];
   };
   
-  $scope.tomarFoto = function() {
-	  moduloCapturaImagen.leer().then(function() {
+  $scope.interpretarImagen = function(imageId) {
+	  if (typeof imageId == 'string') {
+		  return moduloArchivos.generarUrlDadoId2(imageId);
+	  } else {
+		  return 'https://secure.gravatar.com/avatar/9982dd706c21c5e1bf1af97b41d39e32?s=200&d=identicon';
+	  }
+  };
+  
+  $scope.tomarFoto = function(objeto) {
+	  var opciones = {
+			  'dir': '/usr',
+			  'id': objeto.img,
+	  };
+	  moduloCapturaImagen.leer(opciones).then(function(respuesta) {
 		  //Sí la tomó
+		  objeto.img = respuesta.id;
+		  $scope.$digest();
 	  }, function() {
 		  //Canceló
 	  });

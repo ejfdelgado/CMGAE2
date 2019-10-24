@@ -2,7 +2,6 @@
 if (!hayValor(moduloArchivos)) {
 var moduloArchivos = (function() {
 	var MAX_FILE_SIZE = 600*1024;//en KB
-	var PREFIJO_LOCAL = '/app_default_bucket';
 	var PREFIJO_RAIZ_PUBLICA = '/public';
 	
 	var completarPredeterminados = function(atributos) {
@@ -49,6 +48,23 @@ var moduloArchivos = (function() {
 			diferido.reject();
 		});
 		return diferido;
+	};
+	
+	var dataURItoBlob = function(dataURI) {
+	    var byteString = atob(dataURI.split(',')[1]);
+
+	    var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0]
+
+	    var ab = new ArrayBuffer(byteString.length);
+	    var ia = new Uint8Array(ab);
+	    for (var i = 0; i < byteString.length; i++)
+	    {
+	        ia[i] = byteString.charCodeAt(i);
+	    }
+
+	    var bb = new Blob([ab], { "type": mimeString });
+	    //var bb = new File([ab], nombre, { "type": mimeString });
+	    return bb;
 	};
 	
 	var subirArchivo = function(atributos, blob) {
@@ -110,7 +126,11 @@ var moduloArchivos = (function() {
         };
         
         if (typeof blob != 'undefined') {
-        	var archivito = new File([blob], atributos.fileName);
+        	var fileOps = { "type": 'application/octet-stream' };
+        	if (typeof atributos.type == 'string') {
+        		fileOps.type = atributos.type;
+        	}
+        	var archivito = new File([blob], atributos.fileName, fileOps);
         	subirReal(archivito);
         } else {
     		var temp = $('<input type="file" class="invisible" accept="'+atributos.tipos+'">');
@@ -239,13 +259,19 @@ var moduloArchivos = (function() {
 	
 	var generarUrlDadoId = function(unId, local) {
 		var valor;
-		if (local!= true && moduloApp.esProduccion()) {
+		if (local != true && moduloApp.esProduccion()) {
 			unId = normalizarId(unId, true);
 			valor = 'https://storage.googleapis.com'+unId+'?' + new Date().getTime();
 		} else {
 			unId = normalizarId(unId);
 			valor = '/storage/read?name='+encodeURIComponent(unId)
 		}
+		return valor;
+	};
+	
+	var generarUrlDadoId2 = function(unId) {
+		unId = normalizarId(unId, true);
+		valor = 'https://storage.googleapis.com'+unId;
 		return valor;
 	};
 	
@@ -354,6 +380,8 @@ var moduloArchivos = (function() {
 		'borrarCacheConId': borrarCacheConId,
 		'borrarCacheRutaAtual': borrarCacheRutaAtual,
 		'darFuncionCargue': darFuncionCargue,
+		'dataURItoBlob': dataURItoBlob,
+		'generarUrlDadoId2': generarUrlDadoId2,
 	};
 })();
 }
