@@ -1,0 +1,17 @@
+<div class="modal" ui-if="modalError" ui-shared-state="modalError">
+  <div class="modal-backdrop in"></div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button class="close" ui-turn-off="modalError">&times;</button>
+        <h4 class="modal-title">Ups, ha ocurrido un error</h4>
+      </div>
+      <div class="modal-body">
+        <p>Por favor reintente</p>
+      </div>
+      <div class="modal-footer">
+        <button ui-turn-off="modalError" class="btn btn-default">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>

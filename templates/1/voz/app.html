@@ -19,7 +19,12 @@ var esTxtVacio = function(val) {
     'masterIdUsr': true,
     'slaveLoged': false,
     'slaveIdUsr': false,
-    'useFirebase': false,
+    'useFirebase': true,
+  });
+  
+  //moduloPubSub.pub('cambios', 'hola');
+  moduloPubSub.sub('cambios', function(delta) {
+	  console.log('delta', delta);
   });
 
   var app = angular.module('myApp', [
@@ -33,6 +38,7 @@ var esTxtVacio = function(val) {
       $stateProvider.state('/', {url:'/', templateUrl: "/assets/1/voz/vista.html"});
       $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/1/voz/debug.html', reloadOnSearch: false});
       $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/1/voz/galeria.html', reloadOnSearch: false});
+      $stateProvider.state('propiedades', {url: '/propiedades', templateUrl: '/assets/1/voz/propiedades.html', reloadOnSearch: false});
 
       angular.extend(minicolorsProvider.defaults, {
         control: 'hue',
@@ -44,7 +50,41 @@ var esTxtVacio = function(val) {
   app.run(function($transform) {
     window.$transform = $transform;
   });
-
+  
+app.filter('filtrarobj', function() {
+	var siempreTexto = function(obj, llave) {
+		var unTexto = obj[llave];
+		if (typeof unTexto == 'string' && unTexto.trim().length > 0) {
+			return unTexto+' ';
+		}
+		return '';
+	};
+  return function(input, busqueda) {
+	  if (typeof busqueda == 'string' && busqueda.trim().length > 0) {
+		  busqueda = busqueda.toLowerCase();
+		  var ans = {};
+		  var llaves = Object.keys(input);
+		  for (var i=0; i<llaves.length; i++) {
+			  var idPer = llaves[i];
+			  var unaPer = input[idPer];
+			  
+			  var texto = '';
+			  var subllaves = Object.keys(unaPer);
+			  for (var k=0; k<subllaves.length; k++) {
+				  texto += siempreTexto(unaPer, subllaves[k]);
+			  }
+			  texto = texto.toLowerCase();
+			  if (texto.indexOf(busqueda) >= 0) {
+				  ans[idPer] = unaPer;
+			  }
+		  }
+		  return ans;
+	  } else {
+		  return input;
+	  }
+  }
+});
+  
 app.directive("contenteditable", function () {
         return {
             restrict: "A",
@@ -175,6 +215,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 	
   $scope.temporal = {
 	'q': '', 
+	'strict': false,
 	'rta': [],
     'next': null,
   };
@@ -182,9 +223,16 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   $scope.metadata = {
     'ctx2': {
     	'per': {
-        'dfd233': {
-          'img': null,
-        },
+	        'dfd233': {
+	        	'nom': 'Edgar Delgado',
+	        	'email': 'edelgado@panal.co',
+	        	
+	        	'cel': 3183412491,
+				'coef': 0.1,
+				'humId': 'AP301',
+				
+				'img': null,
+	        },
     	},
     	'hist': [
         {
@@ -272,7 +320,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     $scope.slaveUrl = datos.slaveUrl;
     $.extend(true, $scope.metadata, datos);
     $scope.$digest();
-    diferidoDatos.resolve();
+    diferidoDatos.resolve(datos);
   });
 
   var diferidoCargue = null;
@@ -350,13 +398,16 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   
   $scope.capturar = function() {
 	diferidoDatos.then(function() {
-    //$scope.handlerNuevoSonido
 		moduloP5.init($('#canvasVoice'), function() {
-      console.log('handlerLocal')
-    });
+	      	console.log('handlerLocal');
+	    });
 		moduloP5.activar();
 	});
   };
+  
+  $scope.detener = function() {
+	  moduloP5.detener();
+  }
   
   $scope.guardarTodo = function() {
     var diferidoGuardado = moduloActividad.on();
@@ -500,7 +551,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 	  if (typeof imageId == 'string') {
 		  return moduloArchivos.generarUrlDadoId2(imageId);
 	  } else {
-		  return 'https://secure.gravatar.com/avatar/9982dd706c21c5e1bf1af97b41d39e32?s=200&d=identicon';
+		  return '/assets/img/user.jpg';
 	  }
   };
   
@@ -516,6 +567,56 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 	  }, function() {
 		  //Canceló
 	  });
+  };
+  
+  $scope.inicializarRedNeuronal = function() {
+	  mipredictor.inicializar();
+  };
+  
+  $scope.agregarPropiedad = function() {
+	  var nombre = $scope.temporal.q;
+	  if (typeof nombre == 'string' && nombre.trim().length > 0) {
+		  var template = {
+	       	'nom': nombre,
+	       	'email': '',
+	       	'cel': null,
+			'coef': 1,
+			'humId': '',
+			'img': null,
+		  };
+		  modIdGen.nuevo().then(function(uid) {
+			  $scope.metadata.ctx2.per[uid] = template;
+			  $scope.$digest();
+		  });
+	  } else {
+		  alert('Debe escribir un criterio de búsqueda');
+	  }
+  };
+  
+  $scope.borrarPropiedad = function(idProp, valorProp) {
+	  
+	$rootScope.Ui.turnOn('modalBorrar');
+	$scope.diferidoBorrado = $.Deferred();
+	$scope.diferidoBorrado.then(function() {
+		var diferidoBorrado = moduloActividad.on();
+		 var funFinal = function() {
+			 delete $scope.metadata.ctx2.per[idProp];
+			 $scope.$digest();
+			 diferidoBorrado.resolve();
+		 };
+		 //Se debe borrar la imágen en caso de que exista
+		 if (valorProp.img != null) {
+			 moduloArchivos.borrar(valorProp.img).then(function() {
+				 funFinal();
+			 }, function() {
+				 //Alertar que se debe reintentar
+				 $rootScope.Ui.turnOn('modalError');
+				 diferidoBorrado.resolve();
+			 });
+		 } else {
+			 funFinal();
+		 }
+	});
   };
 
 });

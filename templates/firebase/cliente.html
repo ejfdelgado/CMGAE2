@@ -741,6 +741,7 @@
 								'tipo': tipoCliente,
 								'db': db,
 								'firebaseUrl': firebaseUrl,
+								'masterUrl': firebaseUrl,
 								'ctx': ctx,
 								'ctx2': ctx2,
 								'principal': principal,
@@ -760,6 +761,7 @@
 							'tipo': tipoCliente,
 							'db': db,
 							'firebaseUrl': null,
+							'masterUrl': null,
 							'ctx': ctx,
 							'ctx2': ctx2,
 							'principal': principal,
@@ -799,6 +801,7 @@
 							'tipo': tipoCliente,
 							'db': db,
 							'firebaseUrl': firebaseUrl,
+							'masterUrl': urlParamCtx,
 							'ctx': ctx,
 							'ctx2': ctx2,
 							'principal': principal,
@@ -878,4 +881,78 @@
 			'afterAny': afterAny,
 		};
 	});
+	
+	  var moduloPubSub = (function($) {
+		  
+		  var llavesVolando = {};
+		  //Acá se crea el SUB del Bus
+		  var escuchar = function(topico, funcion) {
+			  moduloIntMarkInst.afterAny().then(function(datos) {
+				var db = datos['db'];
+				var firebaseUrl = datos['masterUrl'];
+				
+				var ref = db.ref(firebaseUrl+'/pubsub/'+topico);
+				var escuchador = ref.on('value', function(snapshot) {
+					var valor = snapshot.val();
+					if (valor != null) {
+						var llaves = Object.keys(valor);
+						for (var j=0; j<llaves.length; j++) {
+							var llave = llaves[j];
+							var indiceLlave = -1;
+							
+							if (llavesVolando[topico] instanceof Array) {
+								indiceLlave = llavesVolando[topico].indexOf(llave);	
+							}
+							
+							if (indiceLlave >= 0) {
+								//Es una llave que yo mismo generé
+								llavesVolando[topico].splice(indiceLlave, 1);
+							} else {
+								try {
+									var valLocal = JSON.parse(valor[llave]);
+									funcion(valLocal);
+								} catch (e) {}	
+							}
+						}
+					}
+				});
+			  });
+		  };
+		  
+		  //Acá se crea el PUB del Bus
+		  var publicar = function(topico, objeto) {
+			  var diferido = $.Deferred();
+			  moduloIntMarkInst.afterAny().then(function(datos) {
+				  var llavePubSub = datos['masterUrl']+'/pubsub/'+topico;
+				  var updates = {};
+				  var nuevaLlave = datos['db'].ref().child(llavePubSub).push().key;
+				  if (!(llavesVolando[topico] instanceof Array)) {
+					  llavesVolando[topico] = [];
+				  }
+				  llavesVolando[topico].push(nuevaLlave);
+				  var llavePubSub2 = llavePubSub+'/'+nuevaLlave;
+				  updates[llavePubSub2] = JSON.stringify(objeto);
+				  datos['db'].ref().update(updates).then(function() {
+					  //Acá los borro
+					  updates[llavePubSub2] = null;
+					  datos['db'].ref().update(updates).then(function() {
+						  diferido.resolve();
+					  }, function() {
+						  diferido.resolve();
+					  });
+				  }, function() {
+					  diferido.reject();
+				  });
+			  }, function() {
+				  diferido.reject();
+			  });
+			  return diferido;
+		  };
+		  
+		  return {
+			  'sub': escuchar,
+			  'pub': publicar,
+		  };
+	  })(jQuery);
+	
 </script>

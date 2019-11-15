@@ -1,0 +1,69 @@
+<div class="scrollable">
+  <div class="scrollable-content bootstrapiso">
+  		<div class="bootstrapiso scrollable-header">
+			<div class="input-group p-3 ">
+			  <div class="input-group-append">&nbsp;<br/>&nbsp;<br/></div>
+			</div>
+		</div>
+
+		<div class="section">
+		    <div class="panel-group bootstrapiso">
+		    	<div class="panel panel-default">
+					<div class="section lrnopadding">
+						<div class="col-xs-12 mb-4" ng-repeat="(idProp, valorProp) in metadata.ctx2.per | filtrarobj:temporal.q ">
+							<div class="card">
+								<div class="card-header">
+									<h5 class="card-title pull-left">{{ valorProp.humId }}</h5>
+									<div class="btn-group pull-right">
+									  <button type="button" class="btn btn-danger btn-sm" ng-click="borrarPropiedad(idProp, valorProp)"><i class="fa fa-times"></i></button>
+									</div>
+								</div>
+							  	<div class="card-body lrnopadding">
+							  		<div class="col-md-3 col-sm-6 col-xs-12">
+							  			<span class="card-img-top">
+								  			<img class="redonda" ng-src="{{ interpretarImagen(valorProp.img) }}" ng-click="tomarFoto(valorProp)"/>
+								  		</span>
+								    	<div class="form-group col-xs-12 cero-abajo">
+									    	<label>Apartamento:</label>
+									    	<input type="text" class="form-control" ng-model="valorProp.humId">
+								    	</div>
+								    	<div class="form-group col-xs-12 cero-abajo">
+									    	<label>Coeficiente:</label>
+									    	<input type="number" class="form-control" ng-model="valorProp.coef">
+								    	</div>
+								    </div>
+								    <div class="col-md-9 col-sm-6 col-xs-12">
+								    	<div class="form-group col-xs-12 cero-abajo">
+									    	<label>Nombre completo:</label>
+									    	<input type="text" class="form-control" ng-model="valorProp.nom">
+								    	</div>
+								    	<div class="form-group col-xs-12 cero-abajo">
+									    	<label>Correo:</label>
+									    	<input type="email" class="form-control" ng-model="valorProp.email">
+								    	</div>
+								    	<div class="form-group col-xs-12 cero-abajo">
+									    	<label>Celular:</label>
+									    	<input type="number" class="form-control" ng-model="valorProp.cel">
+								    	</div>
+									</div>
+									<div class="btn-group pull-right" role="group">
+									    <!-- button type="button" class="btn btn-danger" ng-click="borrarPropiedad(idProp, valorProp)"><i class="fa fa-times"></i></button-->
+									</div>
+							  </div>
+							</div>
+						</div>
+					</div>
+		    	</div>
+		    </div>
+		</div>
+  </div>
+</div>
+<div class="bootstrapiso scrollable-header">
+	<div class="input-group p-3 ">
+	  <input type="text" class="form-control" placeholder="Texto de búsqueda" aria-label="Texto de búsqueda" ng-model="temporal.q">
+	  <div class="input-group-append">
+	    <button class="btn btn-success" type="button" ng-click="agregarPropiedad()"><i class="fa fa-plus"></i> Agregar</button>
+	  </div>
+	</div>
+</div>
+

@@ -202,6 +202,40 @@
     margin-right: 20px;
 }
 
+#canvasVoice canvas {
+	width: 100% !important;
+}
+
+.firebaseui-auth-container {
+	background-color: white;
+}
+
+#firebaseui-auth-container .firebaseui-container {
+	/* margin-top: 100px; */
+}
+
+#firebaseui-auth-container .presentacion {
+    margin-top: 50px;
+    text-align: center;
+    width: 80vw;
+    max-width: 700px;
+    margin: 65px auto 0 auto;
+}
+
+.pane {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.bootstrapiso .form-group.cero-abajo {
+	margin-bottom: 0px;
+    padding-bottom: 0px;
+}
+
+img.redonda {
+	border-radius: 50%;
+}
+
 @media (max-width: 800px) {
     .timeline .contenedor .anotaciones {
         width: 100%;
