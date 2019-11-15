@@ -359,7 +359,7 @@
 			return temp;
 		};
 		
-		var leer2 = function() {
+		var leer2 = function(syncronizar) {
 			if (diferidoLectura2 != null && ['resolved', 'pending'].indexOf(diferidoLectura2.state()) >= 0) {
 				return diferidoLectura2;
 			}
@@ -376,6 +376,10 @@
 						//Se toma la foto de la version plana
 						var valorActual = registrarMemento2(todo);
 						diferidoLectura2.resolve(valorActual);
+						
+						moduloPubSub.sub('sync', function(delta) {
+							console.log('delta', delta);
+						});
 					};
 					
 					var recursiva = function() {
@@ -414,7 +418,7 @@
 			return diferidoLectura2;
 		};
 		
-		var guardar2 = function(modelo, lpatrones) {
+		var guardar2 = function(modelo, lpatrones, sincronizar) {
 			var diferido = $.Deferred();
 			if (diferidoLectura !== null) {
 				diferidoLectura.then(function(valor) {
@@ -517,7 +521,10 @@
 								subdatos['patr'] = lpatrones;
 							}
 							moduloHttp.post('/api/tup/'+idPagina, subdatos).then(function(respuesta) {
-								funcionExitoLocal()
+								funcionExitoLocal();
+								if (sincronizar === true) {
+									moduloPubSub.pub('sync', subdatos);	
+								}
 							}, function() {
 								//Hubo error, que hacer?
 								//Reintentar?
@@ -546,8 +553,12 @@
 							} else {
 								//Hace invocacion a servicio
 								//console.log('invocando servicio - con', JSON.stringify(subgrupo));
-								moduloHttp.post('/api/tup/'+idPagina, {'dat': subgrupo, 'acc': '-'}).then(function(respuesta) {
-									funcionExitoLocal()
+								var payloadLocal = {'dat': subgrupo, 'acc': '-'};
+								moduloHttp.post('/api/tup/'+idPagina, payloadLocal).then(function(respuesta) {
+									funcionExitoLocal();
+									if (sincronizar === true) {
+										moduloPubSub.pub('sync', payloadLocal);	
+									}
 								}, function() {
 									//Hubo error, que hacer?
 									//Reintentar?
@@ -582,11 +593,11 @@
 			return diferido;
 		};
 		
-		var leerTodo = function() {
+		var leerTodo = function(sincronizar) {
 			var diferido = $.Deferred();
 			var promesas = [];
 			promesas.push(leer().promise);
-			promesas.push(leer2().promise);
+			promesas.push(leer2(sincronizar).promise);
 			all(promesas).then(function(respuesta) {
 				diferido.resolve(respuesta);
 			}, function() {
@@ -622,11 +633,11 @@
 		
 		return {
 			'crear': crear,
-			'leer': leer,
-			'leer2': leer2,
+			'leer': leer,//leer xpage datos de Página
+			'leer2': leer2,//leer las Tuplas de la Página
 			'leerTodo': leerTodo,
-			'guardar': guardar,
-			'guardar2': guardar2,
+			'guardar': guardar,//guardar xpage datos de Página
+			'guardar2': guardar2,//guardar Tuplas de Página
 			'borrar': borrar,
 			'borrarTodo': borrarTodo,
 			'borrarTuplas': borrarTuplas,
@@ -642,6 +653,7 @@
 			'masterIdUsr': false,
 			'slaveIdUsr': false,//Usar el user uid para crear la entrada en la base de datos firebase
 			'useFirebase': false,
+			'sincronizar': false,
 		}, opciones);
 		var RAIZ = '/pgs';
 		var diferidoDB = $.Deferred();
@@ -685,7 +697,7 @@
 			//Si no tiene parametro pg debe ser master y debe estar logeado
 			var forzarUsuario = ($.urlParam('pg') == null || (opciones['slaveLoged'] || opciones['slaveIdUsr']));
 			miseguridad.buscarUsuario(forzarUsuario, function(principal) {
-				moduloPagina.leerTodo().then(function(contextoPagina) {
+				moduloPagina.leerTodo(opciones.sincronizar).then(function(contextoPagina) {
 					var lecturaBasica = contextoPagina[0];
 					var lecturaLarga = contextoPagina[1];
 					funcionContinuar(principal, lecturaBasica, lecturaLarga);
@@ -821,6 +833,7 @@
 						'tipo': tipoCliente,
 						'db': db,
 						'firebaseUrl': null,
+						'masterUrl': null,
 						'ctx': ctx,
 						'ctx2': ctx2,
 						'principal': principal,
@@ -887,7 +900,14 @@
 		  var llavesVolando = {};
 		  //Acá se crea el SUB del Bus
 		  var escuchar = function(topico, funcion) {
+			  if (!(llavesVolando instanceof Array)) {
+				  llavesVolando[topico] = [];
+			  }
 			  moduloIntMarkInst.afterAny().then(function(datos) {
+				if (datos['masterUrl'] === null) {
+					console.log('Debe incializar moduloIntMark con useFirebase en true');
+					return;
+				}
 				var db = datos['db'];
 				var firebaseUrl = datos['masterUrl'];
 				
@@ -899,11 +919,7 @@
 						for (var j=0; j<llaves.length; j++) {
 							var llave = llaves[j];
 							var indiceLlave = -1;
-							
-							if (llavesVolando[topico] instanceof Array) {
-								indiceLlave = llavesVolando[topico].indexOf(llave);	
-							}
-							
+							indiceLlave = llavesVolando[topico].indexOf(llave);
 							if (indiceLlave >= 0) {
 								//Es una llave que yo mismo generé
 								llavesVolando[topico].splice(indiceLlave, 1);
@@ -923,13 +939,16 @@
 		  var publicar = function(topico, objeto) {
 			  var diferido = $.Deferred();
 			  moduloIntMarkInst.afterAny().then(function(datos) {
+				  if (datos['masterUrl'] === null) {
+					  console.log('Debe incializar moduloIntMark con useFirebase en true');
+					  return;
+				  }
 				  var llavePubSub = datos['masterUrl']+'/pubsub/'+topico;
 				  var updates = {};
 				  var nuevaLlave = datos['db'].ref().child(llavePubSub).push().key;
-				  if (!(llavesVolando[topico] instanceof Array)) {
-					  llavesVolando[topico] = [];
+				  if (llavesVolando[topico] instanceof Array) {
+					  llavesVolando[topico].push(nuevaLlave);
 				  }
-				  llavesVolando[topico].push(nuevaLlave);
 				  var llavePubSub2 = llavePubSub+'/'+nuevaLlave;
 				  updates[llavePubSub2] = JSON.stringify(objeto);
 				  datos['db'].ref().update(updates).then(function() {

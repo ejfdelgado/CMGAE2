@@ -20,11 +20,7 @@ var esTxtVacio = function(val) {
     'slaveLoged': false,
     'slaveIdUsr': false,
     'useFirebase': true,
-  });
-  
-  //moduloPubSub.pub('cambios', 'hola');
-  moduloPubSub.sub('cambios', function(delta) {
-	  console.log('delta', delta);
+    'sincronizar': true,
   });
 
   var app = angular.module('myApp', [
@@ -416,7 +412,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
         toJson: JSON.stringify,
       };
     }
-    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)));
+    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)), undefined, true);
     var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
     all([diferido1.promise, diferido2.promise]).then(function() {
     	diferidoGuardado.resolve();
