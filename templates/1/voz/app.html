@@ -14,13 +14,18 @@ var esTxtVacio = function(val) {
   return ((typeof val == 'string' && val.trim().length == 0) || val == null);
 };
 
+var subModuloSinc = {
+   'funDarModelo': null,
+   'funFinSinc': null,
+};
+
   var moduloIntMarkInst = moduloIntMark({
     'masterLoged': true,
     'masterIdUsr': true,
-    'slaveLoged': false,
-    'slaveIdUsr': false,
+    'slaveLoged': true,
+    'slaveIdUsr': true,
     'useFirebase': true,
-    'sincronizar': true,
+    'sincronizar': subModuloSinc,
   });
 
   var app = angular.module('myApp', [
@@ -311,6 +316,15 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     }
   };
   $scope.slaveUrl = null;
+  
+  //Se reconfigura el módulo de sincronización
+  subModuloSinc.funDarModelo = function() {
+	  return $scope.metadata.ctx2;
+  };
+  subModuloSinc.funFinSinc = function() {
+	  $scope.$digest();
+  };
+  
   moduloIntMarkInst.afterAny().then(function(datos) {
     //console.log(datos);
     $scope.slaveUrl = datos.slaveUrl;

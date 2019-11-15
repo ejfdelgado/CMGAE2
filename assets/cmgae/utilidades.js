@@ -263,7 +263,7 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 				esObj = (typeof objetoActual == 'object');
 				//if (debug) {console.log('i=',i, 'llave=',llave,'esUltimo=',esUltimo,'esObj=',esObj);}
 
-				if (!esObj && anterior != null) {
+				if (!esObj && anterior != null && valor !== undefined) {
 					//if (debug) {console.log('Forza a que sea objeto');}
 					//Forza a que sea un objeto
 					var nuevo;
@@ -286,7 +286,11 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 								objetoActual[llave].push(eee);
 							});
 						} else {
-							objetoActual[llave] = valor;
+							if (valor === undefined) {
+								delete objetoActual[llave];
+							} else {
+								objetoActual[llave] = valor;
+							}
 						}
 					} else {
 						var tipoObj = (typeof objetoActual);

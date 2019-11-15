@@ -359,7 +359,8 @@
 			return temp;
 		};
 		
-		var leer2 = function(syncronizar) {
+		//, funDarModelo, funEvento
+		var leer2 = function(sincronizar) {
 			if (diferidoLectura2 != null && ['resolved', 'pending'].indexOf(diferidoLectura2.state()) >= 0) {
 				return diferidoLectura2;
 			}
@@ -377,9 +378,52 @@
 						var valorActual = registrarMemento2(todo);
 						diferidoLectura2.resolve(valorActual);
 						
-						moduloPubSub.sub('sync', function(delta) {
-							console.log('delta', delta);
-						});
+						if (typeof sincronizar == 'object' && sincronizar !== null) {
+							moduloPubSub.sub('sync', function(delta) {
+								var nuevoSincronizado = delta.dat;
+								var llavesSinc = [];
+								var mireferencia = null;
+								if (typeof sincronizar.funDarModelo == 'function') {
+									mireferencia = sincronizar.funDarModelo();
+								}
+								if (delta.acc == '+') {
+									llavesSinc = Object.keys(nuevoSincronizado);
+									//Asignar las llaves
+									for (var x=0; x<llavesSinc.length; x++) {
+										var unaLlaveSinc = llavesSinc[x];
+										var unValorSinc = nuevoSincronizado[unaLlaveSinc];
+										if (memento2.k.indexOf(unaLlaveSinc) < 0) {
+											memento2.k.push(unaLlaveSinc);
+										}
+										memento2.v[unaLlaveSinc] = unValorSinc;
+										if (mireferencia !== null) {
+											var valReal = null;
+											try {
+												valReal = JSON.parse(unValorSinc);	
+											} catch (e) {}
+											utilidades.asignarObj(mireferencia, unaLlaveSinc, valReal);	
+										}
+									}
+								} else if (delta.acc == '-') {
+									//console.log(JSON.stringify(nuevoSincronizado, null, 4));
+									llavesSinc = nuevoSincronizado;
+									for (var x=0; x<llavesSinc.length; x++) {
+										var unaLlaveSinc = llavesSinc[x];
+										var indiceSinc = memento2.k.indexOf(unaLlaveSinc);
+										if (indiceSinc>=0) {
+											memento2.k.splice(indiceSinc, 1);
+											delete memento2.v[unaLlaveSinc];
+										}
+										if (mireferencia !== null) {
+											utilidades.asignarObj(mireferencia, unaLlaveSinc, undefined);
+										}
+									}
+								}
+								if (typeof sincronizar.funFinSinc == 'function') {
+									sincronizar.funFinSinc();
+								}
+							});	
+						}
 					};
 					
 					var recursiva = function() {
@@ -647,14 +691,15 @@
 	})();
 	
 	var moduloIntMark = (function(opciones) {
+		var sincronizarObj = opciones.sincronizar;
 		opciones = $.extend(true, {
 			'masterLoged': false,
 			'slaveLoged': false,
 			'masterIdUsr': false,
 			'slaveIdUsr': false,//Usar el user uid para crear la entrada en la base de datos firebase
 			'useFirebase': false,
-			'sincronizar': false,
 		}, opciones);
+		opciones.sincronizar = sincronizarObj;
 		var RAIZ = '/pgs';
 		var diferidoDB = $.Deferred();
 		var diferidoId = $.Deferred();
