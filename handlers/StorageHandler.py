@@ -393,14 +393,12 @@ def StorageHandler(request, ident, usuario=None):
     elif request.method == 'POST':
         nombreAnterior = request.POST.get('name', None)
         carpeta = request.POST.get('folder', '')
+        auto = request.POST.get('auto', 'true')
+        
         if (carpeta.endswith('/')):
             carpeta = carpeta[:-1]
-        if (nombreAnterior is not None):
-            if (not usuario_es_dueno(usuario, nombreAnterior)):
-                raise NoAutorizadoException()
-        else:
-            if (not usuario_es_dueno(usuario, carpeta)):
-                raise NoAutorizadoException()
+        
+            
         archivo = request.FILES['file-0']
         uploaded_file_filename = archivo.name
         uploaded_file_content = archivo.read()
@@ -408,7 +406,6 @@ def StorageHandler(request, ident, usuario=None):
         if (tamanio > MAX_TAMANIO_BYTES):
             raise MalaPeticionException()
         uploaded_file_type = archivo.content_type
-        auto = request.POST.get('auto', 'true')
         
         storage_client = darCliente()
         
@@ -416,17 +413,28 @@ def StorageHandler(request, ident, usuario=None):
             #Genera nombres automáticamente usando generarUID
             #Implica que cda versión tiene un nombre diferente
             #Puede que se borre siempre la versión anterior, depende de la bandera no-borrar
-            if (not nombreAnterior is None and request.POST.get('no-borrar', None) is None):
-                try:
-                    req2 = storage_client.objects().delete(bucket=darBucketName(), object=generarRutaSimple(nombreAnterior))
-                    req2.execute()
-                except:
+            if (nombreAnterior is not None and request.POST.get('no-borrar', None) is None):
+                if (usuario_es_dueno(usuario, nombreAnterior)):
+                    try:
+                        req2 = storage_client.objects().delete(bucket=darBucketName(), object=generarRutaSimple(nombreAnterior))
+                        req2.execute()
+                    except:
+                        pass
+                else:
+                    #Debería en algún lugar registrarse que se debe borrar este archivo uerfano
                     pass
+            if (not usuario_es_dueno(usuario, carpeta)):
+                raise NoAutorizadoException()
             nombre = carpeta+'/'+generarUID()+'-'+uploaded_file_filename
         else:
             #Usa el nombre actual del archivo
             if (nombreAnterior is None):
+                if (not usuario_es_dueno(usuario, carpeta)):
+                    raise NoAutorizadoException()
                 nombreAnterior = carpeta+'/'+uploaded_file_filename
+            else:
+                if (not usuario_es_dueno(usuario, nombreAnterior)):
+                    raise NoAutorizadoException()
             nombre = nombreAnterior
         
         body = {

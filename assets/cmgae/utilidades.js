@@ -210,7 +210,7 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 			return $('<div>').html(texto).text();
 		};
 
-		var leerObj = function(obj, nombres, predef, evitarInvocar) {
+		var leerObj = function(obj, nombres, predef, evitarInvocar, soportarNull) {
 			if (!hayValor(nombres) || !esObjeto(obj)){return predef;}
 			var partes;
 			try {
@@ -235,6 +235,9 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 				}
 			}
 			if (!hayValor(objetoActual)) {
+				if (soportarNull === true && objetoActual === null) {
+					return objetoActual;
+				}
 				return predef;
 			}
 			if (evitarInvocar !== true && esFuncion(objetoActual)) {
@@ -329,9 +332,9 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 			return lista;
 		};
 
-		var darRutasObjeto = function(objOr, filtroObjetoAgregar) {
+		var darRutasObjeto = function(objOr, filtroObjetoAgregar, estructura) {
 		  var ans = [];
-		  var funcionRecursiva = function(obj, rutaActual) {
+		  var funcionRecursiva = function(obj, rutaActual, estructura) {
 		    if (esObjeto(obj)) {
 		      $.each(obj, function(llave, valor) {
 		        var llaveSiguiente = null;
@@ -340,25 +343,34 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 		        } else {
 		          llaveSiguiente = rutaActual+'.'+llave;
 		        }
-		        if (esFuncion(filtroObjetoAgregar) && filtroObjetoAgregar(valor)) {
-		          ans.push(llaveSiguiente);
+		        if ((typeof filtroObjetoAgregar == 'function') && filtroObjetoAgregar(valor)) {
+				  if (ans.indexOf(llaveSiguiente) < 0) {
+					ans.push(llaveSiguiente);
+				  }
 		        }
-		        funcionRecursiva(valor, llaveSiguiente);
+		        funcionRecursiva(valor, llaveSiguiente, estructura);
 		      });
+				if (estructura === true && rutaActual !== null && ans.indexOf(rutaActual) < 0) {
+					ans.push(rutaActual);
+				}
 		    } else {
 		      if (rutaActual !== null) {
-		        if (esFuncion(filtroObjetoAgregar)) {
+		        if ((typeof filtroObjetoAgregar == 'function')) {
 		          if (filtroObjetoAgregar(obj)) {
-		            ans.push(rutaActual);
+					if (ans.indexOf(rutaActual) < 0) {
+						ans.push(rutaActual);
+					}
 		          }
 		        } else {
-		          ans.push(rutaActual);
+				  if (ans.indexOf(rutaActual) < 0) {
+					ans.push(rutaActual);
+				  }
 		        }
 		      }
 		    }
 		  };
 
-		  funcionRecursiva(objOr, null);
+		  funcionRecursiva(objOr, null, estructura);
 		  return ans;
 		};
 
@@ -721,6 +733,25 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 				return false;
 			}
 		};
+		
+		var esInstancia = function(prueba, clase) {
+			return (prueba !== undefined && prueba !== null && Object.getPrototypeOf(prueba) == clase.prototype);
+		};
+
+		/*
+		0,1 = tipo básico que sí se persiste
+		2,3 = tipo estructural {} o []
+		null = otro
+		*/
+		var darTipoEstructura = function(dato) {
+			if (dato === undefined) {return null;}
+			if (dato === null) {return 0;}
+			var proto = Object.getPrototypeOf(dato);
+			if ([String.prototype, Number.prototype, Boolean.prototype].indexOf(proto) >= 0) {return 1;}
+			if (proto === Object.prototype) {return 2;}
+			if (proto === Array.prototype) {return 3;}
+			return null;
+		};
 
 		//Solo ejecuta la funFinal después de pasar un periodo de tiempo sin haber recibido un llamado
 		//funFinal puede retornar un diferido
@@ -844,6 +875,8 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 			'scrollBottom': scrollBottom,
 			'scrollToElement': scrollToElement,
 			'encolar': encolar,
+			'esInstancia': esInstancia,
+			'darTipoEstructura': darTipoEstructura,
 		};
 	})();
 

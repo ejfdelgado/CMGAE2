@@ -197,16 +197,27 @@ var moduloTransformacion = (function($) {
 	
 	var modoSimple = (function() {
 		
-		var to = function(objeto, cod) {
+		var to = function(objeto, cod, estruct) {
 			var respuesta = {};
 			
-			var llaves = utilidades.darRutasObjeto(objeto);
+			var llaves = utilidades.darRutasObjeto(objeto, null, estruct);
 			if (cod === true) {
 				for (var i=0; i<llaves.length; i++) {
 					var llave = llaves[i];
-					var val = utilidades.leerObj(objeto, llave, null);
-					if (val !== null) {
-						val = JSON.stringify(val);
+					var val = utilidades.leerObj(objeto, llave, undefined, undefined, true);
+					if (val !== undefined) {
+						var tipEstruct = utilidades.darTipoEstructura(val);
+						if ([0, 1].indexOf(tipEstruct) >= 0) {
+							//tipo básico
+							val = JSON.stringify(val);
+						} else if (estruct === true && [2, 3].indexOf(tipEstruct) >= 0) {
+							//Es tipo estructura
+							if (tipEstruct == 2) {
+								val = '{}';
+							} else if (tipEstruct == 3) {
+								val = '[]';
+							}
+						}
 					}
 					respuesta[llave] = val;
 				}
@@ -223,6 +234,26 @@ var moduloTransformacion = (function($) {
 			var respuesta = {};
 			var llaves = Object.keys(objeto);
 			if (cod === true) {
+				//Se ordena
+				llaves.sort(function(a, b) {
+					return (a.length - b.length);
+				});
+				//Primero se recupera la estructura
+				var j = 0;
+				while (j<llaves.length) {
+					var llave = llaves[j];
+					var dato = objeto[llave];
+					if (dato === '{}') {
+						utilidades.asignarObj(respuesta, 'ans.'+llave, {});
+						llaves.splice(j, 1);
+					} else if (dato === '[]') {
+						utilidades.asignarObj(respuesta, 'ans.'+llave, []);
+						llaves.splice(j, 1);
+					} else {
+						j++;
+					}
+				}
+				//Luego se asignan los datos
 				for (var i=0; i<llaves.length; i++) {
 					var llave = llaves[i];
 					var dato = objeto[llave];
