@@ -219,7 +219,24 @@ var  miseguridad = (function($) {
 	};
 	
 	var showLogin = function() {
-		$('#firebaseui-auth-container').removeClass('invisible');
+		var contenedor = $('#firebaseui-auth-container'); 
+		contenedor.removeClass('invisible');
+		if (contenedor.find('.presentacion').length == 0) {
+			var quiensoy = $('<div class="presentacion"></div>');
+			var titulo = $('meta[name="og:title"]').attr('content');
+			var descripcion = $('meta[name="og:description"]').attr('content');
+			var urlimagen = $('meta[name="og:image"]').attr('content');
+			
+			var h1Tit = $('<h1></h1>');
+			h1Tit.text(titulo);
+			quiensoy.append(h1Tit);
+			
+			var pDesc = $('<p></p>');
+			pDesc.text(descripcion);
+			quiensoy.append(pDesc);
+			
+			contenedor.prepend(quiensoy);
+		}
 	};
 
 	var initApp = function() {

@@ -28,10 +28,19 @@ body {
 	left: 0;
 	right: 0;
 	z-index: 99;
+	background-color: white;
 }
 
 #firebaseui-auth-container .firebaseui-container {
-	margin-top: 100px;
+	/* margin-top: 100px; */
+}
+
+#firebaseui-auth-container .presentacion {
+    margin-top: 50px;
+    text-align: center;
+    width: 80vw;
+    max-width: 700px;
+    margin: 65px auto 0 auto;
 }
 
 html {
