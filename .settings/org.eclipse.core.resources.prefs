@@ -48,6 +48,7 @@ encoding//handlers/PageHandler.py=utf-8
 encoding//handlers/ShortUrl.py=utf-8
 encoding//handlers/StorageHandler.py=utf-8
 encoding//handlers/TuplaHandler.py=utf-8
+encoding//handlers/VotaHandler.py=utf-8
 encoding//handlers/decoradores.py=utf-8
 encoding//handlers/seguridad.py=utf-8
 encoding//lib/httplib2/__init__.py=utf-8

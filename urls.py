@@ -10,6 +10,7 @@ from handlers.PageHandler import PageHandler
 from handlers.DocHandler import DocHandler
 from handlers.ContHandler import ContHandler
 from handlers.TuplaHandler import TuplaHandler
+from handlers.VotaHandler import VotaHandler
 
 
 urlpatterns = defaults.patterns(
@@ -18,6 +19,7 @@ urlpatterns = defaults.patterns(
     (r'^api/xdoc/?(.*)', DocHandler),
     (r'^api/cont/?(.*)', ContHandler),
     (r'^api/tup/?(.*)', TuplaHandler),
+    (r'^api/vot/?(.*)', VotaHandler),
     (r'^storage/?(.*)', StorageHandler),
     (r'^adm/(.*)', AdminHandler),
     (r'^a/(.*)', ShortUrlHandler),

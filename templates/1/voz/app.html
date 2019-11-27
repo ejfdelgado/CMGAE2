@@ -326,7 +326,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   };
   
   moduloIntMarkInst.afterAny().then(function(datos) {
-    //console.log(datos);
+    console.log(datos);
     $scope.slaveUrl = datos.slaveUrl;
     $.extend(true, $scope.metadata, datos);
     $scope.$digest();
@@ -627,6 +627,17 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 			 funFinal();
 		 }
 	});
+  };
+  
+  $scope.asignarVotacionActual = function(indice) {
+	  var actual = utilidades.leerObj($scope.metadata.ctx2, 'global.votacion',null);
+	  var nuevo = 'hist.'+indice+'.chart'
+	  if (actual == null || actual != nuevo) {
+		  utilidades.asignarObj($scope.metadata.ctx2, 'global.votacion', nuevo);
+	  } else {
+		  utilidades.asignarObj($scope.metadata.ctx2, 'global.votacion', null);
+	  }
+	  $scope.guardarTodo();
   };
 
 });

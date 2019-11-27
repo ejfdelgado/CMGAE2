@@ -7,7 +7,7 @@
 
 
     <div class="timeline">
-      <div class="contenedor" ng-repeat="miverso in metadata.ctx2.hist" ng-class="{'derecha': (miverso.odd === false), 'final': (miverso.final === true)}">
+      <div class="contenedor" ng-repeat="(miversollave, miverso) in metadata.ctx2.hist" ng-class="{'derecha': (miverso.odd === false), 'final': (miverso.final === true)}">
         <i class="bolita" ng-click="toggleModo(miverso)"></i>
         <h1 class="titulo" contenteditable ng-if="(miverso.odd === true || miverso.odd === false) && esTxt(miverso.tit)" ng-model="miverso.tit"></h1>
         <span class="horita">{{ miverso.det[0].t | date:"hh:mm" }}</span>
@@ -19,7 +19,7 @@
           <span class="textico" ng-repeat="mitxt in miverso.det"><i class="fa fa-play-circle" ng-click="clickVerso(mitxt, 'play')"></i><span contenteditable ng-model="mitxt.txt[0].txt"></span><i class="fa fa-user" ng-click="clickVerso(mitxt, 'det')"></i></span>
         </div>
         <div>
-        <span class="descr_dona" ng-if="miverso.modo == 'chart'"><h1 class="titulillo" contenteditable ng-model="miverso.chart.pregunta"></h1></span>
+        <span class="descr_dona" ng-if="miverso.modo == 'chart'"><i class="fa fa-eye manito" ng-click="asignarVotacionActual(miversollave)"></i><h1 class="titulillo" contenteditable ng-model="miverso.chart.pregunta"></h1></span>
         <div class="dona" ng-if="miverso.modo == 'chart'">
           <span class="chart"><canvas class="directvozmichart" ng-model="miverso.chart"></canvas></span>
           <span class="unaopcion" ng-repeat="(idopcion, miopcion) in miverso.chart.opciones">

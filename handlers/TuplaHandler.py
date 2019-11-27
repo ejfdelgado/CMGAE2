@@ -80,10 +80,7 @@ def crearTuplas(idPagina, peticion):
 
 @ndb.transactional
 def borrarTuplas(idPagina, llaves):
-    #Armo la llave padre
-    paginaKey = ndb.Key(Pagina, idPagina)
-    temporal = ndb.gql('SELECT * FROM Tupla WHERE i = :1 and k IN :2 and ANCESTOR IS :3', idPagina, llaves, paginaKey).order(Tupla._key)
-    datos, next_cursor, more = temporal.fetch_page(len(llaves))
+    datos = buscarTuplas(idPagina, llaves)
     
     llavesBorrar = []
     #tomo las llaves
@@ -107,6 +104,23 @@ def borrarTuplasTodas(idPagina, n):
     if (len(llavesBorrar) > 0):
         ndb.delete_multi(llavesBorrar)
     return len(llavesBorrar)
+
+def buscarTuplas(idPagina, llaves):
+    #Armo la llave padre
+    paginaKey = ndb.Key(Pagina, idPagina)
+    temporal = ndb.gql('SELECT * FROM Tupla WHERE i = :1 and k IN :2 and ANCESTOR IS :3', idPagina, llaves, paginaKey).order(Tupla._key)
+    datos, next_cursor, more = temporal.fetch_page(len(llaves))
+    return datos
+
+def to_dict_simple(model, propio=None, puntos=False, ignorar=[]):
+    temp = comun.to_dict(model, propio, puntos, ignorar)
+    ans = {}
+    for a in temp:
+        try:
+            ans[a['k']] = simplejson.loads(a['v'])
+        except:
+            ans[a['k']] = None
+    return ans
 
 @inyectarUsuario
 @autoRespuestas
