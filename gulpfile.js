@@ -30,6 +30,7 @@ gulp.task('default', function() {
 	'./assets/cmgae/moduloTimer.js',
 	'./assets/cmgae/moduloInterpolar.js',
 	'./assets/cmgae/moduloCountDown.js',
+	'./assets/cmgae/moduloIdsVotacion.js',
   ]).pipe(concat('modulos.min.js'))
     .pipe(babel())
     //.pipe(uglify())

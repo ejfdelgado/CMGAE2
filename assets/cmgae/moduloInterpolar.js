@@ -33,7 +33,7 @@ var moduloInterpolar = (function() {
 		//Ninguno de los dos es nulo, se puede interpolar
 		//3. Se define la función de interpolación
 		var interpolar = function(v0, v1, paso) {
-			var paso = ((Math.cos(Math.PI*paso) + 1) / 2);
+			paso = ((Math.cos(Math.PI*paso) + 1) / 2);
 			return (v0*(paso)+(1-paso)*v1);
 		};
 		
