@@ -251,6 +251,7 @@ def MainHandler(request, data, usuario):
                     'admin':users.is_current_user_admin(),
                     'path':var_path,
                     'detalle': detalle,
+                    'raiz': StorageHandler.darRaizStorage(),
                     'qparams': request.GET,#Aca se propagan los query params para que esten disponibles en el template
                 }
                 

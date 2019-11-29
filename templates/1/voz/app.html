@@ -40,6 +40,7 @@ var subModuloSinc = {
       $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/1/voz/debug.html', reloadOnSearch: false});
       $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/1/voz/galeria.html', reloadOnSearch: false});
       $stateProvider.state('propiedades', {url: '/propiedades', templateUrl: '/assets/1/voz/propiedades.html', reloadOnSearch: false});
+      $stateProvider.state('meta', {url: '/meta', templateUrl: '/assets/1/voz/meta.html', reloadOnSearch: false});
 
       angular.extend(minicolorsProvider.defaults, {
         control: 'hue',
@@ -461,6 +462,20 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     } else {
       return predef;
     }
+  };
+  
+  $scope.asignarImagenDePagina = function(base, prefijo) {
+	  var diferido = $.Deferred();
+	  moduloArchivos.subirArchivoMioDePagina({
+        auto: 'false', 
+        tipos: 'image/*', 
+        opcionesNegras: [],
+        dataFolder:prefijo,
+      }).then(function(metadata) {
+    	  base.img = metadata.id;
+    	  $scope.guardarTodo();
+    	  $scope.$digest();
+      });
   };
   
   $scope.darUrlDeIdImagen = function(id) {

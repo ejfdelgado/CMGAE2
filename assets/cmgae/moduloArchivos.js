@@ -19,8 +19,17 @@ var moduloArchivos = (function() {
 		return atributos;
 	};
 	
+	var normalizarRuta = function(ruta) {
+		ruta = ruta.trim().replace(/\\/g, '/');
+	  if (!ruta.startsWith('/')) {
+		  ruta = '/'+prefijo;
+	  }
+	  return ruta;
+	};
+	
 	var subirArchivoMioDePagina = function(atributos, blob) {
 		var diferido = $.Deferred();
+		atributos['dataFolder'] = normalizarRuta(atributos['dataFolder']);
 		moduloPagina.leer().then(function(contexto) {
 			atributos['dataFolder']=contexto['path']+'/'+contexto['id']+atributos['dataFolder'];
 			//atributos['dataFolder']='/'+contexto['id']+atributos['dataFolder'];
@@ -351,15 +360,8 @@ var moduloArchivos = (function() {
 		return PREFIJO_RAIZ_PUBLICA;
 	}
 	
-	//Se usa porque en local extrañamente no puede subir archivos con path muy largo...
 	  var darFuncionCargue = function() {
-	      var funcionCargue = null;
-	      if (moduloApp.esProduccion()) {
-	        funcionCargue = moduloArchivos.subirArchivoMioDePagina;
-	      } else {
-	        funcionCargue = moduloArchivos.subirArchivoMio;
-	      }
-	      return funcionCargue;
+	      return moduloArchivos.subirArchivoMioDePagina;
 	  };
 	
 	return {
@@ -382,6 +384,7 @@ var moduloArchivos = (function() {
 		'darFuncionCargue': darFuncionCargue,
 		'dataURItoBlob': dataURItoBlob,
 		'generarUrlDadoId2': generarUrlDadoId2,
+		'normalizarRuta': normalizarRuta,
 	};
 })();
 }
