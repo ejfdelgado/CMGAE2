@@ -19,7 +19,7 @@ urlpatterns = defaults.patterns(
     (r'^api/xdoc/?(.*)', DocHandler),
     (r'^api/cont/?(.*)', ContHandler),
     (r'^api/tup/?(.*)', TuplaHandler),
-    (r'^api/vot/?(.*)', VotaHandler),
+    (r'^api/v/?(.*)', VotaHandler),
     (r'^storage/?(.*)', StorageHandler),
     (r'^adm/(.*)', AdminHandler),
     (r'^a/(.*)', ShortUrlHandler),

@@ -4,85 +4,107 @@ Created on 26/11/2019
 
 @author: Edgar
 '''
-import random
 import logging
 from django.http import HttpResponse
-from google.appengine.api import memcache
 from django.utils import simplejson
 from google.appengine.ext import ndb
-from models import ShortUrlM, Opinion, Contador, Pagina
 from handlers.respuestas import RespuestaNoAutorizado, NoAutorizadoException,\
     ParametrosIncompletosException, NoExisteException, NoHayUsuarioException,\
     MalaPeticionException
-from handlers.seguridad import inyectarUsuario, enRol, enRolFun
+from handlers.seguridad import inyectarUsuario
 from handlers.decoradores import autoRespuestas
 from handlers import comun
-from django.http import HttpResponseRedirect
 from handlers.TuplaHandler import buscarTuplas, to_dict_simple, crearTuplas
-import httplib2
-from oauth2client.client import GoogleCredentials
+from handlers.fbpubsub import publicar
 
-_FIREBASE_SCOPES = [
-    'https://www.googleapis.com/auth/firebase.database',
-    'https://www.googleapis.com/auth/userinfo.email']
+import base64
+import hashlib
+from Crypto import Random
+from Crypto.Cipher import AES
+from Crypto.Cipher.AES import AESCipher
 
-#https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/appengine/standard/firebase/firetactoe/rest_api.py
-def _get_http():
-    """Provides an authed http object."""
-    http = httplib2.Http()
-    # Use application default credentials to make the Firebase calls
-    # https://firebase.google.com/docs/reference/rest/database/user-auth
-    creds = GoogleCredentials.get_application_default().create_scoped(
-        _FIREBASE_SCOPES)
-    creds.authorize(http)
-    return http
+import random
+import string
 
-def firebase_post(path, value=None):
-    """Add an object to an existing list of data.
-    An HTTP POST allows an object to be added to an existing list of data.
-    A successful request will be indicated by a 200 OK HTTP status code. The
-    response content will contain a new attribute "name" which is the key for
-    the child added.
-    Args:
-        path - the url to the Firebase list to append to.
-        value - a json string.
-    """
-    response, content = _get_http().request(path, method='POST', body=value)
-    return simplejson.loads(content)
+def randomStringDigits(stringLength=7):
+    """Generate a random string of letters and digits """
+    lettersAndDigits = string.ascii_letters + string.digits
+    return ''.join(random.choice(lettersAndDigits) for i in range(stringLength))
 
-def firebase_put(path, value=None):
-    """Writes data to Firebase.
+def randomString(stringLength=8):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength))
 
-    An HTTP PUT writes an entire object at the given database path. Updates to
-    fields cannot be performed without overwriting the entire object
+class AESCipher(object):
 
-    Args:
-        path - the url to the Firebase object to write.
-        value - a json string.
-    """
-    response, content = _get_http().request(path, method='PUT', body=value)
-    return simplejson.loads(content)
+    def __init__(self, key): 
+        self.bs = AES.block_size
+        self.key = hashlib.sha256(key.encode()).digest()
 
-def firebase_delete(path):
-    """Removes the data at a particular path.
-    An HTTP DELETE removes the data at a particular path.  A successful request
-    will be indicated by a 200 OK HTTP status code with a response containing
-    JSON null.
-    Args:
-        path - the url to the Firebase object to delete.
-    """
-    response, content = _get_http().request(path, method='DELETE')
-    logging.info(response)
-    logging.info(content)
+    def encrypt(self, raw):
+        raw = self._pad(raw)
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return base64.b64encode(iv + cipher.encrypt(raw.encode()))
 
+    def decrypt(self, enc):
+        enc = base64.b64decode(enc)
+        iv = enc[:AES.block_size]
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
+
+    def _pad(self, s):
+        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+
+    @staticmethod
+    def _unpad(s):
+        return s[:-ord(s[len(s)-1:])]
+
+def darPassDePg(pg):
+    idPagina = comun.leerNumero(pg)
+    llave = ndb.Key('Pagina', idPagina)
+    unapagina = llave.get()
+    if (unapagina.pwd is None):
+        unapagina.pwd = randomString(8)
+        unapagina.put()
+    return unapagina.pwd
+
+#http://proyeccion-colombia1.appspot.com/api/v?enc=esto%20es%20secreto&pg=5714368087982080
+#http://proyeccion-colombia1.appspot.com/api/v?dec=G3Tm1ShRhQIvuLvUIBHut5mVTbpf0oKfcMbtLaYm5Ps=&pg=5714368087982080
+#http://proyeccion-colombia1.appspot.com/api/v?pg=5714368087982080&u=dfd233&v=afg3245e
 @inyectarUsuario
 @autoRespuestas
 def VotaHandler(request, ident, usuario=None):
+    response = HttpResponse("", content_type='application/json', status=200)
+    ans = {}
+    ans['error'] = 0
     if request.method == 'GET':
-        usr = request.GET.get('u', None)
+        
         pg = request.GET.get('pg', None)
+        enc = request.GET.get('enc', None)
+        dec = request.GET.get('dec', None)
+        if (pg is None):
+            raise ParametrosIncompletosException()
+
+        if (enc is not None):
+            pas = darPassDePg(pg)
+            ans['pas'] = pas 
+            motor = AESCipher(pas)
+            ans['ans'] = motor.encrypt(enc);
+            response.write(simplejson.dumps(ans))
+            return response
+        elif (dec is not None):
+            pas = darPassDePg(pg)
+            ans['pas'] = pas 
+            motor = AESCipher(pas)
+            ans['ans'] = motor.decrypt(dec);
+            response.write(simplejson.dumps(ans))
+            return response
+        
+        usr = request.GET.get('u', None)
         vot = request.GET.get('v', None)
-        if (usr is None or pg is None or vot is None):
+        if (usr is None or vot is None):
             raise ParametrosIncompletosException()
         
         consulta = [
@@ -115,14 +137,8 @@ def VotaHandler(request, ident, usuario=None):
         llave = ndb.Key('Pagina', comun.leerNumero(pg))
         unapagina = llave.get()
         
-        rutaFirebase = 'https://proyeccion-colombia1.firebaseio.com/pgs/'+unapagina.usr+unapagina.path+'/'+pg+'/pubsub/sync'
+        publicar(unapagina.usr, unapagina.path, pg, payloadModificacion)
         
-        creacion = firebase_post(rutaFirebase+'.json', simplejson.dumps(simplejson.dumps(payloadModificacion)))
-        firebase_delete(rutaFirebase+'/'+creacion['name']+'.json')
-        
-        response = HttpResponse("", content_type='application/json', status=200)
-        ans = {}
-        ans['error'] = 0
         ans['msg'] = datos2[rutaVotacion+'.pregunta']+' '+datos['per.'+usr+'.humId']+' vota por "'+datos2[rutaVotacion+'.opciones.'+vot+'.txt']+'"'
         #ans['msg1'] = datos
         #ans['msg2'] = datos2

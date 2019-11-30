@@ -31,6 +31,7 @@ class Pagina(ndb.Expando):
     act = ndb.DateTimeProperty(auto_now=True)
     usr = ndb.StringProperty()
     path = ndb.StringProperty()
+    pwd = ndb.StringProperty()
     
     tit = ndb.StringProperty()
     desc = ndb.StringProperty()
