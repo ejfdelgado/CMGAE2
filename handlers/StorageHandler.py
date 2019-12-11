@@ -21,7 +21,7 @@ from handlers.seguridad import inyectarUsuario
 from handlers.decoradores import autoRespuestas
 from _io import BytesIO
 
-MAX_TAMANIO_BYTES = 550*1024
+MAX_TAMANIO_BYTES = 5*1024*1024
 
 #https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/storage/api/crud_object.py
 #https://developers.google.com/resources/api-libraries/documentation/storage/v1/python/latest/storage_v1.objects.html#list_next

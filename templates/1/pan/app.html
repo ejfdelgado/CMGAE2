@@ -1,0 +1,261 @@
+<script type="text/javascript">
+
+var moduloPano = (function($) {
+	
+	var panoViewer = null;
+	
+	var ver = function(urlimagen) {
+        
+        if (panoViewer == null) {
+	        $('.panocontenedor').html('<div class="panoviewer-container viewer">'+
+		        '<div id="panoSet">'+
+		            '<div class="panoviewer container" id="myPanoViewer"></div>'+
+		        '</div>'+
+		    '</div>');
+	        
+	        panoViewer = new PhotoSphereViewer({
+	            container: document.querySelector('#myPanoViewer'),
+	            panorama: urlimagen,
+				navbar: [
+				  'autorotate',
+				  'stereo',
+				  'gyroscope',
+				  'fullscreen',
+				  {
+				      id: 'my-salir',
+				      title: 'Salir',
+				      className: 'custom-button',
+				      content: 'Salir',
+				      onClick: function() {
+				      	salir();
+				      },
+				   },
+				],
+	        });
+        } else {
+        	panoViewer.setPanorama(urlimagen);
+        	panoViewer.stopGyroscopeControl();
+        	panoViewer.stopStereoView();
+        	panoViewer.stopAnimation();
+        }
+        
+        $('.panocontenedor').css({'display': 'block'});
+	};
+	
+	var salir = function() {
+		$('.panocontenedor').css({'display': 'none'});
+	};
+	
+	return {
+		'ver': ver,
+		'salir': salir,
+	};
+	
+})(jQuery);
+
+  var moduloIntMarkInst = moduloIntMark({
+    'masterLoged': true,
+    'masterIdUsr': true,
+    'slaveLoged': false,
+    'slaveIdUsr': false,
+    'useFirebase': false,
+  });
+
+  var app = angular.module('myApp', [
+    //'ngRoute',
+    'ui.router',
+    'mobile-angular-ui',
+    'mobile-angular-ui.gestures',
+    'minicolors',
+  ]).config(function(minicolorsProvider, $stateProvider, $urlRouterProvider) {
+      $urlRouterProvider.otherwise("/");
+      $stateProvider.state('/', {url:'/', templateUrl: "/assets/1/pan/vista.html"});
+      $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/1/pan/debug.html', reloadOnSearch: false});
+      $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/1/pan/galeria.html', reloadOnSearch: false});
+
+      angular.extend(minicolorsProvider.defaults, {
+        control: 'hue',
+        theme: 'bootstrap',
+        position: 'top left'
+      });
+    });
+
+  app.run(function($transform) {
+    window.$transform = $transform;
+  });
+
+app.controller('MainController', function($rootScope, $scope, $state) {
+	
+  $scope.temporal = {
+	'q': '', 
+	'rta': [],
+    'next': null,
+  };
+  $scope.metadata = {
+    'ctx2': {
+    	'fotos': [],
+    },
+    'principal': {
+      'uid': null,
+    }
+  };
+  $scope.slaveUrl = null;
+  moduloIntMarkInst.afterAny().then(function(datos) {
+    //console.log(datos);
+    $scope.slaveUrl = datos.slaveUrl;
+    $.extend(true, $scope.metadata, datos);
+    $scope.$digest();
+    diferidoDatos.resolve();
+  });
+
+  var diferidoCargue = null;
+  var diferidoDatos = $.Deferred();
+  // Needed for the loading screen
+  $rootScope.$on('$routeChangeStart', function() {
+    $rootScope.loading = true;
+    diferidoCargue = moduloActividad.on();
+  });
+
+  $rootScope.$on('$routeChangeSuccess', function() {
+    $rootScope.loading = false;
+    diferidoCargue.resolve();
+  });
+  
+  $scope.redirigir = function(estado) {
+    $state.go(estado);
+  };
+  
+  $scope.inicializar = function() {
+	  diferidoDatos.then(function() {
+		  
+	  });
+  };
+  
+  $scope.guardarTodo = function() {
+    var diferidoGuardado = moduloActividad.on();
+    if (typeof angular == 'undefined') {
+      angular = {
+        toJson: JSON.stringify,
+      };
+    }
+    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)), undefined, true);
+    var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
+    all([diferido1.promise, diferido2.promise]).then(function() {
+    	diferidoGuardado.resolve();
+    });
+    return diferidoGuardado;
+  };
+  
+  $scope.mostrarAlgoEnGaleria = function() {
+    if ($scope.temporal.rta.length > 0) {
+      return;
+    }
+    $scope.buscar();
+  };
+  
+  $scope.buscar = function() {
+    $scope.temporal.rta = [];
+    $scope.temporal.next = null;
+    moduloPagina.buscar($scope.temporal.q).then(function(rta) {
+      for (var i=0; i<rta.valor.length; i++) {
+        $scope.temporal.rta.push(moduloTransformacion.modo('simple').from(rta.valor[i], true));
+      }
+      $scope.temporal.next = rta.next;
+      $scope.$digest();
+    }, function() {
+      
+    });
+  };
+  
+  var darUrlDeArchivo = function(id, predef, local) {
+    if (typeof id == 'string' && id.length > 0) {
+      return moduloArchivos.generarUrlDadoId(id, local);
+    } else {
+      return predef;
+    }
+  };
+  
+  $scope.darUrlDeIdImagen = function(id) {
+    return darUrlDeArchivo(id, '/assets/1/pan/img/def.svg', false);
+  };
+  
+  $scope.verDetalle = function(ctx) {
+    var id = ctx.id;
+    var nuevaUrl = location.pathname.replace(/\d*$/, '')+'?pg='+id+'#!/';
+    var win = window.open(nuevaUrl, '_blank');
+    win.focus();
+  };
+
+  $scope.redirigir = function(estado) {
+    $state.go(estado);
+  };
+  
+  $scope.diferidoBorrado = null;
+  $scope.borrarEfectivo = function() {
+    $scope.diferidoBorrado.resolve();
+  };
+  
+  $scope.borrarUno = function(instancia) {
+
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+      moduloPagina.borrarTodo(instancia.id).then(function() {
+        //Lo debo sacar de la lista
+        var indice = $scope.temporal.rta.indexOf(instancia);
+        if (indice >= 0) {
+          $scope.temporal.rta.splice(indice, 1);
+          $scope.$digest();
+        }
+      });
+    });
+  };
+  
+  $scope.subirPanorama = function() {
+    
+    var subirArchivo = function() {
+      var diferido = $.Deferred();
+      var funcionCargue = moduloArchivos.darFuncionCargue();
+      funcionCargue({
+        auto: 'false', 
+        tipos: 'image/*', 
+        opcionesNegras: [],
+        dataFolder:'/pano',
+      }).then(function(metadata) {
+        diferido.resolve(metadata.id);
+      }, function() {
+        diferido.reject();
+      });
+      return diferido;
+    };
+    
+    subirArchivo().then(function(elid) {
+		var nuevo = {
+			img: elid,
+		};
+		$scope.metadata.ctx2.fotos.push(nuevo);
+		$scope.guardarTodo();
+		$scope.$digest();
+    });
+	  
+
+  };
+  
+  $scope.verPanorama = function(ctx) {
+	  var urlCompleta = moduloArchivos.generarUrlDadoId(ctx.img, false);
+	  moduloPano.ver(urlCompleta);
+  };
+  
+  $scope.borrarPanorama = function(ctx) {
+	  var diferidoBorrar = moduloArchivos.borrar(ctx.img);
+	  diferidoBorrar.then(function() {
+		  var indice = $scope.metadata.ctx2.fotos.indexOf(ctx);
+		  $scope.metadata.ctx2.fotos.splice(indice, 1);
+		  $scope.guardarTodo();
+		  $scope.$digest();
+	  });
+	  
+  };
+
+});
+</script>

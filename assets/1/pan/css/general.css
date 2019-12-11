@@ -1,0 +1,47 @@
+
+.viewer {
+    position: relative;
+    width: 100%;
+    /* height: 400px; */
+    max-width: none;
+    height: 100%;
+    margin: 0px auto;
+    overflow: hidden;
+    outline: none;
+}
+
+.fullscreen-container .viewer {
+}
+
+.viewer .container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.viewer canvas {
+    width: 100%;
+    height: 100%;
+}
+
+.viewer video {
+    position: absolute;
+    visibility: hidden;
+}
+
+.panocontenedor {
+    position: fixed;
+    z-index: 9999999999;
+    overflow: show;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    display: none;
+}
+
+#myPanoViewer {
+    padding: 0;
+}
