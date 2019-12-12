@@ -45,3 +45,21 @@
 #myPanoViewer {
     padding: 0;
 }
+
+.bootstrapiso .card.unpanorama {
+	border: 0;
+}
+
+.unpanorama .card-body {
+	padding: 0;
+}
+
+.unpanorama .card-body img {
+	padding: 0 !important;
+}
+
+.unpanorama .card-body .misbotones {
+	position: absolute;
+    right: 0;
+    top: 0;
+}

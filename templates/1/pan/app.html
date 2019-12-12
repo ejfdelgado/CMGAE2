@@ -257,14 +257,21 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   };
   
   $scope.borrarPanorama = function(ctx) {
-	  var diferidoBorrar = moduloArchivos.borrar(ctx.img);
-	  diferidoBorrar.then(function() {
-		  var indice = $scope.metadata.ctx2.fotos.indexOf(ctx);
-		  $scope.metadata.ctx2.fotos.splice(indice, 1);
-		  $scope.guardarTodo();
-		  $scope.$digest();
-	  });
 	  
+    $rootScope.Ui.turnOn('modalBorrar');
+    $scope.diferidoBorrado = $.Deferred();
+    $scope.diferidoBorrado.then(function() {
+  	  var diferidoBorrar = moduloArchivos.borrar(ctx.img);
+	  var diferidoBorrarPeque = moduloArchivos.borrar(ctx.imgPeque);
+	  diferidoBorrar.then(function() {
+		  diferidoBorrarPeque.then(function() {
+			  var indice = $scope.metadata.ctx2.fotos.indexOf(ctx);
+			  $scope.metadata.ctx2.fotos.splice(indice, 1);
+			  $scope.guardarTodo();
+			  $scope.$digest();
+		  });
+	  });
+    });
   };
 
 });
