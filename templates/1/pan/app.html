@@ -222,16 +222,26 @@ app.controller('MainController', function($rootScope, $scope, $state) {
         opcionesNegras: [],
         dataFolder:'/pano',
       }).then(function(metadata) {
-        diferido.resolve(metadata.id);
+    	  var local = false;
+    	  var urlLarga = moduloArchivos.generarUrlDadoId(metadata.id, local);
+    	  moduloMiniatura.tinyPlanet(urlLarga, 350).then(function(archivo) {
+    		  moduloArchivos.subirArchivoMioDePagina({
+    			  'dataFolder': '/peque',
+    			  'id': modIdGen.nuevo()+'.jpg',
+    		  }, archivo).then(function(metadata2) {
+    			  diferido.resolve({'big':metadata.id, 'peque':metadata2.id});  
+    		  });
+    	  });
       }, function() {
         diferido.reject();
       });
       return diferido;
     };
     
-    subirArchivo().then(function(elid) {
+    subirArchivo().then(function(losids) {
 		var nuevo = {
-			img: elid,
+			img: losids.big,
+			imgPeque: losids.peque,
 		};
 		$scope.metadata.ctx2.fotos.push(nuevo);
 		$scope.guardarTodo();

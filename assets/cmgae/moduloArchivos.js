@@ -268,8 +268,8 @@ var moduloArchivos = (function() {
 	
 	var generarUrlDadoId = function(unId, local) {
 		var valor;
-		//if (local != true && moduloApp.esProduccion()) {
-		if (local != true) {
+		if (local != true && moduloApp.esProduccion()) {
+		//if (local != true) {
 			unId = normalizarId(unId, true);
 			valor = 'https://storage.googleapis.com'+unId+'?' + new Date().getTime();
 		} else {
