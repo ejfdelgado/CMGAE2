@@ -8,14 +8,14 @@
 		    <div class="panel-group bootstrapiso">
 		    	<div class="panel panel-default">
 					<div class="section lrnopadding">
-						<div class="col-md-4 col-sm-6 col-xs-12 mb-4" ng-repeat="ctx in metadata.ctx2.fotos">
+						<div class="col-md-4 col-sm-6 col-xs-12 mb-4" ng-repeat="(llave, ctx) in metadata.ctx2.fotos">
 							<div class="card unpanorama">
 							  	<div class="card-body">
 							  	<img class="card-img-top p-3" ng-src="{{ darUrlDeIdImagen(ctx.imgPeque) }}">
 
 								<div class="btn-group pull-right misbotones" role="group">
 								    <button type="button" class="btn btn-primary" ng-click="verPanorama(ctx)"><i class="fa fa-play"></i></button>
-								    <button type="button" class="btn btn-danger" ng-click="borrarPanorama(ctx)"><i class="fa fa-times"></i></button>
+								    <button type="button" class="btn btn-danger" ng-click="borrarPanorama(llave, ctx)"><i class="fa fa-times"></i></button>
 								</div>
 
 							  </div>
