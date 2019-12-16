@@ -43,6 +43,16 @@ var moduloPano = (function($) {
 	    return diferidoTodo;
 	};
 	
+	var autoAjustar = function() {
+		setTimeout(function() {
+			//panoViewer.zoom(30);
+			//panoViewer.autoSize();
+			//panoViewer.needsUpdate();
+			window.dispatchEvent(new Event("resize"));
+			//window.dispatchEvent(new Event("orientationchange"));
+		}, 0);
+	};
+	
 	var play = function(todas, llaveInicio, MAX_PERIODO) {
 		if (pendiente != null) {
 			clearTimeout(pendiente);
@@ -68,13 +78,7 @@ var moduloPano = (function($) {
 						actividadPrimeraVez.resolve();
 						primeraVez = false;
 					}
-					setTimeout(function() {
-						panoViewer.zoom(30);
-						panoViewer.autoSize();
-						panoViewer.needsUpdate();
-						window.dispatchEvent(new Event("resize"));
-						window.dispatchEvent(new Event("orientationchange"));
-					});
+					autoAjustar();
 					indice++;
 					if (indice >= llaves.length) {
 						indice = 0;
@@ -127,6 +131,16 @@ var moduloPano = (function($) {
 				      	salir();
 				      },
 				   },
+				   {
+				      id: 'my-stereo',
+				      title: 'Stereo',
+				      className: 'custom-button',
+				      content: 'Stereo',
+				      onClick: function() {
+				      	panoViewer.toggleStereoView();
+						autoAjustar();
+				      },
+				   }
 				],
 	        });
 	        panoViewer.on('ready', finalizoCargue);
