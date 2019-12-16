@@ -192,6 +192,7 @@ var moduloPano = (function($) {
       $urlRouterProvider.otherwise("/");
       $stateProvider.state('/', {url:'/', templateUrl: "/assets/1/pan/vista.html"});
       $stateProvider.state('debug', {url: '/debug', templateUrl: '/assets/1/pan/debug.html', reloadOnSearch: false});
+	  $stateProvider.state('meta', {url: '/meta', templateUrl: '/assets/1/rsvp/meta.html', reloadOnSearch: false});
       $stateProvider.state('galeria', {url: '/galeria', templateUrl: '/assets/1/pan/galeria.html', reloadOnSearch: false});
 
       angular.extend(minicolorsProvider.defaults, {
@@ -404,6 +405,16 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 			  $scope.$digest();
 		  });
 	  });
+    });
+  };
+  
+  $scope.crearNuevo = function() {
+    //Podría mostrar un modal con nombre, titulo antes de crear
+    moduloPagina.crear().then(function(rta) {
+      if (rta.error == 0) {
+        var url = location.origin + location.pathname+'?pg='+rta.valor.id+'#!/meta';
+        window.open(url,"_self");
+      }
     });
   };
 

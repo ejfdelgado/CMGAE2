@@ -15,14 +15,14 @@
 
 								<div class="btn-group pull-right misbotones" role="group">
 								    <button type="button" class="btn btn-primary" ng-click="verPanorama(ctx, llave)"><i class="fa fa-play"></i></button>
-								    <button type="button" class="btn btn-danger" ng-click="borrarPanorama(llave, ctx)"><i class="fa fa-times"></i></button>
+								    <button type="button" class="btn btn-danger" ng-click="borrarPanorama(llave, ctx)" ng-if="metadata.tipo == 'master'"><i class="fa fa-times"></i></button>
 								</div>
 
 							  </div>
 							</div>
 						</div>
 						
-						<div class="col-md-4 col-sm-6 col-xs-12 mb-4">
+						<div class="col-md-4 col-sm-6 col-xs-12 mb-4" ng-if="metadata.tipo == 'master'">
 							<div class="card manito" ng-click="subirPanorama()">
 							  	<div class="card-body">
 							  		<h1><i class="fa fa-plus"></i> Agregar</h1>
