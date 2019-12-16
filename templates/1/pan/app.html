@@ -5,28 +5,84 @@ var moduloPano = (function($) {
 	var panoViewer = null;
 	var pendiente = null;
 	
-	var play = function(todas) {
+	var BUFFER_IMGS = {};
+	
+	var darImage = function(url) {
+		var diferido = $.Deferred();
+		var llave = MD5(url);
+		if (llave in BUFFER_IMGS) {
+			diferido.resolve(BUFFER_IMGS[llave]);
+		} else {
+			var imagen = new Image();
+			imagen.setAttribute('crossorigin', 'anonymous'); 
+			imagen.onload = function () {
+				BUFFER_IMGS[llave] = imagen;
+				diferido.resolve(imagen);
+			};
+			imagen.src = url;
+		}
+		return diferido;
+	};
+	
+	var precargarImagen = function(url, MAX_PERIODO) {
+		var diferidoCargueImagen = $.Deferred();
+		var diferidoTodo = $.Deferred();
+		darImage(url).then(function(myimg) {
+	        var canvas = document.createElement('canvas');
+	        canvas.width = myimg.naturalWidth; // or 'width' if you want a special/scaled size
+	        canvas.height = myimg.naturalHeight; // or 'height' if you want a special/scaled size
+	        canvas.getContext('2d').drawImage(myimg, 0, 0);
+	        diferidoCargueImagen.resolve(canvas.toDataURL('image/jpg'));
+		});
+	    
+	    setTimeout(function() {
+	    	diferidoCargueImagen.then(function(datos) {
+	    		diferidoTodo.resolve(datos);
+	    	});
+	    }, MAX_PERIODO);
+	    return diferidoTodo;
+	};
+	
+	var play = function(todas, llaveInicio, MAX_PERIODO) {
 		if (pendiente != null) {
 			clearTimeout(pendiente);
 			pendiente = null;
 		}
 		var llaves = Object.keys(todas);
-		var indice = 0;
+		llaves.sort();
+		var indice = llaves.indexOf(llaveInicio);
+		if (indice < 0) {
+			indice = 0;
+		}
+		var primeraVez = true;
+		var actividadPrimeraVez = moduloActividad.on();
 		
 		var iterativa = function() {
 			console.log('iterativa', indice);
 			var llave = llaves[indice];
 			var ctx = todas[llave];
 			var urlCompleta = moduloArchivos.generarUrlDadoId(ctx.img, false);
-			ver(urlCompleta).then(function() {
-				indice++;
-				if (indice >= llaves.length) {
-					indice = 0;
-				}
-				if (llaves.length > 1) {
-					console.log('esperando N segundos');
-					pendiente = setTimeout(iterativa, 20000);
-				}
+			precargarImagen(urlCompleta, MAX_PERIODO).then(function(datos) {
+				ver(datos).then(function() {
+					if (primeraVez) {
+						actividadPrimeraVez.resolve();
+						primeraVez = false;
+					}
+					setTimeout(function() {
+						panoViewer.zoom(30);
+						panoViewer.autoSize();
+						panoViewer.needsUpdate();
+						window.dispatchEvent(new Event("resize"));
+						window.dispatchEvent(new Event("orientationchange"));
+					});
+					indice++;
+					if (indice >= llaves.length) {
+						indice = 0;
+					}
+					if (llaves.length > 1) {
+						iterativa();
+					}
+				});
 			});
 		};
 		
@@ -41,7 +97,7 @@ var moduloPano = (function($) {
 	};
 	
 	var ver = function(urlimagen) {
-		console.log('ver '+urlimagen);
+		console.log('ver');
 		diferidoCargue = $.Deferred();
         if (panoViewer == null) {
 	        $('.panocontenedor').html('<div class="panoviewer-container viewer">'+
@@ -53,7 +109,9 @@ var moduloPano = (function($) {
 	        panoViewer = new PhotoSphereViewer({
 	            container: document.querySelector('#myPanoViewer'),
 	            panorama: urlimagen,
-	            defaultZoomLvl: 25,
+	            //defaultZoomLvl: 30,
+	            //longitudeRange: [-3*Math.PI/4, 3*Math.PI/4],
+	            //latitudeRange: [Math.PI/2, -Math.PI/2],
 				navbar: [
 				  'autorotate',
 				  'zoom',
@@ -313,8 +371,9 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 
   };
   
-  $scope.verPanorama = function(ctx) {
-	  moduloPano.play($scope.metadata.ctx2.fotos);
+  $scope.verPanorama = function(ctx, myllave) {
+		var MAX_PERIODO = 20000;
+		moduloPano.play($scope.metadata.ctx2.fotos, myllave, MAX_PERIODO);
   };
   
   $scope.borrarPanorama = function(llave, ctx) {
