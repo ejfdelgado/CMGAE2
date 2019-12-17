@@ -63,3 +63,14 @@
     right: 0;
     top: 0;
 }
+
+.enlace_salir {
+	text-decoration: underline;
+	color: white;
+	cursor: pointer;
+}
+
+.enlace_salir:hover {
+	color: gray;
+	
+}

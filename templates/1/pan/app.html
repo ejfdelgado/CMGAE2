@@ -4,7 +4,6 @@ var moduloPano = (function($) {
 	
 	var panoViewer = null;
 	var pendiente = null;
-	
 	var BUFFER_IMGS = {};
 	
 	var darImage = function(url) {
@@ -35,7 +34,7 @@ var moduloPano = (function($) {
 	        diferidoCargueImagen.resolve(canvas.toDataURL('image/jpg'));
 		});
 	    
-	    setTimeout(function() {
+		pendiente = setTimeout(function() {
 	    	diferidoCargueImagen.then(function(datos) {
 	    		diferidoTodo.resolve(datos);
 	    	});
@@ -45,12 +44,12 @@ var moduloPano = (function($) {
 	
 	var autoAjustar = function() {
 		setTimeout(function() {
-			//panoViewer.zoom(30);
-			//panoViewer.autoSize();
-			//panoViewer.needsUpdate();
+			panoViewer.zoom(30);
+			panoViewer.autoSize();
+			panoViewer.needsUpdate();
 			window.dispatchEvent(new Event("resize"));
-			//window.dispatchEvent(new Event("orientationchange"));
-		}, 0);
+			window.dispatchEvent(new Event("orientationchange"));
+		}, 100);
 	};
 	
 	var play = function(todas, llaveInicio, MAX_PERIODO) {
@@ -73,6 +72,9 @@ var moduloPano = (function($) {
 			var ctx = todas[llave];
 			var urlCompleta = moduloArchivos.generarUrlDadoId(ctx.img, false);
 			precargarImagen(urlCompleta, MAX_PERIODO).then(function(datos) {
+				if (pendiente == null) {
+					return;
+				}
 				ver(datos).then(function() {
 					if (primeraVez) {
 						actividadPrimeraVez.resolve();
@@ -166,10 +168,15 @@ var moduloPano = (function($) {
 		}
 	};
 	
+	var darViewer = function() {
+		return panoViewer;
+	}
+	
 	return {
 		'ver': ver,
 		'salir': salir,
 		'play': play,
+		'darViewer': darViewer,
 	};
 	
 })(jQuery);
@@ -188,6 +195,7 @@ var moduloPano = (function($) {
     'mobile-angular-ui',
     'mobile-angular-ui.gestures',
     'minicolors',
+    'ngSanitize',
   ]).config(function(minicolorsProvider, $stateProvider, $urlRouterProvider) {
       $urlRouterProvider.otherwise("/");
       $stateProvider.state('/', {url:'/', templateUrl: "/assets/1/pan/vista.html"});
@@ -377,6 +385,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 			if ($scope.metadata.ctx2.fotos instanceof Array) {
 				$scope.metadata.ctx2.fotos = {};
 			}
+			$scope.metadata.ctx.img = nuevo.imgPeque;
 			$scope.metadata.ctx2.fotos[unIdPano] = nuevo;
 			$scope.guardarTodo();
 			$scope.$digest();	
@@ -411,11 +420,16 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   $scope.crearNuevo = function() {
     //Podría mostrar un modal con nombre, titulo antes de crear
     moduloPagina.crear().then(function(rta) {
+    	moduloActividad.on();
       if (rta.error == 0) {
         var url = location.origin + location.pathname+'?pg='+rta.valor.id+'#!/meta';
         window.open(url,"_self");
       }
     });
+  };
+  
+  $scope.hacerLogout = function() {
+	  miseguridad.logout();
   };
 
 });
