@@ -44,7 +44,7 @@ var moduloPano = (function($) {
 	
 	var autoAjustar = function() {
 		setTimeout(function() {
-			panoViewer.zoom(30);
+			//panoViewer.zoom(30);
 			panoViewer.autoSize();
 			panoViewer.needsUpdate();
 			window.dispatchEvent(new Event("resize"));
@@ -115,14 +115,17 @@ var moduloPano = (function($) {
 	        panoViewer = new PhotoSphereViewer({
 	            container: document.querySelector('#myPanoViewer'),
 	            panorama: urlimagen,
-	            //defaultZoomLvl: 30,
+	            minFov: 100,
+	            maxFov: 120,
+	            defaultZoomLvl: 110,
+	            loadingTxt: 'Las cosas buenas toman su tiempo...',
 	            //longitudeRange: [-3*Math.PI/4, 3*Math.PI/4],
 	            //latitudeRange: [Math.PI/2, -Math.PI/2],
 				navbar: [
 				  'autorotate',
 				  'zoom',
-				  'stereo',
-				  'gyroscope',
+				  //'stereo',
+				  //'gyroscope',
 				  'fullscreen',
 				  {
 				      id: 'my-salir',
@@ -139,6 +142,7 @@ var moduloPano = (function($) {
 				      className: 'custom-button',
 				      content: 'Stereo',
 				      onClick: function() {
+				    	  panoViewer.zoom(110);
 				      	panoViewer.toggleStereoView();
 						autoAjustar();
 				      },
@@ -396,7 +400,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   };
   
   $scope.verPanorama = function(ctx, myllave) {
-		var MAX_PERIODO = 20000;
+		var MAX_PERIODO = 40000;
 		moduloPano.play($scope.metadata.ctx2.fotos, myllave, MAX_PERIODO);
   };
   

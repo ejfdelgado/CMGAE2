@@ -2,7 +2,10 @@
   <div class="sidebar sidebar-left" ng-if="metadata.tipo == 'master'">
     <div class="scrollable">
       <h1 class="scrollable-header app-name">Panorámica</h1>
-      <p style="color: white;padding: 0 10px;"><span ng-bind-html="metadata.ctx.aut"></span><span class="enlace_salir" ng-click="hacerLogout()">(salir)</span></p>
+      <p class="detalle_barra_izquierda">
+      	<span ng-bind-html="metadata.ctx.aut"></span>
+      	<span class="enlace_salir" ng-click="hacerLogout()">(salir)</span>
+      </p>
       <div class="scrollable-content">
         <div class="list-group">
           <div class="section">

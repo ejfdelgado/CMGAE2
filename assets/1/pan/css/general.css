@@ -64,6 +64,12 @@
     top: 0;
 }
 
+.detalle_barra_izquierda {
+	word-break: break-all;
+	color: white;
+	padding: 0 10px;
+}
+
 .enlace_salir {
 	text-decoration: underline;
 	color: white;
