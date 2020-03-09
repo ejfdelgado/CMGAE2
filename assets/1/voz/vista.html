@@ -5,21 +5,20 @@
 <div class="scrollable bootstrapiso">
   <div class="scrollable-content" id="contenido-central" ng-init="inicializar()">
 
-
     <div class="timeline">
-      <div class="contenedor" ng-repeat="(miversollave, miverso) in metadata.ctx2.hist" ng-class="{'derecha': (miverso.odd === false), 'final': (miverso.final === true)}">
+      <div class="contenedor" ng-repeat="miverso in metadata.ctx2.hist | orderbyobjectkey" ng-class="{'derecha': (miverso.odd === false), 'final': (miverso.final === true)}">
         <i class="bolita" ng-click="toggleModo(miverso)"></i>
         <h1 class="titulo" contenteditable ng-if="(miverso.odd === true || miverso.odd === false) && esTxt(miverso.tit)" ng-model="miverso.tit"></h1>
-        <span class="horita">{{ miverso.det[0].t | date:"hh:mm" }}</span>
+        <span class="horita">{{ (primeroEnObj(miverso.det).llave | ord2num) | date:"hh:mm" }}</span>
         <span class="quien" ng-if="miverso.modo == 'voz' && (miverso.odd === true || miverso.odd === false)">
-        	<img ng-src="{{ interpretarImagen(metadata.ctx2.per[miverso.det[0].txt[0].per].img) }}" ng-click="tomarFoto(metadata.ctx2.per[miverso.det[0].txt[0].per])"/>
+        	<img ng-src="{{ interpretarImagen(metadata.ctx2.per[primeroEnObj(primeroEnObj(miverso.det).valor.txt).valor.per].img) }}" ng-click="tomarFoto(metadata.ctx2.per[primeroEnObj(primeroEnObj(miverso.det).valor.txt).valor.per])"/>
         </span>
-        <div class="anotaciones transicion_suave cerrado" contenteditable="" ng-if="miverso.modo == 'voz' && esTxt(miverso.res[0].txt)" ng-model="miverso.res[0].txt" ng-click="clickResumen($event)"></div>
+        <!-- div class="anotaciones transicion_suave cerrado" contenteditable="" ng-if="miverso.modo == 'voz' && esTxt(primeroEnObj(miverso.res).valor.txt)" ng-model="primeroEnObj(miverso.res).valor.txt" ng-click="clickResumen($event)"></div-->
         <div ng-if="miverso.modo == 'voz'">
-          <span class="textico" ng-repeat="mitxt in miverso.det"><i class="fa fa-play-circle" ng-click="clickVerso(mitxt, 'play')"></i><span contenteditable ng-model="mitxt.txt[0].txt"></span><i class="fa fa-user" ng-click="clickVerso(mitxt, 'det')"></i></span>
+          <span class="textico" ng-repeat="mitxt in miverso.det | orderbyobjectkey"><i class="fa fa-play-circle" ng-click="clickVerso(mitxt, 'play')"></i><span contenteditable ng-model="primeroEnObj(mitxt.txt).valor.txt"></span><i class="fa fa-user" ng-click="clickVerso(mitxt, 'det')"></i></span>
         </div>
         <div>
-        <span class="descr_dona" ng-if="miverso.modo == 'chart'"><i class="fa fa-eye manito" ng-click="asignarVotacionActual(miversollave)"></i><h1 class="titulillo" contenteditable ng-model="miverso.chart.pregunta"></h1></span>
+        <span class="descr_dona" ng-if="miverso.modo == 'chart'"><i class="fa fa-eye manito" ng-click="asignarVotacionActual(miverso)"></i><h1 class="titulillo" contenteditable ng-model="miverso.chart.pregunta"></h1></span>
         <div class="dona" ng-if="miverso.modo == 'chart'">
           <span class="chart"><canvas class="directvozmichart" ng-model="miverso.chart"></canvas></span>
           <span class="unaopcion" ng-repeat="(idopcion, miopcion) in miverso.chart.opciones">
@@ -37,44 +36,12 @@
             <a href="" ng-click="capturar()" class="btn btn-default col-xs-6">On <i class="fa fa-volume-up"></i></a>
             <a href="" ng-click="detener()" class="btn btn-default col-xs-6">Off <i class="fa fa-volume-off"></i></a>
             <div class="form-group col-xs-12">
-              <!--div class="input-group col-xs-12">
-              	<label>PBVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.PBVOL" min="0.01" max="1" step="0.01" value="0.2" ng-change="asignarParams()">
-              </div>
-              <div class="input-group col-xs-12">
-              	<label>PBFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.PBFREQ" min="0.1" max="10" step="0.1" value="2" ng-change="asignarParams()">
-              </div>
-              <div class="input-group col-xs-12">
-              	<label>MINVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MINVOL" min="0" max="1000" step="10" value="0" ng-change="asignarParams()">
-              </div>
-              <div class="input-group col-xs-12">
-              	<label>MAXVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MAXVOL" min="0" max="1000" step="10" value="500" ng-change="asignarParams()">
-              </div>
-              <div class="input-group col-xs-12">
-              	<label>MINFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MINFREQ" min="100" max="4000" step="10" value="500" ng-change="asignarParams()">
-              </div>
-              <div class="input-group col-xs-12">
-              	<label>MAXFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MAXFREQ" min="100" max="4000" step="10" value="3000" ng-change="asignarParams()">
-              </div-->
               <div class="input-group col-xs-12">
               	<label>THVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.THVOL" min="0" max="250" step="10" value="40" ng-change="asignarParams()">
               </div>
-              <!--div class="input-group col-xs-12">
-              	<label>THFREQ</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.MFCC_HISTORY_MAX_LENGTH" min="100" max="4000" step="10" value="1100" ng-change="asignarParams()">
-              </div-->
             </div>
-            <!--div class="form-group col-xs-12 col-sm-6">
-            	<pre>{{ metadata.ctx2.params | json }}</pre>
-            </div-->
           </div>
         </div>
-  	</div>
-  	<div class="panes">
-	  	<div class="pane">
-		  	<canvas id="viscanvas" width="400" height="400">Browser not supported for Canvas. Get a real browser.</canvas>
-	  	</div>
-	  	<div class="pane">
-		  	<canvas id="NPGcanvas" width="400" height="400" ng-init="inicializarRedNeuronal()">Browser not supported for Canvas. Get a real browser.</canvas>
-	  	</div>
   	</div>
   	<div id="canvasVoice" class="col-xs-12"></div>
   	<ul class="col-xs-12">
@@ -84,5 +51,13 @@
   			<button class="btn btn-danger" type="button" ng-click="borrarAudio(miaudio)"><i class="fa fa-times"></i></button>
   		</li>
   	</ul>
+  	<!--div class="panes">
+	  	<div class="pane">
+		  	<canvas id="viscanvas" width="400" height="400">Browser not supported for Canvas. Get a real browser.</canvas>
+	  	</div>
+	  	<div class="pane">
+		  	<canvas id="NPGcanvas" width="400" height="400" ng-init="inicializarRedNeuronal()">Browser not supported for Canvas. Get a real browser.</canvas>
+	  	</div>
+  	</div-->
   </div>
 </div>

@@ -81,7 +81,10 @@ var moduloArchivos = (function() {
 		atributos = completarPredeterminados(atributos);
 		
         var subirReal = function(file) {
-	        var diferidoAct = moduloActividad.on();
+	        var diferidoAct = null;
+	        if (atributos.actividad !== false) {
+	        	diferidoAct = moduloActividad.on();
+	        }
 	        //var reader = new FileReader();
 	        //reader.readAsDataURL(file);
 	        var form = new FormData();
@@ -130,7 +133,9 @@ var moduloArchivos = (function() {
 	        });
 
 		  	diferido.always(function() {
-		    	diferidoAct.resolve();
+		  		if (diferidoAct !== null) {
+		  			diferidoAct.resolve();
+		  		}
 		    });
         };
         

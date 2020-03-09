@@ -125,20 +125,11 @@ var moduloPano = (function($) {
 				  'autorotate',
 				  'zoom',
 				  //'stereo',
-				  //'gyroscope',
+				  'gyroscope',
 				  'fullscreen',
-				  {
-				      id: 'my-salir',
-				      title: 'Salir',
-				      className: 'custom-button',
-				      content: 'Salir',
-				      onClick: function() {
-				      	salir();
-				      },
-				   },
 				   {
 				      id: 'my-stereo',
-				      title: 'Stereo',
+				      title: '- Stereo',
 				      className: 'custom-button',
 				      content: 'Stereo',
 				      onClick: function() {
@@ -146,7 +137,16 @@ var moduloPano = (function($) {
 				      	panoViewer.toggleStereoView();
 						autoAjustar();
 				      },
-				   }
+				   },
+					  {
+					      id: 'my-salir',
+					      title: '- Salir',
+					      className: 'custom-button',
+					      content: 'Salir',
+					      onClick: function() {
+					      	salir();
+					      },
+					   },
 				],
 	        });
 	        panoViewer.on('ready', finalizoCargue);

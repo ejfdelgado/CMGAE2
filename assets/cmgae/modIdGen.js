@@ -32,7 +32,13 @@ var modIdGen = (function(){
 	
 	var nuevoFin = function(epoch) {
 		return nuevo(epoch, false);
-	};	
+	};
+	
+	var ord2num = function(id) {
+		var temp = parseInt(id, 36);
+		temp = temp/RANDOM_SPACE_MULT;
+		return temp;
+	};
 	
 	var num2ord = function(num, esInicio) {
 		if (typeof num == 'number') {
@@ -245,5 +251,6 @@ var modIdGen = (function(){
 		'edad': edad,
 		'num2ordIni': num2ordIni,
 		'num2ordFin': num2ordFin,
+		'ord2num': ord2num,
 	};
 })();

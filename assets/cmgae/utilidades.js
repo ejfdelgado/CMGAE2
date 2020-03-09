@@ -825,6 +825,28 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 				}
 			}
 		};
+		
+		var stringifyNoCircular = function(circ, unparam, indent) {
+			// Note: cache should not be re-used by repeated calls to JSON.stringify.
+			var cache = [];
+			var prohibidos = ['$$hashKey'];
+			var text = JSON.stringify(circ, function(key, value) {
+				if (prohibidos.indexOf(key) >= 0) {
+					return;
+				}
+			    if (typeof value === 'object' && value !== null) {
+			        if (cache.indexOf(value) !== -1) {
+			            // Duplicate reference found, discard key
+			            return;
+			        }
+			        // Store value in our collection
+			        cache.push(value);
+			    }
+			    return value;
+			}, indent);
+			cache = null; // Enable garbage collection
+			return text;
+		};
 
 		return {
 			'is_null':is_null,
@@ -877,6 +899,7 @@ var a=function(b){if(Array.isArray(b))return b.map(a);if(b instanceof Object){va
 			'encolar': encolar,
 			'esInstancia': esInstancia,
 			'darTipoEstructura': darTipoEstructura,
+			'stringifyNoCircular': stringifyNoCircular,
 		};
 	})();
 

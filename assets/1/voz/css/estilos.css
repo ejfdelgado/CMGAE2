@@ -58,7 +58,7 @@
 
 .timeline .contenedor span.quien {
     float: left;
-    padding: 5px 15px;
+    padding: 5px 5px;
 }
 
 .timeline .contenedor.derecha .anotaciones {
@@ -72,8 +72,8 @@
 }
 
 .timeline .contenedor span.quien img {
-    width: 100px;
-    height: 100px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
 }
 

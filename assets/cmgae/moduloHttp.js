@@ -1,7 +1,7 @@
 if (!hayValor(moduloHttp)) {
 	var moduloHttp = (function() {
 		
-		var call = function(url, metodo, encabezados, usarCache, payload, params) {
+		var call = function(url, metodo, encabezados, usarCache, payload, params, actividad) {
 			if (!hayValor(usarCache)) {
 				usarCache = false;
 			}
@@ -9,7 +9,10 @@ if (!hayValor(moduloHttp)) {
 				url += '?'+$.param(params);
 			}
 			var diferido = $.Deferred();
-		    var diferidoAct = moduloActividad.on();
+		    var diferidoAct = null;
+		    if (actividad !== false) {
+		    	diferidoAct = moduloActividad.on();
+		    }
 		    var peticion = {
 		        'url': url,
 		        'type': metodo,
@@ -29,7 +32,9 @@ if (!hayValor(moduloHttp)) {
 			    }).fail(function() {
 			    	diferido.reject();
 			    }).always(function() {
-			    	diferidoAct.resolve();
+			    	if (diferidoAct !== null) {
+			    		diferidoAct.resolve();
+			    	}
 			    });
 		    };
 		    miseguridad.insertarToken(peticion).then(siempre, siempre);
@@ -37,8 +42,8 @@ if (!hayValor(moduloHttp)) {
 			return diferido.promise();
 		};
 		
-		var get = function(url, usarCache, params) {
-			return call(url, 'GET', null, usarCache, null, params)
+		var get = function(url, usarCache, params, actividad) {
+			return call(url, 'GET', null, usarCache, null, params, actividad)
 		};
 		
 		var borrar = function(url) {

@@ -86,6 +86,28 @@ app.filter('filtrarobj', function() {
 	  }
   }
 });
+
+app.filter('orderbyobjectkey', function() {
+  return function(objeto) {
+	  var lista = [];
+	  if ([null, undefined].indexOf(objeto) >= 0) {
+		  return lista;
+	  }
+	  var llaves = Object.keys(objeto);
+	  llaves = llaves.sort();
+	  for (var i=0; i<llaves.length; i++) {
+		  var llave = llaves[i];
+		  lista.push(objeto[llave]);
+	  }
+	  return lista;
+  }
+});
+
+app.filter('ord2num', function() {
+	return function(objeto) {
+		return modIdGen.ord2num(objeto);
+	}
+});
   
 app.directive("contenteditable", function () {
         return {
@@ -215,107 +237,42 @@ app.directive("directvozmichart", function () {
 
 app.controller('MainController', function($rootScope, $scope, $state) {
 	
+  $scope.borrarTodo = function() {
+	  $scope.metadata.ctx2.per = {};
+	  $scope.metadata.ctx2.hist = {};
+	  $scope.guardarTodo();
+  };
+	
   $scope.temporal = {
 	'q': '', 
 	'strict': false,
 	'rta': [],
     'next': null,
   };
-  var tiempo = 1571283165065;
+
   $scope.metadata = {
-    'ctx2': {
-    	'per': {
-	        'dfd233': {
-	        	'nom': 'Edgar Delgado',
-	        	'email': 'edelgado@panal.co',
-	        	
-	        	'cel': 3183412491,
-				'coef': 0.1,
-				'humId': 'AP301',
-				
-				'img': null,
-	        },
-    	},
-    	'hist': [
-        {
-          'tit': '15 de febrero del 2019 08:16pm',
-          'res': [{'txt': 'Este es mi resumen', 'usr': 'admin','t': tiempo++}],
-          'odd': true,
-          'det': [
-    	      {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-          ],
-          'tipo': 'voz',
-          'modo': 'voz',
-        },
-        {
-          'final': true,
-          'det': [
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-          ],
-          'tipo': 'voz',
-          'modo': 'voz',
-        },
-        {
-          'tit': '15 de febrero del 2019 08:16pm',
-          'res': [{'txt': 'Este es mi resumen', 'usr': 'admin','t': tiempo++}],
-          'odd': false,
-          'det': [
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-          ],
-          'tipo': 'voz',
-          'modo': 'voz',
-          'final': true,
-        },
-        {
-          'tit': '15 de febrero del 2019 08:16pm',
-          'res': [{'txt': '', 'usr': 'admin','t': tiempo++}],
-          'odd': true,
-          'det': [
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-            {'t': tiempo++,'aud': '', 'txt': [{'txt': 'esto es el texto esto es el texto esto es el texto esto es el texto esto es el texto', 'usr': 'admin', 'per': 'dfd233','t': tiempo++}]},
-          ],
-          'tipo': 'chart',
-          'modo': 'chart',
-          'chart': {
-            'pregunta': '¿Qué vamos a hacer con el ascensor?',
-            'opciones': {
-              'sfg3245d': {'txt':'Comprar nuevo ascensor', 'rgb': 'red'},
-              'afg3245e': {'txt':'Arreglar el actual ascensor', 'rgb': 'blue'},
-            },
-            'resultado': {
-              'data': [40, 60],
-            },
-          },
-        },
-    	],
-    },
+    'ctx2': {},
     'principal': {
       'uid': null,
     }
   };
+  
+  $scope.darTodo = function(a) {
+	  return a;
+  }
+  
+  $scope.primeroEnObj = function(detalles) {
+	  if ([null, undefined].indexOf(detalles) >= 0) {
+		  return null;
+	  }
+	var llaves = Object.keys(detalles);
+	if (llaves.length == 0) {
+		return null;
+	}
+	var primeraLlave = llaves.sort()[0];
+	return {'llave': primeraLlave, 'valor': detalles[primeraLlave]};
+  };
+  
   $scope.slaveUrl = null;
   
   //Se reconfigura el módulo de sincronización
@@ -356,7 +313,6 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 		var paramsActuales = moduloP5.getParams();
 		$.extend(true, paramsActuales, $scope.metadata.ctx2.params);
 		$scope.metadata.ctx2.params = paramsActuales;
-		//$scope.metadata.ctx2.archivos = [];
 		$scope.$digest();
 	  });
   };
@@ -379,38 +335,19 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     });
   };
   
-  $scope.handlerNuevoSonido = function(soundBlob) {
-	  
-      moduloArchivos.darFuncionCargue()({
-        auto: 'false', 
-        fileName: (new Date().getTime())+'.wav',
-        dataFolder:'/sonidos',
-      }, soundBlob).then(function(metadata) {
-    	  console.log(metadata);
-        if (!($scope.metadata.ctx2.archivos instanceof Array)) {
-        	$scope.metadata.ctx2.archivos = [];
-        }
-        var contenido = {'url': moduloArchivos.generarUrlDadoId(metadata.id)};
-        //Pide el texto!
-        
-		var url = '/storage/voice?';
-		url+=$.param({'name': metadata.id});
-		moduloHttp.get(url).then(function(voice) {
-			contenido.det = voice;
-	        $scope.metadata.ctx2.archivos.push(contenido);
-	        $scope.guardarTodo();
-	        $scope.$digest();
-		});
-      }, function() {
-    	  
-      });
-	  
+  $scope.handlerNuevoSonido = function(contenido) {
+      if (!($scope.metadata.ctx2.archivos instanceof Array)) {
+      	$scope.metadata.ctx2.archivos = [];
+      }
+      $scope.metadata.ctx2.archivos.push(contenido);
+      //$scope.guardarTodo();
+      $scope.$digest();
   };
   
   $scope.capturar = function() {
 	diferidoDatos.then(function() {
-		moduloP5.init($('#canvasVoice'), function() {
-	      	console.log('handlerLocal');
+		moduloP5.init($('#canvasVoice'), function(soundBlob) {
+			$scope.handlerNuevoSonido(soundBlob);
 	    });
 		moduloP5.activar();
 	});
@@ -644,7 +581,24 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 	});
   };
   
-  $scope.asignarVotacionActual = function(indice) {
+  $scope.darIdMiVerso = function(miverso) {
+	var objeto = $scope.metadata.ctx2.hist;
+	if ([null, undefined].indexOf(objeto) >= 0) {
+		return null;
+	}
+	var llaves = Object.keys(objeto);
+	for (var i=0; i<llaves.length; i++) {
+		var llave = llaves[i];
+		var actual = $scope.metadata.ctx2.hist[llave];
+		if (miverso == actual) {
+			return i;
+		}
+	}
+	return -1;
+  };
+  
+  $scope.asignarVotacionActual = function(miverso) {
+	  var indice = $scope.darIdMiVerso(miverso);
 	  var actual = utilidades.leerObj($scope.metadata.ctx2, 'global.votacion',null);
 	  var nuevo = 'hist.'+indice+'.chart'
 	  if (actual == null || actual != nuevo) {
@@ -654,6 +608,42 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 	  }
 	  $scope.guardarTodo();
   };
+  
+  document.addEventListener ("keydown", function (event) {
+	  if (event.shiftKey && event.ctrlKey) {
+		  if (event.which == 65) {//1
+    		//Shift+Ctrl+A guarda
+    		//Copiar en el portapapeles todo el modelo
+    		if (event.altKey) {
+    			copyToClipboard(utilidades.stringifyNoCircular($scope.metadata, null, 4));	
+    		} else {
+    			copyToClipboard(utilidades.stringifyNoCircular($scope.metadata));
+    		}
+	  		alert('Copiado en el potapapeles!');
+		  } else if (event.which == 86) {//22
+	    		//Shit+Ctrl+V
+	    		//Pegar desde el portapapeles y ejecutar
+				var funcionFinal = function(text) {
+			  		try {
+			  			var objeto = JSON.parse(text);
+			  			var llaves = ['ctx2'];
+			  			for (var i=0; i<llaves.length; i++) {
+			  				var llave = llaves[i];
+			  				var nuevoObjeto = objeto[llave];
+			  				$scope.metadata[llave] = nuevoObjeto;
+			  			}
+			  			$scope.$digest();
+			  			$scope.guardarTodo();
+			  		} catch (e) {
+			  			alert('El contenido no se logró recuperar');
+			  		}
+				  	
+				};
+
+				utilidades.pegar(funcionFinal);
+	      }
+	  }
+  });
 
 });
 </script>
