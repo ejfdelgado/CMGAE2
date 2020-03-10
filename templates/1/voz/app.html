@@ -261,7 +261,7 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 	  return a;
   }
   
-  $scope.primeroEnObj = function(detalles) {
+  $scope.primeroEnObj = function(detalles, alreves) {
 	  if ([null, undefined].indexOf(detalles) >= 0) {
 		  return null;
 	  }
@@ -269,7 +269,14 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 	if (llaves.length == 0) {
 		return null;
 	}
-	var primeraLlave = llaves.sort()[0];
+	var primeraLlave;
+	var temp = llaves.sort();
+	if (alreves === true) {
+		primeraLlave = temp[temp.length - 1];
+	} else {
+		primeraLlave = temp[0];	
+	}
+	
 	return {'llave': primeraLlave, 'valor': detalles[primeraLlave]};
   };
   
@@ -313,7 +320,9 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 		var paramsActuales = moduloP5.getParams();
 		$.extend(true, paramsActuales, $scope.metadata.ctx2.params);
 		$scope.metadata.ctx2.params = paramsActuales;
-		$scope.$digest();
+		$scope.darDetalleActual().then(function() {
+			$scope.$digest();	
+		});
 	  });
   };
   
@@ -335,7 +344,37 @@ app.controller('MainController', function($rootScope, $scope, $state) {
     });
   };
   
+  $scope.darIdInterlocutor = function() {
+	  //Se debe determinar quién es la persona que está hablando
+	  
+  }
+  
+  $scope.darDetalleActual = function() {
+	  var diferido = $.Deferred();
+	  if ([null, undefined].indexOf($scope.metadata.ctx2.hist) >= 0) {
+		  $scope.metadata.ctx2.hist = {};
+	  }
+	  var detalleUltimo = $scope.primeroEnObj($scope.metadata.ctx2.hist, true);
+	  console.log('detalleUltimo', detalleUltimo, JSON.stringify($scope.metadata.ctx2.hist));
+	  if ([null, undefined].indexOf(detalleUltimo) >= 0) {
+		  modIdGen.nuevo().then(function(idDetalle) {
+			  $scope.metadata.ctx2.hist[idDetalle] = {
+		                "tipo": "voz",
+		                "modo": "voz",
+		                "tit": (new Date(modIdGen.ord2num(idDetalle))).toLocaleString(),
+		                "odd": true,
+		                "det": {},
+			  };
+			  diferido.resolve({'valor': $scope.metadata.ctx2.hist[idDetalle], 'llave': idDetalle});
+		  });
+	  } else {
+		  diferido.resolve(detalleUltimo);
+	  }
+	  return diferido;
+  };
+  
   $scope.handlerNuevoSonido = function(contenido) {
+	  /*
       if (!($scope.metadata.ctx2.archivos instanceof Array)) {
       	$scope.metadata.ctx2.archivos = [];
       }
@@ -343,6 +382,29 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       //Se debe guardar sin indicador de actividad
       $scope.guardarTodo({'actividad': false});
       $scope.$digest();
+      */
+      $scope.darDetalleActual().then(function(todo) {
+    	  var detalle = todo.valor;
+    	  	  var idAudio = contenido.id;
+    	  	  delete contenido.id;
+    	  	  
+        	  var nuevo = {
+                  "aud": contenido.url,
+                  "txt": {},
+              };
+        	  
+        	  nuevo.txt[idAudio] = {
+                  "txt": utilidades.leerObj(contenido, 'det.results.0.alternatives.0.transcript', 'pendiente...'),
+                  "usr": "admin",//El usuario logeado
+                  "per": "dfd233"//El usuario
+              };
+        	  
+        	  detalle.det[idAudio] = nuevo;
+        	  
+              //Se debe guardar sin indicador de actividad
+              $scope.guardarTodo({'actividad': false});
+              $scope.$digest();
+      });
   };
   
   $scope.capturar = function() {
@@ -477,7 +539,9 @@ app.controller('MainController', function($rootScope, $scope, $state) {
   };
 
   $scope.clickVerso = function(dato, acc) {
-    console.log(acc, JSON.stringify(dato));
+	  var misonido = moduloSonidos.createAudio(dato.aud, 100, false);
+	  misonido.play();
+    //console.log(acc, JSON.stringify(dato));
   };
 
   $scope.toggleModo = function(verso) {

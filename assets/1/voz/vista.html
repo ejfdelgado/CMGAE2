@@ -37,7 +37,7 @@
             <a href="" ng-click="detener()" class="btn btn-default col-xs-6">Off <i class="fa fa-volume-off"></i></a>
             <div class="form-group col-xs-12">
               <div class="input-group col-xs-12">
-              	<label>THVOL</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.THVOL" min="0" max="250" step="10" value="40" ng-change="asignarParams()">
+              	<label>THVOL {{ metadata.ctx2.params.THVOL }}</label><input type="range" class="form-control" ng-model="metadata.ctx2.params.THVOL" min="0" max="250" step="10" value="40" ng-change="asignarParams()">
               </div>
             </div>
           </div>

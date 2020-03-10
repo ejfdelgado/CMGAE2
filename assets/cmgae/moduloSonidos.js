@@ -55,5 +55,6 @@ var moduloSonidos = (function($) {
 	return {
 		'play': play,
 		'stopAll': stopAll,
+		'createAudio': createAudio,
 	}
 })(jQuery);

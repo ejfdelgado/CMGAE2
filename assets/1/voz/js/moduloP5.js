@@ -147,7 +147,10 @@ var moduloP5 = (function() {
 			var soundBlob = soundFile.getBlob();
 			blobATexto(soundBlob).then(function(resultado) {
 			    if (typeof handlerNuevo == 'function') {
-			    	handlerNuevo(resultado);
+			    	 modIdGen.nuevo().then(function(idAudio) {
+			    		 resultado.id = idAudio;
+			    		 handlerNuevo(resultado);
+			    	 });
 			    }
 			});
     	}
