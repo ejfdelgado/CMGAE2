@@ -236,13 +236,19 @@
 			return diferidoLectura;
 		};
 		
-		var guardar = function(nuevo) {
+		var guardar = function(nuevo, misopciones) {
+			misopciones = $.extend(true, {
+				'actividad': true,
+			}, misopciones);
 			var diferido = $.Deferred();
 			if (diferidoLectura !== null) {
 				if (esDiferente(nuevo, '0')) {
 					diferidoLectura.then(function(valor) {
 						var temp = moduloTransformacion.modo('simple').to(nuevo, true, true);
-						moduloHttp.put('/api/xpage/'+valor.id, temp).then(function(rta) {
+						moduloHttp.put('/api/xpage/'+valor.id, 
+								temp,
+								undefined,
+								misopciones.actividad).then(function(rta) {
 							var valorActual = moduloTransformacion.modo('simple').from(rta.valor, true);
 							tomarImagen(valorActual, '0');
 							diferido.resolve(valorActual);
@@ -491,7 +497,10 @@
 			return diferidoLectura2;
 		};
 		
-		var guardar2 = function(modelo, lpatrones, sincronizar) {
+		var guardar2 = function(modelo, lpatrones, sincronizar, misopciones) {
+			misopciones = $.extend(true, {
+				'actividad': true,
+			}, misopciones);
 			var diferido = $.Deferred();
 			if (diferidoLectura !== null) {
 				diferidoLectura.then(function(valor) {
@@ -593,7 +602,10 @@
 							if (lpatrones instanceof Array) {
 								subdatos['patr'] = lpatrones;
 							}
-							moduloHttp.post('/api/tup/'+idPagina, subdatos).then(function(respuesta) {
+							moduloHttp.post('/api/tup/'+idPagina, 
+									subdatos, 
+									undefined, 
+									misopciones.actividad).then(function(respuesta) {
 								funcionExitoLocal();
 								if (sincronizar === true) {
 									moduloPubSub.pub('sync', subdatos);	
@@ -627,7 +639,10 @@
 								//Hace invocacion a servicio
 								//console.log('invocando servicio - con', JSON.stringify(subgrupo));
 								var payloadLocal = {'dat': subgrupo, 'acc': '-'};
-								moduloHttp.post('/api/tup/'+idPagina, payloadLocal).then(function(respuesta) {
+								moduloHttp.post('/api/tup/'+idPagina, 
+										payloadLocal, 
+										undefined, 
+										misopciones.actividad).then(function(respuesta) {
 									funcionExitoLocal();
 									if (sincronizar === true) {
 										moduloPubSub.pub('sync', payloadLocal);	

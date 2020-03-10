@@ -50,12 +50,12 @@ if (!hayValor(moduloHttp)) {
 			return call(url, 'DELETE')
 		};
 		
-		var put = function(url, payload, params) {
-			return call(url, 'PUT', null, false, payload, params);
+		var put = function(url, payload, params, actividad) {
+			return call(url, 'PUT', null, false, payload, params, actividad);
 		};
 		
-		var post = function(url, payload, params) {
-			return call(url, 'POST', darHeader(), false, payload, params);
+		var post = function(url, payload, params, actividad) {
+			return call(url, 'POST', darHeader(), false, payload, params, actividad);
 		};
 		
 		var darToken = function() {

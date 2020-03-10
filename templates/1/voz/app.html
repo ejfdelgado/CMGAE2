@@ -340,7 +340,8 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       	$scope.metadata.ctx2.archivos = [];
       }
       $scope.metadata.ctx2.archivos.push(contenido);
-      //$scope.guardarTodo();
+      //Se debe guardar sin indicador de actividad
+      $scope.guardarTodo({'actividad': false});
       $scope.$digest();
   };
   
@@ -357,15 +358,23 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 	  moduloP5.detener();
   }
   
-  $scope.guardarTodo = function() {
-    var diferidoGuardado = moduloActividad.on();
+  $scope.guardarTodo = function(opciones) {
+	  opciones = $.extend(true, {
+		  'actividad': true,
+	  }, opciones);
+    var diferidoGuardado = null;
+    if (opciones.actividad !== false) {
+    	diferidoGuardado = moduloActividad.on();	
+    } else {
+    	diferidoGuardado = $.Deferred();
+    }
     if (typeof angular == 'undefined') {
       angular = {
         toJson: JSON.stringify,
       };
     }
-    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)), undefined, true);
-    var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)));
+    var diferido2 = moduloPagina.guardar2(JSON.parse(angular.toJson($scope.metadata.ctx2)), undefined, true, opciones);
+    var diferido1 = moduloPagina.guardar(JSON.parse(angular.toJson($scope.metadata.ctx)), opciones);
     all([diferido1.promise, diferido2.promise]).then(function() {
     	diferidoGuardado.resolve();
     });
