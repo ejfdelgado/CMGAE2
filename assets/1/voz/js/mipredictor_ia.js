@@ -66,7 +66,7 @@ return exports;
 var mipredictor = (function($) {
 	//https://cs.stanford.edu/people/karpathy/convnetjs/demo/classify2d.html
 	
-	var DIMENSIONES = 2;
+	var DIMENSIONES = 3;
 	var data, labels, N;
 	var ss = 50.0; // scale for drawing
 
@@ -160,8 +160,8 @@ var mipredictor = (function($) {
 	    for(var x=0.0, cx=0; x<=WIDTH; x+= density, cx++) {
 	      for(var y=0.0, cy=0; y<=HEIGHT; y+= density, cy++) {
 	        //var dec= svm.marginOne([(x-WIDTH/2)/ss, (y-HEIGHT/2)/ss]);
-	        netx.w[0] = (x-WIDTH/2)/ss;
-	        netx.w[1] = (y-HEIGHT/2)/ss;
+	        netx.w[d0] = (x-WIDTH/2)/ss;
+	        netx.w[d1] = (y-HEIGHT/2)/ss;
 	        var a = net.forward(netx, false);
 	        
 	        if(a.w[0] > a.w[1]) ctx.fillStyle = 'rgb(250, 150, 150)';
