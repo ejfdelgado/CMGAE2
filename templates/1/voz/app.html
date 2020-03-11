@@ -355,7 +355,6 @@ app.controller('MainController', function($rootScope, $scope, $state) {
 		  $scope.metadata.ctx2.hist = {};
 	  }
 	  var detalleUltimo = $scope.primeroEnObj($scope.metadata.ctx2.hist, true);
-	  console.log('detalleUltimo', detalleUltimo, JSON.stringify($scope.metadata.ctx2.hist));
 	  if ([null, undefined].indexOf(detalleUltimo) >= 0) {
 		  modIdGen.nuevo().then(function(idDetalle) {
 			  $scope.metadata.ctx2.hist[idDetalle] = {

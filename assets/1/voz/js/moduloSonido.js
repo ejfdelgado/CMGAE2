@@ -184,9 +184,11 @@ var moduloReproduccion = (function($) {
 		  //Agrego al buffer todos los audios
 		  for (var i=0; i<llavesNecesitadas.length; i++) {
 			  var llave = llavesNecesitadas[i];
-			  var objeto = cacheOrdenada.mapa[llave];
-			  var audio = moduloSonidos.createAudio(objeto.aud, 100, false);
-			  buffer[llave] = audio;
+			  if (!(llave in buffer)) {
+				  var objeto = cacheOrdenada.mapa[llave];
+				  var audio = moduloSonidos.createAudio(objeto.aud, 100, false);
+				  buffer[llave] = audio;
+			  }
 		  }
 	  };
 	  

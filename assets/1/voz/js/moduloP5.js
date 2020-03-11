@@ -57,7 +57,51 @@ var moduloP5 = (function() {
   var sketch = function(p) {
 	  MIP5 = p;
 	  
+	  var moduloPeriodico = (function() {
+		  var MIN_T = 1000;//una palabra es de mínimo un segundo
+		  var MAX_T = 5000;//una frase es de 5 segundos máximo
+		  
+		  var primero = null;
+		  var segundo = null;
+		  var escuchando = false;
+		  
+		  var cancelarTimers = function() {
+			if (primero != null) {
+				clearTimeout(primero);
+				primero = null;
+			}
+			if (segundo != null) {
+				clearTimeout(segundo);
+				segundo = null;
+			}
+		  };
+		  
+		  var comenzar = function(ignorarAnterior) {
+			  cancelarTimers();
+			  nuevaGrabacion(ignorarAnterior);
+			  escuchando = false;
+			  primero = setTimeout(function() {
+				  escuchando = true;
+			  }, MIN_T);
+			  segundo = setTimeout(function() {
+				  comenzar();
+			  }, MAX_T);
+		  };
+		  
+		  var tic = function() {
+			  if (escuchando === true) {
+				  comenzar();
+			  }
+		  };
+		  
+		  return {
+			  'comenzar': comenzar,
+			  'tic': tic,
+		  }
+	  })();
+	  
     p.setup = function() {
+    	console.log('setup');
     	p.createCanvas ( PARAMS.BOX_WIDTH * PARAMS.MFCC_HISTORY_MAX_LENGTH, PARAMS.BOX_HEIGHT * 13 );
       //p.createCanvas(400, 400);
       //p.background(200);
@@ -87,7 +131,9 @@ var moduloP5 = (function() {
 
       // connect the mic to the recorder
       recorder.setInput(mic);
-    }
+      
+      moduloPeriodico.comenzar(true);
+    };
     
     p.draw = function() {
     	p.background(0);
@@ -104,15 +150,7 @@ var moduloP5 = (function() {
               p.rect(i * PARAMS.BOX_WIDTH, j * PARAMS.BOX_HEIGHT, PARAMS.BOX_WIDTH, PARAMS.BOX_HEIGHT);
             }
           }
-        
-        
-    };
-    
-   //TODO Esto es una simulación de lo que realmente meyda debería hacer 
-    p.mouseClicked = function() {
-    	nuevaGrabacion();
-    };
-    
+    };    
     
     var blobATexto = function(soundBlob) {
     	var diferido = $.Deferred();
@@ -139,20 +177,22 @@ var moduloP5 = (function() {
     	return diferido;
     };
     
-    var nuevaGrabacion = function() {
+    var nuevaGrabacion = function(ignorarAnterior) {
     	
-    	if ([null, undefined].indexOf(soundFile) < 0) {
-    		//Ya había una grabación, la debe guardar
-			recorder.stop();
-			var soundBlob = soundFile.getBlob();
-			blobATexto(soundBlob).then(function(resultado) {
-			    if (typeof handlerNuevo == 'function') {
-			    	 modIdGen.nuevo().then(function(idAudio) {
-			    		 resultado.id = idAudio;
-			    		 handlerNuevo(resultado);
-			    	 });
-			    }
-			});
+    	if (ignorarAnterior !== true) {
+	    	if ([null, undefined].indexOf(soundFile) < 0) {
+	    		//Ya había una grabación, la debe guardar
+				recorder.stop();
+				var soundBlob = soundFile.getBlob();
+				blobATexto(soundBlob).then(function(resultado) {
+				    if (typeof handlerNuevo == 'function') {
+				    	 modIdGen.nuevo().then(function(idAudio) {
+				    		 resultado.id = idAudio;
+				    		 handlerNuevo(resultado);
+				    	 });
+				    }
+				});
+	    	}
     	}
     	soundFile = new p5.SoundFile();
         recorder.record(soundFile);
@@ -241,6 +281,7 @@ var moduloP5 = (function() {
   
   var detener = function() {
 	  analyzer.stop();
+	  recorder.stop();
 	  mic.disconnect();
 	  mic.stop();
 	  MIP5.remove();
