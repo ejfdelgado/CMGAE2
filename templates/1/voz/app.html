@@ -537,11 +537,24 @@ app.controller('MainController', function($rootScope, $scope, $state) {
       $(event.currentTarget).toggleClass('cerrado');
     }
   };
-
-  $scope.clickVerso = function(dato, acc) {
-	  var misonido = moduloSonidos.createAudio(dato.aud, 100, false);
-	  misonido.play();
-    //console.log(acc, JSON.stringify(dato));
+  
+  $scope.darLlaveDeDetalle = function(tupla, miverso) {
+	  var llaves = Object.keys(miverso.det);
+	  for (var i=0; i<llaves.length; i++) {
+		  var llave = llaves[i];
+		  var obj = miverso.det[llave];
+		  if (obj === tupla) {
+			  return llave;
+		  }
+	  }
+	  return null;
+  };
+  
+  $scope.clickVerso = function(tupla, acc, miverso) {
+	  if (acc == 'play') {
+		  var llave =$scope.darLlaveDeDetalle(tupla, miverso);
+		  moduloReproduccion.play(llave, $scope.metadata.ctx2.hist);
+	  }
   };
 
   $scope.toggleModo = function(verso) {

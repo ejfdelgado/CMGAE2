@@ -104,3 +104,140 @@ var moduloSonido = (function($) {
 		'li': createDownloadLink,
 	};
 })(jQuery);
+
+var moduloReproduccion = (function($) {
+	
+	  var MAX_KEYS = 5;
+	  var buffer = {};
+	  
+	  var actual = null;
+	  var llaveActual = null;
+	  
+	  var cacheOrdenada = null;
+	  var invalidarCache = function() {
+		  cacheOrdenada = null;
+	  };
+	  
+	  var darSiguienteLlave = function(llave, hist) {
+		  darLlavesOrdenadas(hist);
+		  var indice = cacheOrdenada.lista.indexOf(llave);
+		  if (cacheOrdenada.lista.length > (indice + 1)) {
+			  return cacheOrdenada.lista[indice+1];
+		  } else {
+			  //Se acabó
+			  return null;
+		  }
+	  };
+	  
+	  var darLlavesOrdenadas = function(hist) {
+		  if (cacheOrdenada !== null) {
+			  return cacheOrdenada;
+		  }
+		var lista = [];
+		var mapa = {};
+		var jerarquia1 = hist;
+		var llaves1 = Object.keys(jerarquia1);
+		for (var i=0; i<llaves1.length; i++) {
+			var llave1 = llaves1[i];
+			var obj1 = jerarquia1[llave1];
+			
+			var jerarquia2 = obj1.det;
+			var llaves2 = Object.keys(jerarquia2);
+			for (var j=0; j<llaves2.length; j++) {
+				var llave2 = llaves2[j];
+				var obj2 = jerarquia2[llave2];
+				lista.push(llave2);
+				mapa[llave2] = obj2;
+			}
+		}
+		lista = lista.sort();
+		cacheOrdenada = {'lista': lista, 'mapa': mapa};
+		return cacheOrdenada;
+	  };
+	  
+	  var precargarAudios = function(llave, hist) {
+		  if (llave === null) {
+			  return;
+		  }
+		  //Se buscan las llaves en orden después de llave
+		  //Se llena el buffer hasta el máximo
+		  var llavesNecesitadas = [];
+		  var ultima = llave;
+		  llavesNecesitadas.push(ultima);
+		  while (llavesNecesitadas.length < MAX_KEYS) {
+			  ultima = darSiguienteLlave(ultima, hist);
+			  if (ultima == null) {
+				  break;
+			  }
+			  llavesNecesitadas.push(ultima);
+		  }
+		  
+	      //borro las llaves que no están en las que necesito
+		  var llavesEnBuffer = Object.keys(buffer);
+		  for (var i=0; i<llavesEnBuffer.length; i++) {
+			  var llave = llavesEnBuffer[i];
+			  if (llavesNecesitadas.indexOf(llave) < 0){
+				  delete buffer[llave];
+			  }
+		  }
+		  
+		  //Agrego al buffer todos los audios
+		  for (var i=0; i<llavesNecesitadas.length; i++) {
+			  var llave = llavesNecesitadas[i];
+			  var objeto = cacheOrdenada.mapa[llave];
+			  var audio = moduloSonidos.createAudio(objeto.aud, 100, false);
+			  buffer[llave] = audio;
+		  }
+	  };
+	  
+	  var audioEnCurso = null;
+	  var loopReproducir = function(hist) {
+		  if (llaveActual == null) {
+			  return;
+		  }
+		  var misonido = buffer[llaveActual];
+		  misonido.play();
+		  audioEnCurso = misonido;
+		  misonido.onended = function() {
+			  audioEnCurso = null;
+			  //Busca el siguiente
+			  if (llaveActual != null) {
+				  llaveActual = darSiguienteLlave(llaveActual, hist);
+				  setTimeout(function() {
+					  precargarAudios(llaveActual, hist);
+				  }, 0);
+				  if (llaveActual != null) {
+				  	loopReproducir(hist);
+				  }
+			  }
+		  };
+	  };
+	  
+	  var reproducir = function(llave, hist) {
+		  stop();
+		  llaveActual = llave;
+		  loopReproducir(hist);
+	  };
+	  
+	  var play = function(llave, hist) {
+		  precargarAudios(llave, hist);
+		  //Se lanza el audio que reproduce
+		  
+		  reproducir(llave);
+	  };
+	  
+	  var stop = function() {
+		  llaveActual = null;
+		  if (audioEnCurso != null) {
+			  audioEnCurso.pause();
+			  audioEnCurso.currentTime = 0;
+			  audioEnCurso = null;
+		  }
+	  };
+	  
+	return {
+		'play': play,
+		'stop': stop,
+		'invalidarCache': invalidarCache,
+	};
+})(jQuery);

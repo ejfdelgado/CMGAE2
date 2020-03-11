@@ -15,16 +15,16 @@
         </span>
         <!-- div class="anotaciones transicion_suave cerrado" contenteditable="" ng-if="miverso.modo == 'voz' && esTxt(primeroEnObj(miverso.res).valor.txt)" ng-model="primeroEnObj(miverso.res).valor.txt" ng-click="clickResumen($event)"></div-->
         <div ng-if="miverso.modo == 'voz'">
-          <span class="textico" ng-repeat="mitxt in miverso.det | orderbyobjectkey"><i class="fa fa-play-circle" ng-click="clickVerso(mitxt, 'play')"></i><span contenteditable ng-model="primeroEnObj(mitxt.txt).valor.txt"></span><i class="fa fa-user" ng-click="clickVerso(mitxt, 'det')"></i></span>
+          <span class="textico" ng-repeat="mitxt in miverso.det | orderbyobjectkey"><i class="fa fa-play-circle" ng-click="clickVerso(mitxt, 'play', miverso)"></i><span contenteditable ng-model="primeroEnObj(mitxt.txt).valor.txt"></span><i class="fa fa-user" ng-click="clickVerso(mitxt, 'det', miverso)"></i></span>
         </div>
         <div>
-        <span class="descr_dona" ng-if="miverso.modo == 'chart'"><i class="fa fa-eye manito" ng-click="asignarVotacionActual(miverso)"></i><h1 class="titulillo" contenteditable ng-model="miverso.chart.pregunta"></h1></span>
+        <span class="descr_dona" ng-if="miverso.modo == 'chart'"><i class="fa fa-eye manito" ng-click="asignarVotacionActual(miverso.v)"></i><h1 class="titulillo" contenteditable ng-model="miverso.chart.pregunta"></h1></span>
         <div class="dona" ng-if="miverso.modo == 'chart'">
           <span class="chart"><canvas class="directvozmichart" ng-model="miverso.chart"></canvas></span>
           <span class="unaopcion" ng-repeat="(idopcion, miopcion) in miverso.chart.opciones">
             <i class="fa fa-circle" ng-style="{color: miopcion.rgb}"></i><span contenteditable ng-model="miopcion.txt"></span><i class="fa fa-times-circle manito" ng-click="borrarOpcion(idopcion, miverso.chart.opciones)"></i><br/>
           </span>
-          <span class="manito accion_agregar_opc" ng-click="agregarOpcion(miverso)"><i class="fa fa-plus-circle"></i>Agregar opción</span>
+          <span class="manito accion_agregar_opc" ng-click="agregarOpcion(miverso.v)"><i class="fa fa-plus-circle"></i>Agregar opción</span>
         </div>
       </div>
     </div>
