@@ -66,6 +66,7 @@ return exports;
 var mipredictor = (function($) {
 	//https://cs.stanford.edu/people/karpathy/convnetjs/demo/classify2d.html
 	
+	var DIMENSIONES = 2;
 	var data, labels, N;
 	var ss = 50.0; // scale for drawing
 
@@ -76,7 +77,7 @@ var mipredictor = (function($) {
 	
 	var reload = function() {
 		layer_defs = [];
-		layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:2});
+		layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:DIMENSIONES});//Se declara la dimensión de las entradas
 		layer_defs.push({type:'fc', num_neurons:6, activation: 'tanh'});
 		layer_defs.push({type:'fc', num_neurons:2, activation: 'tanh'});
 		layer_defs.push({type:'softmax', num_classes:2});
@@ -87,11 +88,15 @@ var mipredictor = (function($) {
 		trainer = new convnetjs.SGDTrainer(net, {learning_rate:0.01, momentum:0.1, batch_size:10, l2_decay:0.001});
 	};
 	
-	function random_data(){
+	function random_data() {
 	  data = [];
 	  labels = [];
 	  for(var k=0;k<40;k++) {
-	    data.push([convnetjs.randf(-3,3), convnetjs.randf(-3,3)]); labels.push(convnetjs.randf(0,1) > 0.5 ? 1 : 0);
+		  var temp = [];
+		  for (var m=0; m<DIMENSIONES; m++) {
+			  temp.push(convnetjs.randf(-3,3));
+		  }
+	    data.push(temp); labels.push(convnetjs.randf(0,1) > 0.5 ? 1 : 0);
 	  }
 	  N = labels.length;
 	}
@@ -120,7 +125,7 @@ var mipredictor = (function($) {
 
 	  var start = new Date().getTime();
 
-	  var x = new convnetjs.Vol(1,1,2);
+	  var x = new convnetjs.Vol(1,1,DIMENSIONES);
 	  //x.w = data[ix];
 	  var avloss = 0.0;
 	  for(var iters=0;iters<20;iters++) {
@@ -145,7 +150,7 @@ var mipredictor = (function($) {
 	    
 	    ctx.clearRect(0,0,WIDTH,HEIGHT);
 	    
-	    var netx = new convnetjs.Vol(1,1,2);
+	    var netx = new convnetjs.Vol(1,1,DIMENSIONES);
 	    // draw decisions in the grid
 	    var density= 5.0;
 	    var gridstep = 2;
@@ -243,11 +248,11 @@ var mipredictor = (function($) {
 	      if(labels[i]==1) ctx.fillStyle = 'rgb(100,200,100)';
 	      else ctx.fillStyle = 'rgb(200,100,100)';
 	      
-	      drawCircle(data[i][0]*ss+WIDTH/2, data[i][1]*ss+HEIGHT/2, 5.0);
+	      drawCircle(data[i][d0]*ss+WIDTH/2, data[i][d1]*ss+HEIGHT/2, 5.0);
 
 	      // also draw transformed data points while we're at it
-	      netx.w[0] = data[i][0];
-	      netx.w[1] = data[i][1]
+	      netx.w[0] = data[i][d0];
+	      netx.w[1] = data[i][d1]
 	      var a = net.forward(netx, false);
 	      var xt = visWIDTH * (net.layers[lix].out_act.w[d0] - mmx.minv) / mmx.dv; // in screen coords
 	      var yt = visHEIGHT * (net.layers[lix].out_act.w[d1] - mmy.minv) / mmy.dv; // in screen coords
@@ -262,6 +267,7 @@ var mipredictor = (function($) {
 	}
 
 	function mouseClick(x, y, shiftPressed, ctrlPressed){
+		/*
 	  //console.log(x, y);
 	  // x and y transformed to data space coordinates
 	  var xt = (x-WIDTH/2)/ss;
@@ -294,13 +300,38 @@ var mipredictor = (function($) {
 	    N += 1;
 	    //console.log(xt, yt, data.length, labels.length, N);
 	  }
-
+	  */
 	}
 
 	function keyDown(key){
+		console.log('key', key);
+		if (key == 83) {
+			var json = net.toJSON();
+			var str = JSON.stringify(json);
+			console.log(str);
+		} else if (key == 76) {
+			var myjson = {"layers":[{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"input"},{"out_depth":6,"out_sx":1,"out_sy":1,"layer_type":"fc","num_inputs":2,"l1_decay_mul":0,"l2_decay_mul":1,"filters":[{"sx":1,"sy":1,"depth":2,"w":{"0":0.6730647726475136,"1":0.4423637253134721}},{"sx":1,"sy":1,"depth":2,"w":{"0":1.3316213287730314,"1":-1.7303401957627191}},{"sx":1,"sy":1,"depth":2,"w":{"0":-2.6508169864701028,"1":-1.5852275043387856}},{"sx":1,"sy":1,"depth":2,"w":{"0":0.6916595553958305,"1":-1.403243486723663}},{"sx":1,"sy":1,"depth":2,"w":{"0":0.32052038008463624,"1":1.555705050303381}},{"sx":1,"sy":1,"depth":2,"w":{"0":1.8243147175755718,"1":2.4368004445417175}}],"biases":{"sx":1,"sy":1,"depth":6,"w":{"0":-0.7975748966148888,"1":2.6354334702871602,"2":3.4688553482490394,"3":3.4933668730607956,"4":3.6228503554382003,"5":3.0136282781007644}}},{"out_depth":6,"out_sx":1,"out_sy":1,"layer_type":"tanh"},{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"fc","num_inputs":6,"l1_decay_mul":0,"l2_decay_mul":1,"filters":[{"sx":1,"sy":1,"depth":6,"w":{"0":5.057050183000219,"1":2.153485058666249,"2":4.33027945470676,"3":-3.4455570982597963,"4":3.289240228052259,"5":-2.388263108308716}},{"sx":1,"sy":1,"depth":6,"w":{"0":-2.274738837100848,"1":-0.5896330086244045,"2":-1.2099847447701702,"3":1.7012009053963906,"4":-1.3039412885242117,"5":1.796732334215926}}],"biases":{"sx":1,"sy":1,"depth":2,"w":{"0":-0.005393511577637624,"1":-0.8046901722556189}}},{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"tanh"},{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"fc","num_inputs":2,"l1_decay_mul":0,"l2_decay_mul":1,"filters":[{"sx":1,"sy":1,"depth":2,"w":{"0":-4.880545684236688,"1":3.3169342666437602}},{"sx":1,"sy":1,"depth":2,"w":{"0":4.218450842208072,"1":-2.0648094474616974}}],"biases":{"sx":1,"sy":1,"depth":2,"w":{"0":0.7047535960989859,"1":-0.704753596098985}}},{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"softmax","num_inputs":2}]};
+			net = new convnetjs.Net(); // create an empty network
+			net.fromJSON(myjson); // load all parameters from JSON
+		} else if (key == 49) {
+			//Modifico la dimension 1
+			d0++;
+			if (d0 >= DIMENSIONES) {
+				d0 = 0;
+			}
+			console.log(d0+' vs. '+d1);
+		} else if (key == 50) {
+			//Modifico la dimension 2
+			d1++;
+			if (d1 >= DIMENSIONES) {
+				d1 = 0;
+			}
+			console.log(d0+' vs. '+d1);
+		}
 	}
 
 	function keyUp(key) {
+		
 	}
 	
 	//---------------------------------------------------------------------
@@ -448,6 +479,7 @@ var mipredictor = (function($) {
 	    visHEIGHT = viscanvas.height;
 		
 	    random_data();
+	    //spiral_data();
 	    reload();
 	    NPGinit(20);
 	};

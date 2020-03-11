@@ -44,20 +44,23 @@ var moduloP5 = (function() {
         var mfcc = features ["mfcc"];
         var rms = features ["rms"];
         
-        if ( rms > PARAMS.THVOL/1000 ) { 
-            mfcc_history.push ( mfcc ) /* only push mfcc where some audio is present */
-        }
+        /* only push mfcc where some audio is present */
+        //if ( rms > PARAMS.THVOL/1000 ) { 
+            mfcc_history.push ( mfcc ) 
+        //}
         
         var dif = (mfcc_history.length - PARAMS.MFCC_HISTORY_MAX_LENGTH);
         if(dif > 0) {
             mfcc_history.splice(0,dif) /* remove past mfcc values */
         }
     };
+    
+    var moduloPeriodico;
 	
   var sketch = function(p) {
 	  MIP5 = p;
 	  
-	  var moduloPeriodico = (function() {
+	  moduloPeriodico = (function() {
 		  var MIN_T = 1000;//una palabra es de mínimo un segundo
 		  var MAX_T = 5000;//una frase es de 5 segundos máximo
 		  
@@ -94,9 +97,14 @@ var moduloP5 = (function() {
 			  }
 		  };
 		  
+		  var detener = function() {
+			  cancelarTimers();
+		  };
+		  
 		  return {
 			  'comenzar': comenzar,
 			  'tic': tic,
+			  'detener': detener,
 		  }
 	  })();
 	  
@@ -141,16 +149,46 @@ var moduloP5 = (function() {
     	
     	var data = mfcc_history;
         for(var i = 0; i < data.length; i++ ) {
-            for(var j = 0; j < data [i].length; j++ ) {
-              // setting fill color
-              if ( data [i] [j] >= 0 ) p.fill ( 100, data[i][j] * 100, 100 )
-              else p.fill( 100, 100, - data[i][j] * 100 )
-
-              p.noStroke();
-              p.rect(i * PARAMS.BOX_WIDTH, j * PARAMS.BOX_HEIGHT, PARAMS.BOX_WIDTH, PARAMS.BOX_HEIGHT);
-            }
+        	if (data[i] !== null) {
+	            for(var j = 0; j < data [i].length; j++ ) {
+	              // setting fill color
+	              if ( data [i] [j] >= 0 ) p.fill ( 100, data[i][j] * 100, 100 )
+	              else p.fill( 100, 100, - data[i][j] * 100 )
+	
+	              p.noStroke();
+	              p.rect(i * PARAMS.BOX_WIDTH, j * PARAMS.BOX_HEIGHT, PARAMS.BOX_WIDTH, PARAMS.BOX_HEIGHT);
+	            }
+        	} else {
+        		for(var j = 0; j < 13; j++ ) {
+  	              // setting fill color
+        		  p.fill ( 100, 100, 100 );//For null values...
+  	              p.noStroke();
+  	              p.rect(i * PARAMS.BOX_WIDTH, j * PARAMS.BOX_HEIGHT, PARAMS.BOX_WIDTH, PARAMS.BOX_HEIGHT);
+  	            }
+        	}
           }
-    };    
+        
+        //Esto se debe invocar cuando es una pausa
+        var ultimo = data[data.length-1];
+        console.log(vectorNormalizado(ultimo));
+        //moduloPeriodico.tic();
+    };
+    
+    p.mouseClicked = function() {
+    	
+    };
+    
+    var vectorNormalizado = function(vector) {
+    	if (vector instanceof Array) {
+	    	var nuevo = [];
+	    	for (var i=0; i<vector.length; i++) {
+	    		nuevo.push(parseInt(vector[i]*100));
+	    	}
+	    	return nuevo.join(';');
+    	} else {
+    		return null;
+    	}
+    };
     
     var blobATexto = function(soundBlob) {
     	var diferido = $.Deferred();
@@ -197,70 +235,6 @@ var moduloP5 = (function() {
     	soundFile = new p5.SoundFile();
         recorder.record(soundFile);
     };
-    
-    p.drawOld = function() {
-		var spectrum = fft.analyze();
-		var spectralCentroid = fft.getCentroid();
-		var mean_freq_index = spectralCentroid/(NYQUIST/spectrum.length);
-		var centroidplot = p.map(p.log(mean_freq_index), 0, p.log(spectrum.length), 0, p.width);
-		var rms = 1000*mic.getLevel();
-
-		filtro.escribir([rms, spectralCentroid], [PARAMS.PBVOL, PARAMS.PBFREQ]);
-		var vectorDebug = filtro.leer();
-		var vector = filtro.umbral([PARAMS.THVOL, PARAMS.THFREQ]);
-		
-		if (state == 0 && vector[0] === true && vector[1] === true) {
-			//Se debe comenzar a grabar
-			console.log('Inicia grabación');
-			soundFile = new p5.SoundFile();
-			recorder.record(soundFile);
-			state = 1;
-		} else if (state == 1 && vector[0] === false && vector[1] === false) {
-			//Debe detener la grabación
-			console.log('Finaliza grabación');
-			
-			recorder.stop();
-			var soundBlob = soundFile.getBlob();
-			if (typeof handlerNuevo == 'function') {
-				handlerNuevo(soundBlob);
-			}
-			state = 0;
-		}
-		
-		p.background(0);
-		p.fill(255,255,255);// text is white
-		
-		p.text("rms: ", 10, 20);
-		p.text(p.round(rms), 10, 40);
-		
-		p.text("centroid: ", 10, 60);
-		p.text(p.round(spectralCentroid)+" Hz", 10, 80);
-		
-		p.text("rms*: ", 10, 100);
-		p.text(p.round(vectorDebug[0]), 10, 120);
-		  
-		p.text("centroid*: ", 10, 140);
-		p.text(p.round(vectorDebug[1]), 10, 160);
-		
-		p.fill(127);
-		p.stroke(0);
-		var max = Math.max(p.width, p.height)*1;
-		
-		var cx = p.map(rms, PARAMS.MINVOL, PARAMS.MAXVOL, 0, p.height);
-		var cy = p.map(spectralCentroid, PARAMS.MINFREQ, PARAMS.MAXFREQ, 0, p.width);
-		
-		var cx2 = p.map(vectorDebug[0], PARAMS.MINVOL, PARAMS.MAXVOL, 0, p.height);
-		var cy2 = p.map(vectorDebug[1], PARAMS.MINFREQ, PARAMS.MAXFREQ, 0, p.width);
-		
-		p.fill(0,0,255);
-		p.ellipse(cx, cy, 10, 10);
-		p.fill(255,0,0);
-		p.ellipse(cx2, cy2, 10, 10);
-		p.fill(0,255,0);
-		p.ellipse(0, cy2, 10, 10);
-		p.ellipse(cx2, 0, 10, 10);
-	  
-	};
   };
   
   //moduloP5.init($('body'));
@@ -280,6 +254,7 @@ var moduloP5 = (function() {
   };
   
   var detener = function() {
+	  moduloPeriodico.detener();
 	  analyzer.stop();
 	  recorder.stop();
 	  mic.disconnect();
