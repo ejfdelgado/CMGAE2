@@ -1,0 +1,4 @@
+<label>Cargar archivo:</label>
+<input class="miinputfile" type="file" multiple file-model="interno.archivo" evento="cargarArchivos" />
+<p ng-repeat="(key, value) in entrenamiento"><span>Clase: {{ key }}</span>, <span>Tamaño: {{ value.length }}</span><p>
+<button ng-click="entrenar()">Entrenar</button>

@@ -108,6 +108,199 @@ app.filter('ord2num', function() {
 		return modIdGen.ord2num(objeto);
 	}
 });
+
+app.directive('fileModel', ['$parse', function ($parse) {
+    return {
+		scope: {
+			fileModel: "=",
+			evento: "=",
+		},
+       restrict: 'A',
+       link: function(scope, element, attrs) {
+          var model = $parse(attrs.fileModel);
+          var modelSetter = model.assign;
+          
+          element.bind('change', function() {
+             scope.$apply(function() {
+				 var datos = element[0].files;
+                modelSetter(scope, datos);
+				scope.evento(datos);
+             });
+          });
+       }
+    };
+}]);
+
+app.directive('audioentrenador', [function () {
+    return {
+		restrict: 'A',
+		scope: {
+			tipo: '=tipo',
+		},
+		templateUrl: '/assets'+window.location.pathname+'/audioentrenador.html',
+		link: function($scope, element, attrs) {
+			
+			var MIP5 = null;
+			var mic = null;
+			var mfcc_history = [];
+			var recorder, soundFile, analyzer, fft;
+			var state = 0;//0 - parado, 1 - grabando
+			var PARAMS = {
+				MFCC_HISTORY_MAX_LENGTH: 200,
+				BOX_WIDTH: 1,
+				BOX_HEIGHT: 20,
+			};
+		    
+		    var vectorNormalizado = function(vector) {
+		    	if (vector instanceof Array) {
+			    	var nuevo = [];
+			    	for (var i=0; i<vector.length; i++) {
+			    		nuevo.push(parseInt(vector[i]*100));
+			    	}
+			    	return nuevo;
+		    	} else {
+		    		return null;
+		    	}
+		    };
+			
+			$scope.interno = {
+				archivo: null,
+			};
+			
+			$scope.entrenamiento = {};
+			
+			var sketch = function(p) {
+				MIP5 = p;
+				
+				p.setup = function() {
+					p.createCanvas ( PARAMS.BOX_WIDTH * PARAMS.MFCC_HISTORY_MAX_LENGTH, PARAMS.BOX_HEIGHT * 13 );
+
+					if (typeof Meyda === "undefined") {
+						console.log("Meyda could not be found! Have you included it?");
+					} else {
+
+					}
+				};
+				
+				p.draw = function() {
+			    	p.background(0);
+			    	var data = mfcc_history;
+			        for(var i = 0; i < data.length; i++ ) {
+			        	if (data[i] !== null) {
+				            for(var j = 0; j < data [i].length; j++ ) {
+				              // setting fill color
+				              if ( data [i] [j] >= 0 ) p.fill ( 100, data[i][j] * 100, 100 )
+				              else p.fill( 100, 100, - data[i][j] * 100 )
+				
+				              p.noStroke();
+				              p.rect(i * PARAMS.BOX_WIDTH, j * PARAMS.BOX_HEIGHT, PARAMS.BOX_WIDTH, PARAMS.BOX_HEIGHT);
+				            }
+			        	} else {
+			        		for(var j = 0; j < 13; j++ ) {
+			  	              // setting fill color
+			        		  p.fill ( 100, 100, 100 );//For null values...
+			  	              p.noStroke();
+			  	              p.rect(i * PARAMS.BOX_WIDTH, j * PARAMS.BOX_HEIGHT, PARAMS.BOX_WIDTH, PARAMS.BOX_HEIGHT);
+			  	            }
+			        	}
+			          }
+				};
+			};
+			
+			var detener = function() {
+				if (MIP5 == null) {
+					return;
+				}
+				analyzer.stop();
+				mic.disconnect();
+				mic.stop();
+				MIP5.remove();
+				$(element).find('.midivinterno').remove();
+				MIP5 = null;
+			};
+			
+			var init = function() {
+				detener();
+				var padre = $(element);
+				var node = $('<div class="midivinterno"></div>');
+				new p5(sketch, node[0]);
+				padre.append(node);
+				setTimeout(function() {
+				 node.find('canvas').css({'visibility': 'visible'});
+				}, 0);
+			};
+			
+			$scope.cargarArchivos = function(archivos) {
+				if (!(archivos instanceof Array || archivos instanceof FileList)) {
+					return;
+				}
+				$.each(archivos, function(i, unarchivo) {
+					var diferido = $.Deferred();
+					var unarchivo = archivos[i];
+					var clase = /_clase(\d+)\./.exec(unarchivo.name);
+					procesarUnArchivo(unarchivo, clase[1]);
+				});
+			};
+			
+			var procesarUnArchivo = function(archivo, clase) {
+				//Se debe crear un elemento audio
+				var nuevoAudio = $('<audio controls><source src="" type="audio/mp3"></audio>');
+				$(element).append(nuevoAudio);
+				nuevoAudio.find('source').attr('src', window.URL.createObjectURL(archivo));
+				setTimeout(function() {
+					const audioContext = new AudioContext();
+					const htmlAudioElement = nuevoAudio.get(0);
+					const source = audioContext.createMediaElementSource(htmlAudioElement);
+					source.connect(audioContext.destination);
+					analyzer = Meyda.createMeydaAnalyzer({
+						"audioContext": audioContext,
+						"source": source,
+						"bufferSize": 512,
+						"featureExtractors": ["mfcc","rms"],
+						"callback": function( features ) {
+					        var mfcc = features ["mfcc"];
+					        var nuevo = vectorNormalizado(mfcc);
+					        var hayDato = 0;
+					        for (var j=0; j<nuevo.length; j++) {
+					        	if (nuevo[j] != 0) {
+					        		hayDato++;
+					        	}
+					        }
+					        if (hayDato <= 7) {
+					        	return;
+					        }
+					        var rms = features ["rms"];
+					        mfcc_history.push ( mfcc );
+					        
+					        var dif = (mfcc_history.length - PARAMS.MFCC_HISTORY_MAX_LENGTH);
+					        if(dif > 0) {
+					            mfcc_history.splice(0,dif) /* remove past mfcc values */
+					        }
+					        if (!($scope.entrenamiento[clase] instanceof Array)) {
+					        	$scope.entrenamiento[clase] = [];
+					        }
+					        $scope.entrenamiento[clase].push(nuevo); 
+					        //console.log(nuevo.join(';'));
+					    },
+					});
+					htmlAudioElement.play();
+					analyzer.start();
+					htmlAudioElement.addEventListener('ended', function() {
+						analyzer.stop();
+						nuevoAudio.remove();
+						$scope.$digest();
+				    }, false);
+				}, 0);
+			};
+			
+			$scope.entrenar = function() {
+				
+			};
+			
+			init();
+		}
+    };
+}]);
   
 app.directive("contenteditable", function () {
         return {

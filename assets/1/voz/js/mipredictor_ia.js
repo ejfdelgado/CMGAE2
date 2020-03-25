@@ -101,6 +101,34 @@ var mipredictor = (function($) {
 	  N = labels.length;
 	}
 	
+	function circle_data() {
+		  data = [];
+		  labels = [];
+		  for(var i=0;i<50;i++) {
+		    var temp = [];
+		    for (var m=0; m<DIMENSIONES; m++) {
+			    var r = convnetjs.randf(0.0, 2.0);
+			    var t = convnetjs.randf(0.0, 2*Math.PI);
+		    	temp.push(r*Math.sin(t));
+		    }
+		    data.push(temp);
+		    labels.push(1);
+		  }
+		  for(var i=0;i<50;i++) {
+		    var temp = [];
+		    for (var m=0; m<DIMENSIONES; m++) {
+			    var r = convnetjs.randf(3.0, 5.0);
+			    //var t = convnetjs.randf(0.0, 2*Math.PI);
+			    var t = 2*Math.PI*i/50.0
+		    	//temp.push(r*Math.sin(t));
+			    temp.push(r);
+		    }
+		    data.push(temp);
+		    labels.push(0);
+		  }
+		  N = data.length;
+		}
+	
 	function spiral_data() {
 	  data = [];
 	  labels = [];
@@ -248,7 +276,7 @@ var mipredictor = (function($) {
 	      if(labels[i]==1) ctx.fillStyle = 'rgb(100,200,100)';
 	      else ctx.fillStyle = 'rgb(200,100,100)';
 	      
-	      drawCircle(data[i][d0]*ss+WIDTH/2, data[i][d1]*ss+HEIGHT/2, 5.0);
+	      drawCircle(data[i][d0]*ss+WIDTH/2, data[i][d1]*ss+HEIGHT/2, 2.0);
 
 	      // also draw transformed data points while we're at it
 	      netx.w[0] = data[i][d0];
@@ -306,14 +334,17 @@ var mipredictor = (function($) {
 	function keyDown(key){
 		console.log('key', key);
 		if (key == 83) {
+			//s
 			var json = net.toJSON();
 			var str = JSON.stringify(json);
 			console.log(str);
 		} else if (key == 76) {
+			//l
 			var myjson = {"layers":[{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"input"},{"out_depth":6,"out_sx":1,"out_sy":1,"layer_type":"fc","num_inputs":2,"l1_decay_mul":0,"l2_decay_mul":1,"filters":[{"sx":1,"sy":1,"depth":2,"w":{"0":0.6730647726475136,"1":0.4423637253134721}},{"sx":1,"sy":1,"depth":2,"w":{"0":1.3316213287730314,"1":-1.7303401957627191}},{"sx":1,"sy":1,"depth":2,"w":{"0":-2.6508169864701028,"1":-1.5852275043387856}},{"sx":1,"sy":1,"depth":2,"w":{"0":0.6916595553958305,"1":-1.403243486723663}},{"sx":1,"sy":1,"depth":2,"w":{"0":0.32052038008463624,"1":1.555705050303381}},{"sx":1,"sy":1,"depth":2,"w":{"0":1.8243147175755718,"1":2.4368004445417175}}],"biases":{"sx":1,"sy":1,"depth":6,"w":{"0":-0.7975748966148888,"1":2.6354334702871602,"2":3.4688553482490394,"3":3.4933668730607956,"4":3.6228503554382003,"5":3.0136282781007644}}},{"out_depth":6,"out_sx":1,"out_sy":1,"layer_type":"tanh"},{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"fc","num_inputs":6,"l1_decay_mul":0,"l2_decay_mul":1,"filters":[{"sx":1,"sy":1,"depth":6,"w":{"0":5.057050183000219,"1":2.153485058666249,"2":4.33027945470676,"3":-3.4455570982597963,"4":3.289240228052259,"5":-2.388263108308716}},{"sx":1,"sy":1,"depth":6,"w":{"0":-2.274738837100848,"1":-0.5896330086244045,"2":-1.2099847447701702,"3":1.7012009053963906,"4":-1.3039412885242117,"5":1.796732334215926}}],"biases":{"sx":1,"sy":1,"depth":2,"w":{"0":-0.005393511577637624,"1":-0.8046901722556189}}},{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"tanh"},{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"fc","num_inputs":2,"l1_decay_mul":0,"l2_decay_mul":1,"filters":[{"sx":1,"sy":1,"depth":2,"w":{"0":-4.880545684236688,"1":3.3169342666437602}},{"sx":1,"sy":1,"depth":2,"w":{"0":4.218450842208072,"1":-2.0648094474616974}}],"biases":{"sx":1,"sy":1,"depth":2,"w":{"0":0.7047535960989859,"1":-0.704753596098985}}},{"out_depth":2,"out_sx":1,"out_sy":1,"layer_type":"softmax","num_inputs":2}]};
 			net = new convnetjs.Net(); // create an empty network
 			net.fromJSON(myjson); // load all parameters from JSON
 		} else if (key == 49) {
+			//1
 			//Modifico la dimension 1
 			d0++;
 			if (d0 >= DIMENSIONES) {
@@ -321,6 +352,7 @@ var mipredictor = (function($) {
 			}
 			console.log(d0+' vs. '+d1);
 		} else if (key == 50) {
+			//2
 			//Modifico la dimension 2
 			d1++;
 			if (d1 >= DIMENSIONES) {
@@ -478,7 +510,7 @@ var mipredictor = (function($) {
 	    visWIDTH = viscanvas.width;
 	    visHEIGHT = viscanvas.height;
 		
-	    random_data();
+	    circle_data();
 	    //spiral_data();
 	    reload();
 	    NPGinit(20);
