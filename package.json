@@ -42,7 +42,7 @@
     "crypto-js": "^3.1.9-1",
     "firebaseui": "^3.1.1",
     "instascan": "^1.0.0",
-    "jquery": "^3.3.1",
+    "jquery": "^3.5.0",
     "jquery-next-id": "^1.0.1",
     "jquery-roving-tabindex": "^1.0.1",
     "jquery-tabs": "^0.5.3",
