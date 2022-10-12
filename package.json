@@ -49,7 +49,7 @@
     "jquery-ui": "^1.12.1",
     "jquery-ui-dist": "^1.12.1",
     "jquery.enhsplitter": "^1.1.0",
-    "jspdf": "^1.4.1",
+    "jspdf": "^2.5.1",
     "jstree": "^3.3.5",
     "mobile-angular-ui": "^1.3.4",
     "ngmap": "^1.18.4",
